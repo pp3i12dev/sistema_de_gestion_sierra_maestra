@@ -58,3 +58,46 @@
         // Simple regeneration
         setInterval(createBubbles, 20000); // Every 20 seconds
         setInterval(createOceanParticles, 30000); // Every 30 seconds
+
+        // ==== POPUP LOGIN ====
+document.addEventListener("DOMContentLoaded", function () {
+  const popup = document.getElementById("loginPopup");
+  const btnLogin = document.getElementById("btnLogin"); // INICIAR SESION
+  const closeBtn = document.querySelector(".popup .close");
+
+  const formCliente = document.getElementById("formCliente");
+  const formAsociado = document.getElementById("formAsociado");
+  const switchAsociado = document.getElementById("switchAsociado");
+  const switchCliente = document.getElementById("switchCliente");
+
+  // Abrir popup
+  btnLogin.addEventListener("click", function (e) {
+    e.preventDefault();
+    popup.classList.add("active");  // usamos clase en vez de display:block
+  });
+
+  // Cerrar popup
+  closeBtn.addEventListener("click", function () {
+    popup.classList.remove("active");
+  });
+
+  // Cerrar si clickea afuera
+  window.addEventListener("click", function (e) {
+    if (e.target === popup) {
+      popup.classList.remove("active");
+    }
+  });
+
+  // Cambiar entre Cliente y Asociado
+  switchAsociado.addEventListener("click", function (e) {
+    e.preventDefault();
+    formCliente.style.display = "none";
+    formAsociado.style.display = "block";
+  });
+
+  switchCliente.addEventListener("click", function (e) {
+    e.preventDefault();
+    formCliente.style.display = "block";
+    formAsociado.style.display = "none";
+  });
+});

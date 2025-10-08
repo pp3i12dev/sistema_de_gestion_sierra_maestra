@@ -183,6 +183,32 @@
             </div>
           </div>
 
+<!-- Sección del Popup -->
+    <section id="loginPopup" class="popup"> <!-- Popup Inicio de Sesión -->
+        <div class="popup-content">
+            <span class="close">&times;</span>
+            <h2>Iniciar Sesión</h2>
+
+            <form id="formCliente" class="formulario"> <!-- Formulario Cliente -->
+                <input type="email" placeholder="Ingrese su email" required>
+                <input type="password" placeholder="Ingrese su contraseña" required>
+                <a href="#">¿Olvidaste tu contraseña?</a>
+                <button type="submit">Registrarse</button>
+                <button type="submit">Iniciar Sesión</button>
+                <p><a href="#" id="switchAsociado">Soy Asociado</a></p>
+            </form>
+
+            <form id="formAsociado" class="formulario" style="display:none;"> <!-- Formulario Asociado -->
+                <input type="text" placeholder="Ingrese su legajo" required>
+                <input type="password" placeholder="Ingrese su contraseña" required>
+                <a href="#">¿Olvidaste tu contraseña?</a>
+                <button type="submit">Iniciar Sesión</button>
+                <p><a href="#" id="switchCliente">Soy Cliente</a></p>
+            </form>
+        </div>
+    </section>
+    <!-- Fin sección del Popup -->
+
           <!-- Administración -->
           <div class="col-12 flex-grow-1">
             <div class="card h-100">

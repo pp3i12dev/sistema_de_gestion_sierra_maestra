@@ -1948,3 +1948,89 @@ section > #buscar {
     font-size: 14px;
   }
 }
+
+       /* ==== POPUP LOGIN ==== */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.popup {
+  display: none;              /* oculto por defecto */
+  position: fixed;
+  inset: 0;                   /* top:0; right:0; bottom:0; left:0 */
+  z-index: 1000;
+
+
+  /* Centramos con flex (pero solo cuando está activo) */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Clase que se agrega con JS cuando abrís el popup */
+.popup.active {
+  display: flex;
+}
+
+.popup-content {
+  background: #c18c47;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 350px;
+  text-align: center;
+  color: #fff;
+  position: relative;
+
+  /* sombra quitada */
+  box-shadow: none;
+}
+
+.popup-content h2 {
+  margin-bottom: 15px;
+  font-size: 1.5rem;
+}
+
+.popup-content input {
+  width: 80%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 20px;
+  border: none;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.popup-content button {
+  padding: 10px 20px;
+  background: white;
+  color: #333;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.popup-content button:hover {
+  background: #eee;
+}
+
+.popup-content a {
+  color: #744b00;
+  font-size: 0.9em;
+}
+
+.close {
+  position: absolute;
+  right: 15px; top: 10px;
+  font-size: 22px;
+  cursor: pointer;
+}
+.popup-content a {
+  display: block;   /* fuerza que quede en su propia línea */
+  margin-top: 10px;
+  color: #744b00;
+  font-size: 0.9em;
+}
+/* ==== FIN POPUP LOGIN ==== */
