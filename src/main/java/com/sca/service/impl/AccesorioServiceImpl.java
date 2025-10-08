@@ -109,7 +109,7 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
             respuesta.setDescripcion("Datos del Accesorio");
-            respuesta.setData(accesorioRepository.findById(id));
+            respuesta.setData(accesorioRepository.findById(id).orElse(null));
         } catch (Exception e) {
             respuesta.setCodigo("400");
             respuesta.setStatus("Error");

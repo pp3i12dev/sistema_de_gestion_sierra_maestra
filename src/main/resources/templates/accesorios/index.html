@@ -11,10 +11,12 @@
       </div>
 
     <!-- Buscar por ID -->
-  <div>
-    <input type="number" id="idAccesorioInput" placeholder="Ingrese ID del accesorio">
-    <button type="button" onclick="buscarAccesorioPorId()">Buscar</button>
-  </div>
+    <div class="row mt-3">
+      <div class="col-md-4 d-flex">
+        <input class="form-control" type="text" id="idAccesorioInput" placeholder="Ingrese ID del accesorio">
+        <button class="btn btn-primary ms-2" type="button" onclick="buscarAccesorioPorId()">Buscar</button>
+      </div>
+    </div>
 
   <!-- Buscar por Estado -->
   <div class="col-md-4 d-flex">
@@ -46,41 +48,42 @@
     
     <script>
 
-    async function buscarAccesorioPorId() {
-  const id = document.getElementById("idAccesorioInput").value;
-  const resultadoDiv = document.getElementById("resultadoAccesorio");
+function buscarAccesorioPorId() {
+  const id = document.getElementById('idAccesorioInput').value.trim();
+  if (!id) return alert('Ingrese un ID');
 
-  if (!id) {
-    alert("Por favor ingrese un ID");
-    return;
-  }
-
-  try {
-    const response = await fetch(`/getByIdAccesorio/${id}`);
-    if (!response.ok) throw new Error("Error al obtener el accesorio");
-
-    const data = await response.json();
-
-    if (data.codigo === "200" && data.data) {
+  fetch(`/accesorios/getByIdAccesorio/${id}`)
+    .then(response => {
+      if (!response.ok) throw new Error('Error en la respuesta');
+      return response.json();
+    })
+    .then(data => {
       const accesorio = data.data;
-      resultadoDiv.innerHTML = `
-        <h5>Accesorio encontrado:</h5>
-        <ul>
-          <li><b>ID:</b> ${accesorio.id}</li>
-          <li><b>Nombre:</b> ${accesorio.nombre || '—'}</li>
-          <li><b>Tipo:</b> ${accesorio.tipo || '—'}</li>
-          <li><b>Estado:</b> ${accesorio.estado || '—'}</li>
-          <li><b>Descripción:</b> ${accesorio.descripcion || '—'}</li>
-        </ul>
-      `;
-    } else {
-      resultadoDiv.innerHTML = `<p>No se encontró ningún accesorio con ese ID.</p>`;
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    resultadoDiv.innerHTML = `<p>Error al buscar el accesorio.</p>`;
-  }
+      let html = '';
+
+      if (accesorio) {
+        html = `
+          <div class="card p-3 mb-2">
+            <h5>Accesorio encontrado</h5>
+            <div><strong>ID:</strong> ${accesorio.id}</div>
+            <div><strong>Nombre:</strong> ${accesorio.nombre || '-'}</div>
+            <div><strong>Tipo:</strong> ${accesorio.tipo || '-'}</div>
+            <div><strong>Estado:</strong> ${accesorio.estado || '-'}</div>
+            <div><strong>Descripción:</strong> ${accesorio.descripcion || '-'}</div>
+          </div>
+        `;
+      } else {
+        html = '<div>No se encontró el accesorio.</div>';
+      }
+
+      document.getElementById('resultadoAccesorio').innerHTML = html;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('resultadoAccesorio').innerHTML = '<div>Error al buscar el accesorio.</div>';
+    });
 }
+
     
 
     //Buscar por estado
