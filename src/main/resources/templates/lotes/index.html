@@ -45,6 +45,8 @@
 
     <script>
 
+      
+
     function buscarLotePorId() {
     const id = document.getElementById('buscarId').value;
     if(!id) return alert('Ingrese un ID');
@@ -88,22 +90,42 @@
             const lotes = data.data;
             let html = '';
 
-            if(lotes && lotes.length > 0) {
-                html = lotes.map(lote => `
-                    <div class="card p-3 mb-2">
-                        <h6>Lote ID: ${lote.id}</h6>
-                        <div><strong>Cerveza:</strong> ${lote.cerveza ? lote.cerveza.nombreCerveza : '-'}</div>
-                        <div><strong>Cantidad (L):</strong> ${lote.cantidadLitros}</div>
-                        <div><strong>Estado:</strong> ${lote.estado}</div>
-                        <div><strong>Notas:</strong> ${lote.notas || '-'}</div>
-                        <div><strong>Fecha Carga:</strong> ${lote.fechaCarga || '-'}</div>
-                        <div><strong>Fecha Carga Madurador:</strong> ${lote.fechaCargaMadurador || '-'}</div>
-                        <div><strong>Fecha Vencimiento:</strong> ${lote.fechaVencimiento || '-'}</div>
-                    </div>
-                `).join('');
-            } else {
-                html = '<div>No se encontraron lotes con ese estado.</div>';
-            }
+            //Creamos la tabla
+            if (lotes && lotes.length > 0) {
+            html = `
+              <table class="table table-bordered table-hover table-striped mt-3">
+                <thead class="table-dark">
+                  <tr>
+                    <th>ID</th>
+                    <th>Cerveza</th>
+                    <th>Cantidad (L)</th>
+                    <th>Estado</th>
+                    <th>Notas</th>
+                    <th>Fecha Carga</th>
+                    <th>Fecha Madurador</th>
+                    <th>Fecha Vencimiento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${lotes.map(lote => `
+                    <tr>
+                      <td>${lote.id}</td>
+                      <td>${lote.cerveza ? lote.cerveza.nombreCerveza : '-'}</td>
+                      <td>${lote.cantidadLitros}</td>
+                      <td>${lote.estado}</td>
+                      <td>${lote.notas || '-'}</td>
+                      <td>${lote.fechaCarga || '-'}</td>
+                      <td>${lote.fechaCargaMadurador || '-'}</td>
+                      <td>${lote.fechaVencimiento || '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+          } else {
+            html = '<div class="alert alert-warning">No se encontraron lotes con ese estado.</div>';
+          }
+
 
             document.getElementById('resultado-busqueda-estado').innerHTML = html;
         })

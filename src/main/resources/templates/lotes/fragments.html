@@ -63,7 +63,8 @@
     </form>
   </div>
 
-  <div th:fragment="view">
+  <!-- ESTO IGNORA PORQUE SE DUPLICA EL ID AL PRESIONAR UNO DE LOS DATOS CARGADO -->
+  <!-- <div th:fragment="view">
     <div class="card p-3">
       <h6>Detalle Lote</h6>
       <div><strong>Id:</strong> <span th:text="${lote.id}">-</span></div>
@@ -76,7 +77,7 @@
         <button class="btn btn-sm btn-secondary" hx-get="/lotes/list" hx-target="#lotes-list" hx-swap="innerHTML">Cerrar</button>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <div th:fragment="view">
     <div th:if="${lote != null}" class="card p-3 mb-2">

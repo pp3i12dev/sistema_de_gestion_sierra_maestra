@@ -1,17 +1,9 @@
 package com.sca.model;
 // import java.util.ArrayList;
 import java.util.Date;
-import java.util.Set;
 import java.util.HashSet;
-import org.springframework.format.annotation.DateTimeFormat;
+import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.sca.constantes.ExpresionRegular;
-import com.sca.validator.ValidarExpresionesRegulares;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,14 +12,22 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-// import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-// import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-// import javax.persistence.OneToOne;
-import javax.persistence.ManyToOne;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.sca.constantes.ExpresionRegular;
+import com.sca.validator.ValidarExpresionesRegulares;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -69,18 +69,21 @@ public class Lote {
     @Column(name = "fecha_carga", nullable = false)
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "America/Argentina/Buenos_Aires")
     private Date fechaCarga;
 
     @NotNull(message = "La fecha de vencimiento es obligatoria")
     @Column(name = "fecha_vencimiento", nullable = false)
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "America/Argentina/Buenos_Aires")
     private Date fechaVencimiento;
 
     @NotNull(message = "La fecha de carga en madurador es obligatoria")
     @Column(name = "fecha_carga_madurador", nullable = false)
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "America/Argentina/Buenos_Aires")
     private Date fechaCargaMadurador;
     
     @OneToMany(mappedBy = "lote", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
