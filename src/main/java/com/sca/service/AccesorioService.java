@@ -31,4 +31,8 @@ public interface AccesorioService {
     void marcarComoDisponibles(List<Long> accesorioIds);
 
     Respuesta findAccesorioPorEstado(String estado);
+
+    // 🔹 Nuevo método para exportar a Excel
+    ResponseEntity<byte[]> exportarAccesoriosExcel();
+
 }

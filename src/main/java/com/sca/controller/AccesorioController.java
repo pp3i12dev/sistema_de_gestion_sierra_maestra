@@ -75,4 +75,12 @@ public class AccesorioController {
 	}
 
 
+	@GetMapping(value = "/exportarExcel", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	@ApiOperation(value = "Exportar accesorios a Excel", notes = "Descarga un archivo Excel con todos los accesorios")
+	public ResponseEntity<byte[]> exportarAccesoriosExcel() {
+		return accesoriosServiceImpl.exportarAccesoriosExcel();
+	}
+
+
+
 }
