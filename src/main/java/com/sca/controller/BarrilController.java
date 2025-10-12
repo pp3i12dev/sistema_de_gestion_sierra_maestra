@@ -116,5 +116,11 @@ public class BarrilController {
         return ResponseEntity.ok(respuesta);
     }
 
+    @GetMapping("/barriles/exportarExcel/{estado}")
+    public ResponseEntity<byte[]> exportarBarrilesPorEstadoExcel(@PathVariable String estado) {
+        return barrilServiceImpl.exportarBarrilesPorEstadoExcel(estado);
+    }
+
+
 
 }

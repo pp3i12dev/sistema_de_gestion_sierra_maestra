@@ -1,13 +1,14 @@
 package com.sca.service;
 
 import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 
 import com.sca.model.Barril;
-import com.sca.model.Respuesta;
 import com.sca.model.Lote;
+import com.sca.model.Respuesta;
 
 public interface BarrilService {
 
@@ -34,5 +35,9 @@ public interface BarrilService {
 
     // 🔹 Nuevo método que ya tenías
     Respuesta findDisponiblesByCerveza(Long cervezaId);
+
+    // Exportar barriles a Excel filtrando por estado
+    ResponseEntity<byte[]> exportarBarrilesPorEstadoExcel(String estado);
+
     
 }

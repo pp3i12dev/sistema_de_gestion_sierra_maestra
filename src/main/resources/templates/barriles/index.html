@@ -31,6 +31,9 @@
             <option value="Sucio">Sucio</option>
           </select>
           <button class="btn btn-primary" onclick="buscarBarrilPorEstado()">Buscar</button>
+
+          <button class="btn btn-success" onclick="exportarBarrilesPorEstadoExcel()">Descargar Excel</button>
+
         </div>
       <!-- </div> -->
 
@@ -214,6 +217,36 @@ function mostrarListaBarril(cervezas) {
         
         document.getElementById('barriles-list').innerHTML = html;
     }
+
+    //Exportar a excel para poder descargar
+    function exportarBarrilesPorEstadoExcel() {
+    const estado = document.getElementById("estadoBarril").value.trim();
+    if (!estado) {
+        alert("Seleccione un estado para exportar");
+        return;
+    }
+
+    fetch(`/barriles/exportarExcel/${encodeURIComponent(estado)}`, { method: 'GET' })
+        .then(response => {
+            if (!response.ok) throw new Error("Error al generar el Excel");
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Barriles_${estado}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            console.error("Error al exportar Excel:", err);
+            alert("No se pudo generar el Excel: " + err.message);
+        });
+}
+
 
 
   document.addEventListener('DOMContentLoaded', ()=>{ htmx.ajax('GET','/barriles/list','#barriles-list'); });</script>
