@@ -9,6 +9,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import com.sca.constantes.ExpresionRegular;
 import com.sca.validator.ValidarExpresionesRegulares;
 import io.swagger.annotations.ApiModelProperty;
@@ -42,7 +43,7 @@ public class Cliente {
 	@Column(name="apellido")
 	private String apellido;
 	
-	@ValidarExpresionesRegulares(customMessage = "El documento no es válido", expresionRegular = ExpresionRegular.DOCUMENTO)
+	@Pattern(regexp = "^\\d+$", message = "El documento debe contener solo números")
 	@NotBlank(message = "El documento no puede estar en blanco")
 	@Column(name="documento")
 	private String documento;

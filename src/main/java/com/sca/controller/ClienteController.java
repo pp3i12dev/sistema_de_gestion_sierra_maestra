@@ -22,6 +22,9 @@ import com.sca.model.Cliente;
 import com.sca.model.Respuesta;
 import com.sca.service.impl.ClienteServiceImpl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -76,5 +79,38 @@ public class ClienteController {
     @ApiOperation(value = "Login Cliente", notes = "Valida documento y contraseña de un cliente")
     public Respuesta loginCliente(@RequestBody Cliente loginRequest) {
         return clientesServiceImpl.login(loginRequest.getDocumento(), loginRequest.getContrasenia());
+    }
+
+    // 🔹 Nuevo: registro público de cliente
+    @PostMapping(value = "/registrarCliente", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Registrar Cliente", notes = "Registra un nuevo cliente con validaciones de unicidad para DNI y email")
+    public ResponseEntity<Object> registrarCliente(@RequestBody @Validated Cliente cliente, BindingResult bindingResult) throws BindException {
+        return clientesServiceImpl.registrarCliente(cliente, bindingResult);
+    }
+
+    // 🔹 Endpoint de prueba para validar DNI
+    @PostMapping(value = "/validarDNI", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Validar DNI", notes = "Endpoint de prueba para validar formato de DNI")
+    public ResponseEntity<Object> validarDNI(@RequestBody Map<String, String> request) {
+        String dni = request.get("dni");
+        log.info("Validando DNI: {}", dni);
+        
+        // Verificar si el DNI cumple con la expresión regular simplificada
+        boolean esValido = dni != null && dni.matches("^\\d+$");
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("dni", dni);
+        response.put("esValido", esValido);
+        response.put("regex", "^\\d+$");
+        response.put("longitud", dni != null ? dni.length() : 0);
+        response.put("soloNumeros", dni != null ? dni.matches("^\\d+$") : false);
+        
+        // Prueba manual con tu DNI específico
+        String tuDNI = "37043109";
+        boolean tuDNIEsValido = tuDNI.matches("^\\d+$");
+        response.put("tuDNI", tuDNI);
+        response.put("tuDNIEsValido", tuDNIEsValido);
+        
+        return ResponseEntity.ok(response);
     }
 }

@@ -23,4 +23,7 @@ public interface ClienteService {
 
     // 🔹 Nuevo: login
     public Respuesta login(String documento, String contrasenia);
+    
+    // 🔹 Nuevo: registro de cliente público
+    public ResponseEntity<Object> registrarCliente(Cliente cliente, BindingResult bindingResult) throws BindException;
 }
