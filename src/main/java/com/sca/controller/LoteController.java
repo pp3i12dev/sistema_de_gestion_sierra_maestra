@@ -1,5 +1,8 @@
 package com.sca.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import javax.websocket.server.PathParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,6 +82,21 @@ public class LoteController {
 	@GetMapping(value = "/findLotesPorEstado/{estado}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Respuesta findLotesPorEstado(@PathVariable String estado) {
 		return lotesServiceImpl.findLotesPorEstado(estado);
+	}
+
+
+	@GetMapping("/lotes/exportarExcel/{estado}")
+	public ResponseEntity<byte[]> exportarLotesPorEstadoExcel(@PathVariable String estado) throws IOException {
+		ByteArrayInputStream stream = lotesServiceImpl.exportarPorEstadoAExcel(estado);
+
+
+		org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+		headers.add("Content-Disposition", "attachment; filename=lotes_" + estado + ".xlsx");
+
+		return ResponseEntity
+				.ok()
+				.headers(headers)
+				.body(stream.readAllBytes());
 	}
 
 

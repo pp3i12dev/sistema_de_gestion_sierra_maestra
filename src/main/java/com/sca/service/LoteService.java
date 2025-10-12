@@ -1,5 +1,8 @@
 package com.sca.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -18,4 +21,7 @@ public interface LoteService {
 	public Respuesta findAll();
 	
 	public Respuesta findById(Long id);
+
+	ByteArrayInputStream exportarPorEstadoAExcel(String estado) throws IOException;
+
 }
