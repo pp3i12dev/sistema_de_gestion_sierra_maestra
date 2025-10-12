@@ -51,7 +51,17 @@
             onclick="buscarPorEstado()"
           >
             Buscar
-          </button>
+        </button>
+
+        <!-- ✅ BOTÓN DESCARGAR EXCEL -->
+        <button 
+            id="btnDescargarExcel" 
+            class="btn btn-success ms-2" 
+            style="display:none;"
+            onclick="descargarExcelPorEstado()">
+            <i class="bi bi-file-earmark-excel"></i> Descargar Excel
+        </button>
+
 
     </div>
 
@@ -164,25 +174,18 @@ function getBadgeClass(estado) {
                     if (respuesta && (respuesta.codigo === '200' || respuesta.status === 'Ok')) {
                         const cervezas = Array.isArray(respuesta.data) ? respuesta.data : [];
                         mostrarListaCervezasPorEstado(cervezas, estado);
-                        // si tenés botones de descarga, activalos (opcional)
-                        const excelBtn = document.getElementById('descargar-excel');
-                        const pdfBtn = document.getElementById('descargar-pdf');
-                        if (excelBtn) {
-                            excelBtn.style.display = cervezas.length ? 'inline-block' : 'none';
-                            excelBtn.setAttribute('data-estado', estado);
-                            excelBtn.href = '/cervezas/exportar-estado-excel/' + encodeURIComponent(estado);
-                        }
-                        if (pdfBtn) {
-                            pdfBtn.style.display = cervezas.length ? 'inline-block' : 'none';
-                            pdfBtn.setAttribute('data-estado', estado);
-                            // si tenés endpoint para pdf ajustar href
-                            pdfBtn.href = '/cervezas/exportar-estado-pdf/' + encodeURIComponent(estado);
-                        }
+
+                        // ✅ Mostrar botón de descarga solo si hay resultados
+                        const excelBtn = document.getElementById('btnDescargarExcel');
+                        excelBtn.style.display = cervezas.length > 0 ? 'inline-block' : 'none';
                     } else {
                         document.getElementById('lista-cervezas-estado').innerHTML =
                             '<div class="alert alert-warning">No se encontraron cervezas en el estado seleccionado</div>';
+                        document.getElementById('btnDescargarExcel').style.display = 'none';
                     }
                 })
+
+                    
                 .catch(err => {
                     console.error('Error buscarPorEstado:', err);
                     document.getElementById('lista-cervezas-estado').innerHTML =
@@ -533,6 +536,20 @@ function getBadgeClass(estado) {
             }
         }
     });
+
+
+    function descargarExcelPorEstado() {
+        const estado = document.getElementById('buscar-estado').value;
+        if (!estado) {
+            alert("Seleccione un estado primero");
+            return;
+        }
+
+        // descarga directa del backend
+        window.location.href = '/cervezas/exportar-estado-excel/' + encodeURIComponent(estado);
+        }
+
+
 
     // Cargar automáticamente al iniciar
     cargarCervezas();

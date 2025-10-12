@@ -1,5 +1,14 @@
 package com.sca.service.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -157,5 +166,36 @@ Logger log = LoggerFactory.getLogger(String.class);
 		}
 		return respuesta;
 	}
+
+	@Override
+public ByteArrayInputStream exportarPorEstadoAExcel(String estado) throws IOException {
+    List<Cerveza> cervezas = cervezaRepository.findByEstado(estado);
+
+    try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        Sheet sheet = workbook.createSheet("Cervezas_" + estado);
+        Row header = sheet.createRow(0);
+        String[] columnas = {"ID", "Nombre", "Tipo", "Grado Alc.", "IBU", "Precio/L", "Estado", "Descripción"};
+        for (int i = 0; i < columnas.length; i++) {
+            header.createCell(i).setCellValue(columnas[i]);
+        }
+
+        int fila = 1;
+        for (Cerveza c : cervezas) {
+            Row row = sheet.createRow(fila++);
+            row.createCell(0).setCellValue(c.getId());
+            row.createCell(1).setCellValue(c.getNombreCerveza());
+            row.createCell(2).setCellValue(c.getTipoCerveza());
+            row.createCell(3).setCellValue(c.getGradoAlcoholico());
+            row.createCell(4).setCellValue(c.getAmargorIbu());
+            row.createCell(5).setCellValue(c.getPrecioPorLitro());
+            row.createCell(6).setCellValue(c.getEstado());
+            row.createCell(7).setCellValue(c.getDescripcion());
+        }
+
+        workbook.write(out);
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+}
+
 
 }
