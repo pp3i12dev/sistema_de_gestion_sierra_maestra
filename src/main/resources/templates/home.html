@@ -1,59 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aqua Nova - Ocean Explorer Portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link th:href="@{/css/StyleCerv.css}" rel="stylesheet">
-
-
-</head>
-<body>
-    <div id="underwater-bg"></div>
-
-    <nav id="navbar">
-        <div class="nav-container">
-            
-            <a href="#home" class="logo-container">
-                <img th:src="@{/images/logo.jpg}" alt="Logo" style="height: 4rem; width: 4rem; border-radius: 50%; object-fit: cover; vertical-align:middle; margin-right:8px;">               
-                <span class="logo-text">Sierra Maestra</span>
-                <p class="subtitle">Para todos la luz, para todos todo</p>
-            </a>
-            
-            <div class="mobile-menu-toggle" id="mobile-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            
-            <div class="nav-menu" id="nav-menu">
-                <ul>
-                    <li><a href="#home">INICIO</a></li>
-                    <li><a href="#sesion">INICIAR SESION</a></li>
-                    <li><a href="#cervezas">NUESTRAS CERVEZAS</a></li>
-                    <li><a href="#armarPedido">PEDIDO</a></li>
-                    <li><a href="#contact">CONTACTO</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <br>
-
-    <section id="home" class="hero">
-            <div class="hero-content">
-                    <img th:src="@{/images/logo.jpg}" alt="Logo" style="height:  40rem; border-radius: 55%; object-fit: cover; vertical-align:middle; margin-right:8px;">
-            </div>
-            <a href="#armarPedido   " class="scroll-btn">
-            <div class="scroll-btn-inner">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                  <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
-                </svg>
-            </div>
-            </a>
-    </section>
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::content})">
   <section th:fragment="content">
     <div class="row g-4 mb-3">
       <div class="col-12 col-lg-4">
@@ -96,44 +42,26 @@
       <div class="col-12 col-lg-8">
         <div class="row g-3">
           <!-- Producción -->
-<!-- Producción -->
-<div class="col-12">
-  <div class="card">
-    <div class="card-body d-flex justify-content-between align-items-center">
-      <h5 class="card-title mb-0">Producción</h5>
-      <small class="text-muted">Lotes, Maduración, Cervezas y Accesorios</small>
-    </div>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item">
-        <a th:href="@{/cervezas}" class="text-decoration-none">
-          <i class="bi bi-droplet me-2"></i>Cervezas
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a th:href="@{/lotes}" class="text-decoration-none">
-          <i class="bi bi-box-seam me-2"></i>Lotes
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a th:href="@{/maduradores}" class="text-decoration-none">
-          <i class="bi bi-person-lines-fill me-2"></i>Maduradores
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a th:href="@{/barriles}" class="text-decoration-none">
-          <i class="bi bi-box2-fill me-2"></i>Barriles
-        </a>
-      </li>
-      <!-- Nuevo enlace a accesorios -->
-      <li class="list-group-item">
-        <a th:href="@{/accesorios}" class="text-decoration-none">
-          <i class="bi bi-tools me-2"></i>Accesorios
-        </a>
-      </li>
-    </ul>
-  </div>
-</div>
-
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Producción</h5>
+                <small class="text-muted">Lotes, Maduración, Cervezas y Accesorios</small>
+              </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item"><a th:href="@{/cervezas}" class="text-decoration-none"><i class="bi bi-droplet me-2"></i>Cervezas</a></li>
+                <li class="list-group-item"><a th:href="@{/lotes}" class="text-decoration-none"><i class="bi bi-box-seam me-2"></i>Lotes</a></li>
+                <li class="list-group-item"><a th:href="@{/maduradores}" class="text-decoration-none"><i class="bi bi-person-lines-fill me-2"></i>Maduradores</a></li>
+                <li class="list-group-item"><a th:href="@{/barriles}" class="text-decoration-none"><i class="bi bi-box2-fill me-2"></i>Barriles</a></li>
+                <!-- Nuevo enlace a accesorios -->
+                <li class="list-group-item">
+                  <a th:href="@{/accesorios}" class="text-decoration-none">
+                    <i class="bi bi-tools me-2"></i>Accesorios
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
 
           <!-- Ventas -->
           <div class="col-12">
@@ -203,9 +131,7 @@
       </div>
     </div>
   </section>
-<script>"{@/js/htmx.local.js}"</script> 
-</body>
-  </html>
+</html>
 
 <script>
 (function() {
@@ -295,51 +221,6 @@
     return String(unsafe).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   }
-
-  
-        // Simple ocean particles
-        function createOceanParticles() {
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'ocean-particle';
-                particle.style.width = Math.random() * 4 + 2 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 15 + 's';
-                particle.style.animationDuration = Math.random() * 5 + 12 + 's';
-                underwaterBg.appendChild(particle);
-            }}
-            // Research Tabs Functionality - Fixed
-        const researchTabs = document.querySelectorAll('.research-tab');
-        const researchContents = document.querySelectorAll('.research-content');
-
-        if (researchTabs.length > 0 && researchContents.length > 0) {
-            researchTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Remove active class from all tabs and contents
-                    researchTabs.forEach(t => t.classList.remove('active'));
-                    researchContents.forEach(c => c.classList.remove('active'));
-
-                    // Add active class to clicked tab
-                    tab.classList.add('active');
-
-                    // Show corresponding content
-                    const tabId = tab.getAttribute('data-tab');
-                    const targetContent = document.getElementById(tabId);
-                    if (targetContent) {
-                        targetContent.classList.add('active');
-                    }
-                });
-            });
-        }
-
-        // Simple initialization
-        createBubbles();
-        createOceanParticles();
-
-        // Simple regeneration
-        setInterval(createBubbles, 20000); // Every 20 seconds
-        setInterval(createOceanParticles, 30000); // Every 30 seconds
 
   document.addEventListener("DOMContentLoaded", function(){
     loadLowStock();
