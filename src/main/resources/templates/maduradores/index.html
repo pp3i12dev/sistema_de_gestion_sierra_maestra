@@ -27,6 +27,11 @@
             <option value="Inactivo">Inactivo</option>
         </select>
         <button class="btn btn-primary" onclick="buscarMaduradoresPorEstado()">Buscar</button>
+
+        <button class="btn btn-success ms-2" onclick="descargarMaduradoresPorEstado()">
+            Descargar Excel
+        </button>
+
       </div>
 
     </div>
@@ -123,6 +128,16 @@ function buscarMaduradoresPorEstado() {
       document.getElementById('resultado-busqueda-estado').innerHTML = '<div class="alert alert-danger">Error al buscar maduradores</div>';
     });
 }
+
+
+    function descargarMaduradoresPorEstado() {
+        const estado = document.getElementById('buscarEstado').value;
+        if (!estado) return alert('Seleccione un estado');
+
+        // Abrir la descarga en una nueva ventana
+        window.open(`/maduradores/exportarExcel/${encodeURIComponent(estado)}`, '_blank');
+    }
+
 
     
     document.addEventListener('DOMContentLoaded', ()=>{ htmx.ajax('GET','/maduradores/list','#maduradores-list'); });</script>
