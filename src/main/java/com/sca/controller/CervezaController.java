@@ -1,22 +1,17 @@
 package com.sca.controller;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.websocket.server.PathParam;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +22,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.sca.model.Cerveza;
 import com.sca.model.Respuesta;
+import com.sca.service.CervezaService;
 import com.sca.service.impl.CervezaServiceImpl;
 
 import io.swagger.annotations.Api;
@@ -40,6 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 @CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 @Slf4j
 public class CervezaController {
+
+    @Autowired
+    private CervezaService cervezaService;
+
 
     @Autowired
     private CervezaServiceImpl cervezasServiceImpl;
@@ -124,35 +125,24 @@ public class CervezaController {
 
 
     @GetMapping("/cervezas/exportar-estado-excel/{estado}")
-    public void exportarExcel(@PathVariable String estado, HttpServletResponse response) throws IOException {
-    List<Cerveza> cervezas = (List<Cerveza>) cervezasServiceImpl.findByEstado(estado).getData();
+public ResponseEntity<byte[]> exportarCervezaPorEstadoExcel(@PathVariable String estado) {
+    try {
+        ByteArrayInputStream stream = cervezaService.exportarPorEstadoAExcel(estado);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=cervezas_" + estado + ".xlsx");
 
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Cervezas");
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(stream.readAllBytes());
 
-        // Cabecera
-        Row header = sheet.createRow(0);
-        header.createCell(0).setCellValue("ID");
-        header.createCell(1).setCellValue("Nombre");
-        header.createCell(2).setCellValue("Tipo");
-        header.createCell(3).setCellValue("Estado");
-
-        // Filas
-        int rowNum = 1;
-        for (Cerveza c : cervezas) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(c.getId());
-            row.createCell(1).setCellValue(c.getNombreCerveza());
-            row.createCell(2).setCellValue(c.getTipoCerveza());
-            row.createCell(3).setCellValue(c.getEstado());
-        }
-
-        // Configurar respuesta
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment; filename=cervezas_" + estado + ".xlsx");
-
-        workbook.write(response.getOutputStream());
-        workbook.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.internalServerError().build();
     }
+}
+
+
 }

@@ -1,12 +1,23 @@
 package com.sca.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.sca.dto.BarrilDTO;
 import com.sca.model.Barril;
@@ -17,8 +28,6 @@ import com.sca.service.impl.BarrilServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @RestController
 @Api(tags = "Barril")
@@ -32,7 +41,7 @@ public class BarrilController {
     @PostMapping(value = "/addBarril", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Agrega un Barril", notes = "Esta operación agrega un Barril a la base de datos")
     public ResponseEntity<Object> addBarril(@RequestBody @Validated Barril barril,
-                                            BindingResult bindingResult) throws BindException {
+        BindingResult bindingResult) throws BindException {
         return barrilServiceImpl.save(barril, bindingResult);
     }
 
@@ -57,7 +66,7 @@ public class BarrilController {
     @PutMapping(value = "/updateBarril", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Actualizar Barril", notes = "Actualiza un Barril en la base de datos")
     public ResponseEntity<Object> updateBarril(@RequestBody Barril barril,
-                                               BindingResult bindingResult) throws BindException {
+        BindingResult bindingResult) throws BindException {
         return barrilServiceImpl.update(barril, bindingResult);
     }
 
@@ -92,4 +101,26 @@ public class BarrilController {
     public ResponseEntity<List<BarrilDTO>> getBarrilesDisponiblesDTO(@PathVariable Long cervezaId) {
         return ResponseEntity.ok(barrilServiceImpl.findDisponiblesDTOByCerveza(cervezaId));
     }
+
+
+    @GetMapping(value = "/barriles/buscarPorId")
+    public String buscarPorId(@RequestParam Long id, org.springframework.ui.Model model) {
+        Respuesta respuesta = barrilServiceImpl.findById(id);
+        model.addAttribute("items", respuesta.getData() != null ? List.of(respuesta.getData()) : List.of());
+        return "barril/fragments :: lista";
+    }
+
+    @GetMapping(value = "/barril/findByEstado/{estado}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> getBarrilesByEstado(@PathVariable String estado) {
+        Respuesta respuesta = barrilServiceImpl.findByEstado(estado);
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @GetMapping("/barriles/exportarExcel/{estado}")
+    public ResponseEntity<byte[]> exportarBarrilesPorEstadoExcel(@PathVariable String estado) {
+        return barrilServiceImpl.exportarBarrilesPorEstadoExcel(estado);
+    }
+
+
+
 }

@@ -1,8 +1,13 @@
 package com.sca.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,7 +114,7 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
             respuesta.setDescripcion("Datos del Accesorio");
-            respuesta.setData(accesorioRepository.findById(id));
+            respuesta.setData(accesorioRepository.findById(id).orElse(null));
         } catch (Exception e) {
             respuesta.setCodigo("400");
             respuesta.setStatus("Error");
@@ -147,18 +152,19 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
     }
 
     @Override
-    public Respuesta findAccesoriosPorEstado(String estado) {
-        respuesta = new Respuesta();
+    public Respuesta findAccesorioPorEstado(String estado) {
+        Respuesta respuesta = new Respuesta();
         try {
+            List<Accesorio> accesorios = accesorioRepository.findAll()
+                .stream()
+                .filter(a -> a.getEstado() != null && a.getEstado().equalsIgnoreCase(estado))
+                .collect(Collectors.toList());
+
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
             respuesta.setDescripcion("Datos de los Accesorios por Estado");
-            respuesta.setData(
-                accesorioRepository.findAll()
-                                   .stream()
-                                   .filter(a -> estado.equalsIgnoreCase(a.getEstado()))
-                                   .collect(Collectors.toList())
-            );
+            respuesta.setData(accesorios);
+
         } catch (Exception e) {
             respuesta.setCodigo("400");
             respuesta.setStatus("Error");
@@ -167,6 +173,8 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
         }
         return respuesta;
     }
+
+
 
     @Override
     public void marcarComoAlquilados(List<Long> ids) {
@@ -212,6 +220,54 @@ public Respuesta findDisponiblesByNombre(String nombre) {
     }
     return respuesta;
 }
+
+
+@Override
+public ResponseEntity<byte[]> exportarAccesoriosExcel() {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+        Sheet sheet = workbook.createSheet("Accesorios");
+
+        // Crear fila de encabezado
+        Row header = sheet.createRow(0);
+        String[] columnas = {"ID", "Nombre", "Estado", "Notas"};
+        for (int i = 0; i < columnas.length; i++) {
+            Cell cell = header.createCell(i);
+            cell.setCellValue(columnas[i]);
+        }
+
+        // Llenar datos
+        List<Accesorio> accesorios = accesorioRepository.findAll();
+        int rowNum = 1;
+        for (Accesorio a : accesorios) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(a.getId());
+            row.createCell(1).setCellValue(a.getNombre());
+            row.createCell(2).setCellValue(a.getEstado());
+            row.createCell(3).setCellValue(a.getNotas() != null ? a.getNotas() : "");
+        }
+
+        // Ajustar ancho de columnas
+        for (int i = 0; i < columnas.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Convertir workbook a byte[]
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=accesorios.xlsx");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .body(out.toByteArray());
+
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
+
 
 
 }

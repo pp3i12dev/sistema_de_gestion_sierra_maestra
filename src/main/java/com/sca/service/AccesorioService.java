@@ -29,4 +29,10 @@ public interface AccesorioService {
 
     // 🔹 Nuevo método
     void marcarComoDisponibles(List<Long> accesorioIds);
+
+    Respuesta findAccesorioPorEstado(String estado);
+
+    // 🔹 Nuevo método para exportar a Excel
+    ResponseEntity<byte[]> exportarAccesoriosExcel();
+
 }

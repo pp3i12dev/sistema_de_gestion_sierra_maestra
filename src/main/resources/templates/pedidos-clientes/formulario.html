@@ -745,9 +745,6 @@ async function submitForm(e) {
 
     if (productosAgregados.length === 0) { mensaje('Debe agregar al menos un producto', 'error'); return; }
 
-    const idVal = pedidoClienteIdInput.value ? Number(pedidoClienteIdInput.value) : 0;
-    const total = Number(recalcTotal()) || 0;
-
     // Preparar productos para el payload
     const cervezas = [];
     const accesorios = [];
@@ -759,6 +756,15 @@ async function submitForm(e) {
         accesorios.push({ id: Number(producto.accesorio.id) });
       }
     });
+
+    // 🔹 VALIDACIÓN DE NEGOCIO: Verificar que si hay accesorios, debe haber al menos una cerveza
+    if (accesorios.length > 0 && cervezas.length === 0) {
+      mensaje('No se puede crear un pedido de accesorios sin al menos una cerveza', 'error');
+      return;
+    }
+
+    const idVal = pedidoClienteIdInput.value ? Number(pedidoClienteIdInput.value) : 0;
+    const total = Number(recalcTotal()) || 0;
 
     const payload = {
       id: idVal,

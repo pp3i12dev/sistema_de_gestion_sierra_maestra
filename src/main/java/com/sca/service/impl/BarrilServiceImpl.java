@@ -1,13 +1,19 @@
 package com.sca.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindException;
@@ -150,17 +156,13 @@ public class BarrilServiceImpl extends ResponseEntityExceptionHandler implements
     // Buscar por Estado
     @Override
     public Respuesta findByEstado(String estado) {
-        respuesta = new Respuesta();
+        Respuesta respuesta = new Respuesta();
         try {
+            List<Barril> lista = barrilRepository.findByEstado(estado);
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
-            respuesta.setDescripcion("Datos de los Barriles por Estado");
-            respuesta.setData(
-                barrilRepository.findAll()
-                                .stream()
-                                .filter(n -> n.getEstado().equals(estado))
-                                .collect(Collectors.toList())
-            );
+            respuesta.setDescripcion("Barriles con estado: " + estado);
+            respuesta.setData(lista);
         } catch (Exception e) {
             respuesta.setCodigo("400");
             respuesta.setStatus("Error");
@@ -169,6 +171,7 @@ public class BarrilServiceImpl extends ResponseEntityExceptionHandler implements
         }
         return respuesta;
     }
+
 
     // Buscar por Lote
     @Override
@@ -268,6 +271,52 @@ public class BarrilServiceImpl extends ResponseEntityExceptionHandler implements
             }
         });
     }
+
+
+    @Override
+    public ResponseEntity<byte[]> exportarBarrilesPorEstadoExcel(String estado) {
+        List<Barril> lista = barrilRepository.findByEstado(estado);
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Barriles_" + estado);
+
+            // Cabecera
+            Row header = sheet.createRow(0);
+            header.createCell(0).setCellValue("ID");
+            header.createCell(1).setCellValue("Litros");
+            header.createCell(2).setCellValue("Estado");
+            header.createCell(3).setCellValue("Notas");
+            header.createCell(4).setCellValue("Lote ID");
+
+            // Filas
+            int rowNum = 1;
+            for (Barril b : lista) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(b.getId());
+                row.createCell(1).setCellValue(b.getLitros() != null ? b.getLitros() : 0);
+                row.createCell(2).setCellValue(b.getEstado() != null ? b.getEstado() : "");
+                row.createCell(3).setCellValue(b.getNotas() != null ? b.getNotas() : "");
+                row.createCell(4).setCellValue(b.getLote() != null ? b.getLote().getId() : 0);
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=Barriles_" + estado + ".xlsx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(out.toByteArray());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+}
+
 
 
 }

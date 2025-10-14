@@ -1,5 +1,16 @@
 package com.sca.service.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,4 +159,62 @@ Logger log = LoggerFactory.getLogger(String.class);
 
 		return new ResponseEntity<Object>(respuesta, null, HttpStatus.CREATED);
 	}
+
+
+	public Respuesta findLotesPorEstado(String estado) {
+		Respuesta respuesta = new Respuesta();
+		try {
+			List<Lote> lotes = loteRepository.findAll()
+				.stream()
+				.filter(l -> estado.equalsIgnoreCase(l.getEstado()))
+				.collect(Collectors.toList());
+
+			respuesta.setCodigo("200");
+			respuesta.setStatus("Ok");
+			respuesta.setDescripcion("Lotes por estado");
+			respuesta.setData(lotes);
+		} catch (Exception e) {
+			respuesta.setCodigo("400");
+			respuesta.setStatus("Error");
+			respuesta.setDescripcion("No se pudieron mostrar los lotes por estado");
+			respuesta.setData(e.getMessage());
+		}
+		return respuesta;
+}
+
+
+public ByteArrayInputStream exportarPorEstadoAExcel(String estado) throws IOException {
+    List<Lote> lotes = loteRepository.findByEstado(estado);
+
+    try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        Sheet sheet = workbook.createSheet("Lotes_" + estado);
+
+        // Encabezado
+        Row header = sheet.createRow(0);
+        String[] columnas = {"ID", "Cerveza", "Cantidad (L)", "Estado", "Notas", "Fecha Carga", "Fecha Madurador", "Fecha Vencimiento"};
+        for (int i = 0; i < columnas.length; i++) {
+            Cell cell = header.createCell(i);
+            cell.setCellValue(columnas[i]);
+        }
+
+        // Datos
+        int rowIdx = 1;
+        for (Lote lote : lotes) {
+            Row row = sheet.createRow(rowIdx++);
+            row.createCell(0).setCellValue(lote.getId());
+            row.createCell(1).setCellValue(lote.getCerveza() != null ? lote.getCerveza().getNombreCerveza() : "-");
+            row.createCell(2).setCellValue(lote.getCantidadLitros() != null ? lote.getCantidadLitros() : 0);
+            row.createCell(3).setCellValue(lote.getEstado());
+            row.createCell(4).setCellValue(lote.getNotas() != null ? lote.getNotas() : "-");
+            row.createCell(5).setCellValue(lote.getFechaCarga() != null ? lote.getFechaCarga().toString() : "-");
+            row.createCell(6).setCellValue(lote.getFechaCargaMadurador() != null ? lote.getFechaCargaMadurador().toString() : "-");
+            row.createCell(7).setCellValue(lote.getFechaVencimiento() != null ? lote.getFechaVencimiento().toString() : "-");
+        }
+
+        workbook.write(out);
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+}
+
+
 }

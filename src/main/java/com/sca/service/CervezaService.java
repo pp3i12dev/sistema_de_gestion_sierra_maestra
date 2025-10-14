@@ -1,5 +1,8 @@
 package com.sca.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -20,4 +23,7 @@ public interface CervezaService {
 	public Respuesta findById(Long id);
 
 	public Respuesta findByEstado(String estado);
+
+	ByteArrayInputStream exportarPorEstadoAExcel(String estado) throws IOException;
+
 }

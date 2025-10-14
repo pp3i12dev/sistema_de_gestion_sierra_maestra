@@ -1,12 +1,14 @@
 package com.sca.controller;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 import javax.websocket.server.PathParam;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sca.model.Lote;
@@ -68,4 +71,34 @@ public class LoteController {
 	public ResponseEntity<Object> updateLote(@RequestBody Lote lote, BindingResult bindingResult) throws BindException {
 		return lotesServiceImpl.update(lote, bindingResult);
 	}
+
+	@GetMapping(value = "/lotes/buscarPorId", produces = MediaType.TEXT_HTML_VALUE)
+	public String buscarPorId(@RequestParam Long id, Model model) {
+		Lote lote = (Lote) lotesServiceImpl.findById(id).getData();
+		model.addAttribute("lote", lote);
+		return "lotes/fragments :: view";
+	}
+
+	@GetMapping(value = "/findLotesPorEstado/{estado}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public Respuesta findLotesPorEstado(@PathVariable String estado) {
+		return lotesServiceImpl.findLotesPorEstado(estado);
+	}
+
+
+	@GetMapping("/lotes/exportarExcel/{estado}")
+	public ResponseEntity<byte[]> exportarLotesPorEstadoExcel(@PathVariable String estado) throws IOException {
+		ByteArrayInputStream stream = lotesServiceImpl.exportarPorEstadoAExcel(estado);
+
+
+		org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+		headers.add("Content-Disposition", "attachment; filename=lotes_" + estado + ".xlsx");
+
+		return ResponseEntity
+				.ok()
+				.headers(headers)
+				.body(stream.readAllBytes());
+	}
+
+
+
 }

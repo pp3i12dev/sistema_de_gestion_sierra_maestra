@@ -174,4 +174,70 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
         }
         return respuesta;
     }
+
+    /*
+     * MÉTODO: registrarCliente()
+     * Descripción: Registra un nuevo cliente con validaciones de unicidad
+     * Valida que el DNI y email no estén ya registrados en el sistema
+     * Parámetros: cliente (Cliente), bindingResult (BindingResult)
+     * Retorna: ResponseEntity<Object> con resultado del registro
+     */
+    @Override
+    public ResponseEntity<Object> registrarCliente(Cliente cliente, BindingResult bindingResult) throws BindException {
+        respuesta = new Respuesta();
+        try {
+            // VALIDACIONES DE UNICIDAD
+            // Verificar si el DNI ya existe
+            if (clienteRepository.existsByDocumento(cliente.getDocumento())) {
+                respuesta.setCodigo("409");
+                respuesta.setStatus("Conflict");
+                respuesta.setDescripcion("El DNI ya está registrado en el sistema");
+                respuesta.setData("El documento " + cliente.getDocumento() + " ya está en uso");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
+            }
+
+            // Verificar si el email ya existe
+            if (clienteRepository.existsByMail(cliente.getMail())) {
+                respuesta.setCodigo("409");
+                respuesta.setStatus("Conflict");
+                respuesta.setDescripcion("El email ya está registrado en el sistema");
+                respuesta.setData("El email " + cliente.getMail() + " ya está en uso");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
+            }
+
+            // CONFIGURACIÓN INICIAL DEL CLIENTE
+            // Establecer valores por defecto para nuevos clientes
+            cliente.setActivo(true);  // Cliente activo por defecto
+            cliente.setTipo("Cliente");  // Tipo por defecto
+            cliente.setLegajo("CLI-" + System.currentTimeMillis());  // Legajo único generado
+
+            // GUARDAR EL CLIENTE
+            Cliente clienteGuardado = clienteRepository.save(cliente);
+            
+            // RESPUESTA DE ÉXITO
+            respuesta.setCodigo("201");
+            respuesta.setStatus("Created");
+            respuesta.setDescripcion("Cliente registrado exitosamente");
+            respuesta.setData(clienteGuardado);
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
+
+        } catch (Exception e) {
+            // MANEJO DE ERRORES
+            respuesta.setCodigo(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+            respuesta.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
+            respuesta.setDescripcion("Error al registrar el cliente");
+            
+            // Si hay errores de validación, mostrarlos
+            if (bindingResult.hasErrors()) {
+                bindingResult.getAllErrors().forEach(r -> resp = resp + r.getDefaultMessage() + "; ");
+                respuesta.setData(resp);
+                resp = "";
+            } else {
+                respuesta.setData(e.getMessage());
+            }
+            
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+        }
+    }
 }

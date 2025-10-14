@@ -33,6 +33,18 @@ public class PedidoClienteServiceImpl extends ResponseEntityExceptionHandler imp
     public ResponseEntity<Object> save(PedidoCliente pedidoCliente, BindingResult bindingResult) throws BindException {
         respuesta = new Respuesta();
         try {
+            // 🔹 VALIDACIÓN DE NEGOCIO: Verificar que si hay accesorios, debe haber al menos una cerveza
+            boolean tieneAccesorios = pedidoCliente.getAccesorios() != null && !pedidoCliente.getAccesorios().isEmpty();
+            boolean tieneCervezas = pedidoCliente.getCervezas() != null && !pedidoCliente.getCervezas().isEmpty();
+            
+            if (tieneAccesorios && !tieneCervezas) {
+                respuesta.setCodigo(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                respuesta.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
+                respuesta.setDescripcion("No se puede crear un pedido de accesorios sin al menos una cerveza");
+                respuesta.setData("Los accesorios deben ir acompañados de cerveza");
+                return new ResponseEntity<Object>(respuesta, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            }
+            
             // Limpiar relaciones para evitar errores de objetos transitorios
             pedidoCliente.setAccesorios(null);
             pedidoCliente.setCervezas(null);
@@ -116,6 +128,18 @@ public class PedidoClienteServiceImpl extends ResponseEntityExceptionHandler imp
     public ResponseEntity<Object> update(PedidoCliente pedidoCliente, BindingResult bindingResult) throws BindException {
         respuesta = new Respuesta();
         try {
+            // 🔹 VALIDACIÓN DE NEGOCIO: Verificar que si hay accesorios, debe haber al menos una cerveza
+            boolean tieneAccesorios = pedidoCliente.getAccesorios() != null && !pedidoCliente.getAccesorios().isEmpty();
+            boolean tieneCervezas = pedidoCliente.getCervezas() != null && !pedidoCliente.getCervezas().isEmpty();
+            
+            if (tieneAccesorios && !tieneCervezas) {
+                respuesta.setCodigo(String.valueOf(HttpStatus.BAD_REQUEST.value()));
+                respuesta.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
+                respuesta.setDescripcion("No se puede crear un pedido de accesorios sin al menos una cerveza");
+                respuesta.setData("Los accesorios deben ir acompañados de cerveza");
+                return new ResponseEntity<Object>(respuesta, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            }
+            
             // Limpiar relaciones para evitar errores de objetos transitorios
             pedidoCliente.setAccesorios(null);
             pedidoCliente.setCervezas(null);
