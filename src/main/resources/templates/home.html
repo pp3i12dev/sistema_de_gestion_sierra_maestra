@@ -1,83 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aqua Nova - Ocean Explorer Portfolio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link th:href="@{/css/StyleCerv.css}" rel="stylesheet">
-
-
-</head>
-<body>
-    <div id="underwater-bg"></div>
-
-    <nav id="navbar">
-        <div class="nav-container">
-            
-            <a href="#home" class="logo-container">
-                <img th:src="@{/images/logo.jpg}" alt="Logo" style="height: 4rem; width: 4rem; border-radius: 50%; object-fit: cover; vertical-align:middle; margin-right:8px;">               
-                <span class="logo-text">Sierra Maestra</span>
-                <p class="subtitle">Para todos la luz, para todos todo</p>
-            </a>
-            
-            <div class="mobile-menu-toggle" id="mobile-toggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            
-            <div class="nav-menu" id="nav-menu">
-                <ul>
-                    <li><a href="#home">INICIO</a></li>
-                    <li><a href="#sesion">INICIAR SESION</a></li>
-                    <li><a href="#cervezas">NUESTRAS CERVEZAS</a></li>
-                    <li><a href="#armarPedido">PEDIDO</a></li>
-                    <li><a href="#contact">CONTACTO</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <br>
-
-    <section id="home" class="hero">
-            <div class="hero-content">
-                    <img th:src="@{/images/logo.jpg}" alt="Logo" style="height:  40rem; border-radius: 55%; object-fit: cover; vertical-align:middle; margin-right:8px;">
-            </div>
-            <a href="#armarPedido   " class="scroll-btn">
-            <div class="scroll-btn-inner">
-                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                  <path d="M7 13l5 5 5-5M7 6l5 5 5-5"/>
-                </svg>
-            </div>
-            </a>
-    </section>
+<!doctype html>
+<!-- 
+  PÁGINA PRINCIPAL DEL SISTEMA DE GESTIÓN SIERRA MAESTRA
+  Esta es la página de inicio que muestra el dashboard principal con:
+  - Mensaje de bienvenida
+  - Estado del sistema
+  - Alertas de stock
+  - Enlaces a todos los módulos del sistema
+-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::content})">
   <section th:fragment="content">
+    <!-- 
+      SECCIÓN SUPERIOR: Dashboard con 3 tarjetas principales
+      - Bienvenida
+      - Estado del sistema  
+      - Alertas de stock con configuración
+    -->
     <div class="row g-4 mb-3">
+          <!-- TARJETA DE BIENVENIDA -->
       <div class="col-12 col-lg-4">
         <div class="card p-3 h-100">
           <h2 class="m-0">Bienvenido</h2>
           <p class="muted">Seleccione una sección para empezar.</p>
+          <!-- Botón de registro para nuevos clientes -->
+          <div class="mt-3">
+            <a th:href="@{/registro}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-person-plus me-2"></i>Crear Cuenta
+            </a>
+          </div>
         </div>
       </div>
+      <!-- TARJETA DE ESTADO DEL SISTEMA -->
       <div class="col-12 col-lg-4 d-flex align-items-start">
         <div class="card p-3 w-100 h-100">
           <h6 class="mb-2">Estado del sistema</h6>
           <p class="small text-muted mb-0">Última actualización:
+            <!-- Muestra la fecha y hora actual usando Thymeleaf -->
             <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}">–</span>
           </p>
         </div>
       </div>
+      
+      <!-- TARJETA DE ALERTAS DE STOCK -->
       <div class="col-12 col-lg-4 d-flex align-items-start">
         <div class="card p-3 w-100 h-100" id="lowstock-card">
           <h6 class="mb-2">Alertas de Stock</h6>
+          <!-- Contenedor donde se mostrarán las alertas de stock bajo -->
           <div id="lowstock-content">
             <p class="small text-muted mb-0">Cargando alertas...</p>
           </div>
+          
+          <!-- FORMULARIO PARA CONFIGURAR MÍNIMOS DE STOCK -->
           <h6 class="mt-3">Configurar mínimos</h6>
           <form id="threshold-form" class="d-flex gap-2">
+            <!-- Selector de categoría para configurar el mínimo -->
             <select id="categoria" class="form-select form-select-sm">
               <option value="cervezas">Cerveza</option>
               <option value="barriles">Barril Disponible</option>
@@ -85,80 +60,81 @@
               <option value="lotes">Lote</option>
               <option value="maduradores">Madurador</option>
             </select>
+            <!-- Input para ingresar el valor mínimo -->
             <input type="number" id="minimo" class="form-control form-control-sm" placeholder="Mínimo">
+            <!-- Botón para guardar la configuración -->
             <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
           </form>
         </div>
       </div>
     </div>
 
+    <!-- 
+      SECCIÓN PRINCIPAL: Enlaces a todos los módulos del sistema
+      Dividida en dos columnas: izquierda (módulos principales) y derecha (accesos rápidos + admin)
+    -->
     <div class="row g-4 align-items-stretch">
+      <!-- COLUMNA IZQUIERDA: Módulos principales del sistema -->
       <div class="col-12 col-lg-8">
         <div class="row g-3">
-          <!-- Producción -->
-<!-- Producción -->
-<div class="col-12">
-  <div class="card">
-    <div class="card-body d-flex justify-content-between align-items-center">
-      <h5 class="card-title mb-0">Producción</h5>
-      <small class="text-muted">Lotes, Maduración, Cervezas y Accesorios</small>
-    </div>
-    <ul class="list-group list-group-flush">
-      <li class="list-group-item">
-        <a th:href="@{/cervezas}" class="text-decoration-none">
-          <i class="bi bi-droplet me-2"></i>Cervezas
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a th:href="@{/lotes}" class="text-decoration-none">
-          <i class="bi bi-box-seam me-2"></i>Lotes
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a th:href="@{/maduradores}" class="text-decoration-none">
-          <i class="bi bi-person-lines-fill me-2"></i>Maduradores
-        </a>
-      </li>
-      <li class="list-group-item">
-        <a th:href="@{/barriles}" class="text-decoration-none">
-          <i class="bi bi-box2-fill me-2"></i>Barriles
-        </a>
-      </li>
-      <!-- Nuevo enlace a accesorios -->
-      <li class="list-group-item">
-        <a th:href="@{/accesorios}" class="text-decoration-none">
-          <i class="bi bi-tools me-2"></i>Accesorios
-        </a>
-      </li>
-    </ul>
-  </div>
-</div>
+          <!-- TARJETA DE PRODUCCIÓN -->
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Producción</h5>
+                <small class="text-muted">Lotes, Maduración, Cervezas y Accesorios</small>
+              </div>
+              <!-- Lista de enlaces a módulos de producción -->
+              <ul class="list-group list-group-flush">
+                <!-- Gestión de cervezas -->
+                <li class="list-group-item"><a th:href="@{/cervezas}" class="text-decoration-none"><i class="bi bi-droplet me-2"></i>Cervezas</a></li>
+                <!-- Gestión de lotes de producción -->
+                <li class="list-group-item"><a th:href="@{/lotes}" class="text-decoration-none"><i class="bi bi-box-seam me-2"></i>Lotes</a></li>
+                <!-- Gestión de maduradores -->
+                <li class="list-group-item"><a th:href="@{/maduradores}" class="text-decoration-none"><i class="bi bi-person-lines-fill me-2"></i>Maduradores</a></li>
+                <!-- Gestión de barriles -->
+                <li class="list-group-item"><a th:href="@{/barriles}" class="text-decoration-none"><i class="bi bi-box2-fill me-2"></i>Barriles</a></li>
+                <!-- Gestión de accesorios (agregado recientemente) -->
+                <li class="list-group-item">
+                  <a th:href="@{/accesorios}" class="text-decoration-none">
+                    <i class="bi bi-tools me-2"></i>Accesorios
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
 
-
-          <!-- Ventas -->
+          <!-- TARJETA DE VENTAS Y CLIENTES -->
           <div class="col-12">
             <div class="card">
               <div class="card-body d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Ventas & Clientes</h5>
                 <small class="text-muted">Pedidos y clientes</small>
               </div>
+              <!-- Lista de enlaces a módulos de ventas -->
               <ul class="list-group list-group-flush">
+                <!-- Gestión de pedidos generales -->
                 <li class="list-group-item"><a th:href="@{/pedidos}" class="text-decoration-none"><i class="bi bi-basket-fill me-2"></i>Pedidos</a></li>
+                <!-- Gestión de pedidos específicos de clientes -->
                 <li class="list-group-item"><a th:href="@{/pedidos-clientes}" class="text-decoration-none"><i class="bi bi-cart-fill me-2"></i>Pedidos de Clientes</a></li>
+                <!-- Gestión de base de datos de clientes -->
                 <li class="list-group-item"><a th:href="@{/clientes}" class="text-decoration-none"><i class="bi bi-people-fill me-2"></i>Clientes</a></li>
               </ul>
             </div>
           </div>
 
-          <!-- Operaciones -->
+          <!-- TARJETA DE OPERACIONES -->
           <div class="col-12">
             <div class="card">
               <div class="card-body d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Operaciones</h5>
                 <small class="text-muted">Asistencias y reportes</small>
               </div>
+              <!-- Lista de enlaces a módulos de operaciones -->
               <ul class="list-group list-group-flush">
+                <!-- Registro de asistencias diarias -->
                 <li class="list-group-item"><a th:href="@{/asistencias}" class="text-decoration-none"><i class="bi bi-clock-fill me-2"></i>Asistencias</a></li>
+                <!-- Reportes y totales de asistencias -->
                 <li class="list-group-item"><a th:href="@{/asistencias-total}" class="text-decoration-none"><i class="bi bi-bar-chart-fill me-2"></i>Asistencia Total</a></li>
               </ul>
             </div>
@@ -166,61 +142,47 @@
         </div>
       </div>
 
-      <!-- Lateral -->
+      <!-- COLUMNA DERECHA: Accesos rápidos y administración -->
       <div class="col-12 col-lg-4 d-flex flex-column">
         <div class="row g-3 flex-grow-1 d-flex flex-column">
-          <!-- Accesos rápidos -->
+          <!-- TARJETA DE ACCESOS RÁPIDOS -->
           <div class="col-12">
             <div class="card bg-light p-3">
               <h6 class="mb-2">Accesos rápidos</h6>
+              <!-- Botones de acceso directo a funciones más utilizadas -->
               <div class="d-grid gap-2">
+                <!-- Acceso rápido a gestión de lotes -->
                 <a th:href="@{/lotes}" class="btn btn-outline-primary d-flex align-items-center"><i class="bi bi-box-seam me-2"></i>Nuevo / Listar Lotes</a>
+                <!-- Acceso rápido a creación de pedidos -->
                 <a th:href="@{/pedidos}" class="btn btn-outline-success d-flex align-items-center"><i class="bi bi-basket-fill me-2"></i>Crear Pedido</a>
+                <!-- Acceso rápido a pedidos de clientes -->
                 <a th:href="@{/pedidos-clientes}" class="btn btn-outline-warning d-flex align-items-center"><i class="bi bi-cart-fill me-2"></i>Pedidos de Clientes</a>
+                <!-- Acceso rápido a gestión de clientes -->
                 <a th:href="@{/clientes}" class="btn btn-outline-secondary d-flex align-items-center"><i class="bi bi-people-fill me-2"></i>Clientes</a>
+                <!-- Acceso rápido a gestión de cervezas -->
                 <a th:href="@{/cervezas}" class="btn btn-outline-info d-flex align-items-center"><i class="bi bi-droplet me-2"></i>Cervezas</a>
               </div>
             </div>
           </div>
 
-<!-- Sección del Popup -->
-    <section id="loginPopup" class="popup"> <!-- Popup Inicio de Sesión -->
-        <div class="popup-content">
-            <span class="close">&times;</span>
-            <h2>Iniciar Sesión</h2>
-
-            <form id="formCliente" class="formulario"> <!-- Formulario Cliente -->
-                <input type="email" placeholder="Ingrese su email" required>
-                <input type="password" placeholder="Ingrese su contraseña" required>
-                <a href="#">¿Olvidaste tu contraseña?</a>
-                <button type="submit">Registrarse</button>
-                <button type="submit">Iniciar Sesión</button>
-                <p><a href="#" id="switchAsociado">Soy Asociado</a></p>
-            </form>
-
-            <form id="formAsociado" class="formulario" style="display:none;"> <!-- Formulario Asociado -->
-                <input type="text" placeholder="Ingrese su legajo" required>
-                <input type="password" placeholder="Ingrese su contraseña" required>
-                <a href="#">¿Olvidaste tu contraseña?</a>
-                <button type="submit">Iniciar Sesión</button>
-                <p><a href="#" id="switchCliente">Soy Cliente</a></p>
-            </form>
-        </div>
-    </section>
-    <!-- Fin sección del Popup -->
-
-          <!-- Administración -->
+          <!-- TARJETA DE ADMINISTRACIÓN -->
           <div class="col-12 flex-grow-1">
             <div class="card h-100">
               <div class="card-body d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">Administración</h6>
                 <small class="text-muted">Configuración</small>
               </div>
+              <!-- Lista de enlaces a módulos de configuración del sistema -->
               <ul class="list-group list-group-flush">
+                <!-- Gestión de asociados/socios -->
                 <li class="list-group-item"><a th:href="@{/asociados}" class="text-decoration-none"><i class="bi bi-person-badge-fill me-2"></i>Asociados</a></li>
+                <!-- Gestión de categorías de productos -->
                 <li class="list-group-item"><a th:href="@{/categorias}" class="text-decoration-none"><i class="bi bi-tags-fill me-2"></i>Categorías</a></li>
+                <!-- Configuración de meses del año -->
                 <li class="list-group-item"><a th:href="@{/meses}" class="text-decoration-none"><i class="bi bi-calendar2-week-fill me-2"></i>Meses</a></li>
+                <!-- Configuración de sueldos básicos -->
                 <li class="list-group-item"><a th:href="@{/sueldos-basicos}" class="text-decoration-none"><i class="bi bi-cash-stack me-2"></i>Sueldos Básicos</a></li>
+                <!-- Configuración de porcentajes mensuales -->
                 <li class="list-group-item"><a th:href="@{/porcentajes-mes}" class="text-decoration-none"><i class="bi bi-percent me-2"></i>Porcentajes Mes</a></li>
               </ul>
             </div>
@@ -229,21 +191,63 @@
       </div>
     </div>
   </section>
-<script>"{@/js/htmx.local.js}"</script> 
-</body>
-  </html>
+
+<!-- Sección del Popup -->
+<section id="loginPopup" class="popup"> <!-- Popup Inicio de Sesión -->
+  <div class="popup-content">
+      <span class="close">&times;</span>
+      <h2>Iniciar Sesión</h2>
+
+      <form id="formCliente" class="formulario"> <!-- Formulario Cliente -->
+          <input type="email" placeholder="Ingrese su email" required>
+          <input type="password" placeholder="Ingrese su contraseña" required>
+          <a href="#">¿Olvidaste tu contraseña?</a>
+          <button type="submit">Registrarse</button>
+          <button type="submit">Iniciar Sesión</button>
+          <p><a href="#" id="switchAsociado">Soy Asociado</a></p>
+      </form>
+
+      <form id="formAsociado" class="formulario" style="display:none;"> <!-- Formulario Asociado -->
+          <input type="text" placeholder="Ingrese su legajo" required>
+          <input type="password" placeholder="Ingrese su contraseña" required>
+          <a href="#">¿Olvidaste tu contraseña?</a>
+          <button type="submit">Iniciar Sesión</button>
+          <p><a href="#" id="switchCliente">Soy Cliente</a></p>
+      </form>
+  </div>
+</section>
+<!-- Fin sección del Popup -->
+
+
+</html>
 
 <script>
+/*
+  SISTEMA DE ALERTAS DE STOCK BAJO
+  Este script maneja la funcionalidad de alertas de stock en tiempo real.
+  
+  Funcionalidades principales:
+  - Carga y guarda thresholds (mínimos) de stock en localStorage
+  - Verifica stock bajo en diferentes categorías (cervezas, barriles, lotes, maduradores)
+  - Actualiza las alertas cada 60 segundos automáticamente
+  - Permite configurar mínimos personalizados por categoría
+*/
 (function() {
-  // Agregar barriles_cargados a los thresholds por defecto
+  // THRESHOLDS POR DEFECTO: Valores mínimos de stock para cada categoría
+  // Estos valores se usan cuando no hay configuración guardada en localStorage
   const DEFAULT_THRESHOLDS = { 
-    cervezas: 100, 
-    barriles: 10, 
-    barriles_cargados: 5,  // Nuevo threshold para barriles cargados
-    lotes: 5, 
-    maduradores: 2 
+    cervezas: 100,           // Mínimo de cervezas en stock
+    barriles: 10,            // Mínimo de barriles disponibles
+    barriles_cargados: 5,    // Mínimo de barriles cargados (agregado recientemente)
+    lotes: 5,                // Mínimo de lotes en producción
+    maduradores: 2           // Mínimo de maduradores activos
   };
 
+  /*
+    FUNCIÓN: loadThresholds()
+    Descripción: Carga los thresholds (mínimos) de stock desde localStorage
+    Si no hay configuración guardada, usa los valores por defecto
+  */
   async function loadThresholds() {
     try {
       const stored = localStorage.getItem('lowstock_thresholds');
@@ -252,6 +256,12 @@
     return Object.assign({}, DEFAULT_THRESHOLDS);
   }
 
+  /*
+    FUNCIÓN: saveThreshold(category, value)
+    Descripción: Guarda un nuevo threshold para una categoría específica
+    Parámetros: category (string), value (number)
+    Guarda la configuración en localStorage
+  */
   async function saveThreshold(category, value) {
     const thresholds = await loadThresholds();
     thresholds[category] = value;
@@ -259,12 +269,23 @@
     return { ok: true };
   }
 
+  /*
+    FUNCIÓN: safeParse(response)
+    Descripción: Parsea de forma segura la respuesta de una petición HTTP
+    Maneja tanto respuestas JSON como texto plano
+  */
   async function safeParse(response) {
     const ct = response.headers.get('content-type') || '';
     if (ct.includes('application/json')) { try { return await response.json(); } catch(e){ return {}; } }
     return await response.text();
   }
 
+  /*
+    FUNCIÓN: callCheckEndpoint(url)
+    Descripción: Realiza una petición HTTP a un endpoint específico
+    Maneja errores de red y respuestas HTTP incorrectas
+    Retorna un objeto con ok: boolean y message: string
+  */
   async function callCheckEndpoint(url) {
     try {
       const resp = await fetch(url);
@@ -273,13 +294,25 @@
     } catch (e) { return { ok: false, message: e.message }; }
   }
 
+  /*
+    FUNCIÓN: loadLowStock()
+    Descripción: Función principal que carga y muestra todas las alertas de stock
+    Verifica el stock de todas las categorías y actualiza la interfaz
+  */
   async function loadLowStock() {
     const thresholds = await loadThresholds();
     const contentEl = document.getElementById('lowstock-content');
     contentEl.innerHTML = '<p class="small text-muted mb-0">Actualizando alertas...</p>';
 
+    /*
+      FUNCIÓN INTERNA: formatMessage(category, res)
+      Descripción: Formatea el mensaje de alerta según el resultado de la verificación
+      Parámetros: category (string), res (objeto con ok y message)
+      Retorna HTML formateado para mostrar en la interfaz
+    */
     function formatMessage(category, res) {
       if (res.ok) {
+        // Verifica si el mensaje indica stock bajo usando expresiones regulares
         if (/por debajo|⚠|bajo|insuficiente|no alcanza/i.test(res.message)) {
           return `<li><span class="text-danger">🚨 ${category} Insuficientes</span></li>`;
         } else {
@@ -292,93 +325,76 @@
 
     const items = [];
     
-    // Verificación de cervezas
+    // VERIFICACIONES DE STOCK POR CATEGORÍA
+    // Cada verificación consulta un endpoint específico del backend
+    
+    // 1. Verificación de cervezas en stock
     const resC = await callCheckEndpoint(`/reports/cervezas/check-threshold?threshold=${encodeURIComponent(thresholds.cervezas)}`);
     items.push(formatMessage('Cervezas', resC));
 
-    // Verificación de barriles disponibles (estado: Disponible)
+    // 2. Verificación de barriles disponibles (estado: Disponible)
     const resB = await callCheckEndpoint(`/reports/barriles/check-threshold?threshold=${encodeURIComponent(thresholds.barriles)}`);
     items.push(formatMessage('Barriles Disponibles', resB));
 
-    // NUEVA VERIFICACIÓN: Barriles cargados (estado: Cargado)
-    // Usando el mismo endpoint pero con parámetro de estado
+    // 3. Verificación de barriles cargados (estado: Cargado) - FUNCIONALIDAD AGREGADA RECIENTEMENTE
+    // Usa el mismo endpoint pero con parámetro de estado para diferenciar
     const resBC = await callCheckEndpoint(`/reports/barriles/check-threshold?threshold=${encodeURIComponent(thresholds.barriles_cargados)}&estado=Cargado`);
     items.push(formatMessage('Barriles Cargados', resBC));
 
-    // Verificación de lotes
+    // 4. Verificación de lotes en producción
     const resL = await callCheckEndpoint(`/reports/lotes/check-threshold?threshold=${encodeURIComponent(thresholds.lotes)}`);
     items.push(formatMessage('Lotes', resL));
 
-    // Verificación de maduradores
+    // 5. Verificación de maduradores activos
     const resM = await callCheckEndpoint(`/finByEstado/Activo?threshold=${encodeURIComponent(thresholds.maduradores)}`);
     items.push(formatMessage('Maduradores', resM));
 
+    // Actualizar la interfaz con todos los resultados
     contentEl.innerHTML = `<ul class="mb-0">${items.join('\n')}</ul>`;
   }
 
+  /*
+    FUNCIÓN: escapeHtml(unsafe)
+    Descripción: Escapa caracteres HTML peligrosos para prevenir XSS
+    Parámetros: unsafe (string) - texto que puede contener HTML
+    Retorna: string escapado seguro para mostrar en la interfaz
+  */
   function escapeHtml(unsafe) {
     if (unsafe == null) return '';
     return String(unsafe).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
       .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   }
 
-  
-        // Simple ocean particles
-        function createOceanParticles() {
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'ocean-particle';
-                particle.style.width = Math.random() * 4 + 2 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 15 + 's';
-                particle.style.animationDuration = Math.random() * 5 + 12 + 's';
-                underwaterBg.appendChild(particle);
-            }}
-            // Research Tabs Functionality - Fixed
-        const researchTabs = document.querySelectorAll('.research-tab');
-        const researchContents = document.querySelectorAll('.research-content');
-
-        if (researchTabs.length > 0 && researchContents.length > 0) {
-            researchTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Remove active class from all tabs and contents
-                    researchTabs.forEach(t => t.classList.remove('active'));
-                    researchContents.forEach(c => c.classList.remove('active'));
-
-                    // Add active class to clicked tab
-                    tab.classList.add('active');
-
-                    // Show corresponding content
-                    const tabId = tab.getAttribute('data-tab');
-                    const targetContent = document.getElementById(tabId);
-                    if (targetContent) {
-                        targetContent.classList.add('active');
-                    }
-                });
-            });
-        }
-
-        // Simple initialization
-        createBubbles();
-        createOceanParticles();
-
-        // Simple regeneration
-        setInterval(createBubbles, 20000); // Every 20 seconds
-        setInterval(createOceanParticles, 30000); // Every 30 seconds
-
+  /*
+    INICIALIZACIÓN DEL SISTEMA
+    Se ejecuta cuando el DOM está completamente cargado
+  */
   document.addEventListener("DOMContentLoaded", function(){
+    // Cargar alertas de stock al inicio
     loadLowStock();
+    
+    // EVENT LISTENER: Formulario de configuración de mínimos
     document.getElementById('threshold-form').addEventListener('submit', async function(e){
       e.preventDefault();
+      
+      // Obtener valores del formulario
       const categoria = document.getElementById('categoria').value;
       const minimo = parseInt(document.getElementById('minimo').value);
-      if (!Number.isFinite(minimo) || minimo < 0) { alert('❌ Ingrese un mínimo válido'); return; }
+      
+      // Validar entrada
+      if (!Number.isFinite(minimo) || minimo < 0) { 
+        alert('❌ Ingrese un mínimo válido'); 
+        return; 
+      }
+      
+      // Guardar configuración y actualizar interfaz
       await saveThreshold(categoria, minimo);
       alert('✅ Mínimo guardado');
       await loadLowStock();
       document.getElementById('minimo').value='';
     });
+    
+    // Actualización automática cada 60 segundos (60000 ms)
     setInterval(loadLowStock, 60000);
   });
 })();
