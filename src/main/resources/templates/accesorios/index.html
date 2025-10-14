@@ -36,7 +36,8 @@
       Buscar
     </button>
 
-    <button class="btn btn-outline-success mt-2" onclick="window.location.href='/accesorios/exportarExcel'">
+    <button class="btn btn-outline-success mt-2" 
+            onclick="descargarExcel()">
         Exportar a Excel
     </button>
 
@@ -142,6 +143,12 @@ function buscarAccesorioPorId() {
             });
     }
 
+    
+    function descargarExcel() {
+    const estado = document.getElementById('buscarEstadoAccesorio').value;
+    if (!estado) return alert('Seleccione un estado para exportar');
+    window.location.href = `/accesorios/exportarExcel?estado=${estado}`;
+}
     
     document.addEventListener('DOMContentLoaded', ()=>{ htmx.ajax('GET','/accesorios/list','#accesorios-list'); });
     </script>

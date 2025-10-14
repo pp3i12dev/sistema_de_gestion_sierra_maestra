@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sca.model.Accesorio;
@@ -76,11 +77,8 @@ public class AccesorioController {
 
 
 	@GetMapping(value = "/exportarExcel", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	@ApiOperation(value = "Exportar accesorios a Excel", notes = "Descarga un archivo Excel con todos los accesorios")
-	public ResponseEntity<byte[]> exportarAccesoriosExcel() {
-		return accesoriosServiceImpl.exportarAccesoriosExcel();
+	public ResponseEntity<byte[]> exportarAccesoriosExcel(@RequestParam(required = false) String estado) {
+		return accesoriosServiceImpl.exportarAccesoriosExcel(estado);
 	}
-
-
 
 }

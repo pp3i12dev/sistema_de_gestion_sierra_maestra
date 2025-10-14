@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -246,20 +245,29 @@ public Respuesta findDisponiblesByNombre(String nombre) {
 
 
 @Override
-public ResponseEntity<byte[]> exportarAccesoriosExcel() {
+public ResponseEntity<byte[]> exportarAccesoriosExcel(String estado) {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
         Sheet sheet = workbook.createSheet("Accesorios");
 
-        // Crear fila de encabezado
+        // Fila de encabezado
         Row header = sheet.createRow(0);
         String[] columnas = {"ID", "Nombre", "Estado", "Notas"};
         for (int i = 0; i < columnas.length; i++) {
-            Cell cell = header.createCell(i);
-            cell.setCellValue(columnas[i]);
+            header.createCell(i).setCellValue(columnas[i]);
+        }
+
+        // Filtrar por estado si se pasa
+        List<Accesorio> accesorios;
+        if (estado != null && !estado.isEmpty()) {
+            accesorios = accesorioRepository.findAll()
+                            .stream()
+                            .filter(a -> estado.equalsIgnoreCase(a.getEstado()))
+                            .collect(Collectors.toList());
+        } else {
+            accesorios = accesorioRepository.findAll();
         }
 
         // Llenar datos
-        List<Accesorio> accesorios = accesorioRepository.findAll();
         int rowNum = 1;
         for (Accesorio a : accesorios) {
             Row row = sheet.createRow(rowNum++);
@@ -269,27 +277,20 @@ public ResponseEntity<byte[]> exportarAccesoriosExcel() {
             row.createCell(3).setCellValue(a.getNotas() != null ? a.getNotas() : "");
         }
 
-        // Ajustar ancho de columnas
-        for (int i = 0; i < columnas.length; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        for (int i = 0; i < columnas.length; i++) sheet.autoSizeColumn(i);
 
-        // Convertir workbook a byte[]
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         workbook.write(out);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=accesorios.xlsx");
 
-        return ResponseEntity
-                .ok()
-                .headers(headers)
-                .body(out.toByteArray());
-
+        return ResponseEntity.ok().headers(headers).body(out.toByteArray());
     } catch (Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 }
+
 
 
 
