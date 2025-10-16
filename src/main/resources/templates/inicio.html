@@ -14,12 +14,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #D2691E 100%);
+            background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .inicio-container {
-            background: white;
+            background: rgb(139, 63, 0);
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 3rem 2.5rem;
@@ -55,33 +55,33 @@
         }
         
         .logo-section h1 {
-            color: #333;
+            color: #ffffff;
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
         
         .logo-section p {
-            color: #6c757d;
+            color: #ffffff;
             font-size: 1rem;
         }
         
         .opciones-container {
             display: flex;
-            flex-direction: column;
+            flex-direction: column; 
             gap: 1.5rem;
         }
         
         .opcion-card {
-            border: 2px solid #e9ecef;
-            border-radius: 15px;
+            border: 2px solid #ad6200;
+            border-radius: 15px;    
             padding: 2rem;
             text-decoration: none;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 1.5rem;
-            background: #f8f9fa;
+            background: #ad6200;
         }
         
         .opcion-card:hover {
@@ -105,30 +105,30 @@
         }
         
         .opcion-usuario .opcion-icon {
-            color: #8B4513;
+            color: #ffaf02;
         }
         
         .opcion-cliente .opcion-icon {
-            color: #DAA520;
+            color: #ffaf02;
         }
         
         .opcion-content h3 {
             margin: 0 0 0.5rem 0;
-            color: #333;
+            color: #fffdfb;
             font-size: 1.5rem;
             font-weight: 600;
         }
         
         .opcion-content p {
             margin: 0;
-            color: #6c757d;
+            color: #fce3be;
             font-size: 0.95rem;
         }
         
         .arrow-icon {
             margin-left: auto;
             font-size: 1.5rem;
-            color: #DAA520;
+            color: #f8d616;
         }
         
         @media (max-width: 576px) {
@@ -154,9 +154,106 @@
                 font-size: 1.2rem;
             }
         }
+
+           /* Burbujas de cerveza */
+        .bubble {
+            position: fixed;
+            bottom: -100px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3));
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: rise linear infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+         @keyframes ripple {
+            0%, 100% { opacity: 0.8; transform: translateY(0px); }
+            50% { opacity: 1; transform: translateY(-5px); }
+        }
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                opacity: 0;
+                transform: translateX(0) scale(1);
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                bottom: 110vh;
+                opacity: 0;
+                transform: translateX(var(--drift)) scale(0.8);
+            }
+        }
+
+     .bubble:nth-child(1) { width: 8px; height: 8px; left: 5%; animation-duration: 8s; animation-delay: 0s; --drift: 10px; }
+        .bubble:nth-child(2) { width: 12px; height: 12px; left: 10%; animation-duration: 10s; animation-delay: 2s; --drift: -15px; }
+        .bubble:nth-child(3) { width: 10px; height: 10px; left: 15%; animation-duration: 9s; animation-delay: 1s; --drift: 8px; }
+        .bubble:nth-child(4) { width: 6px; height: 6px; left: 20%; animation-duration: 7s; animation-delay: 3s; --drift: -12px; }
+        .bubble:nth-child(5) { width: 14px; height: 14px; left: 25%; animation-duration: 11s; animation-delay: 0.5s; --drift: 18px; }
+        .bubble:nth-child(6) { width: 8px; height: 8px; left: 30%; animation-duration: 8.5s; animation-delay: 2.5s; --drift: -10px; }
+        .bubble:nth-child(7) { width: 11px; height: 11px; left: 35%; animation-duration: 9.5s; animation-delay: 1.5s; --drift: 12px; }
+        .bubble:nth-child(8) { width: 7px; height: 7px; left: 40%; animation-duration: 7.5s; animation-delay: 3.5s; --drift: -8px; }
+        .bubble:nth-child(9) { width: 13px; height: 13px; left: 45%; animation-duration: 10.5s; animation-delay: 1s; --drift: 15px; }
+        .bubble:nth-child(10) { width: 9px; height: 9px; left: 50%; animation-duration: 8s; animation-delay: 4s; --drift: -9px; }
+        .bubble:nth-child(11) { width: 10px; height: 10px; left: 55%; animation-duration: 9s; animation-delay: 2s; --drift: 11px; }
+        .bubble:nth-child(12) { width: 6px; height: 6px; left: 60%; animation-duration: 7s; animation-delay: 3s; --drift: -6px; }
+        .bubble:nth-child(13) { width: 12px; height: 12px; left: 65%; animation-duration: 10s; animation-delay: 1.5s; --drift: 14px; }
+        .bubble:nth-child(14) { width: 9px; height: 9px; left: 70%; animation-duration: 8.5s; animation-delay: 2.5s; --drift: -10px; }
+        .bubble:nth-child(15) { width: 8px; height: 8px; left: 75%; animation-duration: 7.5s; animation-delay: 3.5s; --drift: 8px; }
+        .bubble:nth-child(16) { width: 11px; height: 11px; left: 80%; animation-duration: 9s; animation-delay: 0.8s; --drift: -11px; }
+        .bubble:nth-child(17) { width: 7px; height: 7px; left: 85%; animation-duration: 8s; animation-delay: 2.8s; --drift: 9px; }
+        .bubble:nth-child(18) { width: 10px; height: 10px; left: 90%; animation-duration: 10s; animation-delay: 1.2s; --drift: -12px; }
+        .bubble:nth-child(19) { width: 8px; height: 8px; left: 95%; animation-duration: 9s; animation-delay: 3.2s; --drift: 10px; }
+        .bubble:nth-child(20) { width: 12px; height: 12px; left: 3%; animation-duration: 7.5s; animation-delay: 0.3s; --drift: -8px; }
+        .bubble:nth-child(21) { width: 9px; height: 9px; left: 8%; animation-duration: 8.5s; animation-delay: 1.8s; --drift: 7px; }
+        .bubble:nth-child(22) { width: 7px; height: 7px; left: 13%; animation-duration: 9.5s; animation-delay: 2.3s; --drift: -9px; }
+        .bubble:nth-child(23) { width: 11px; height: 11px; left: 18%; animation-duration: 10.5s; animation-delay: 0.7s; --drift: 11px; }
+        .bubble:nth-child(24) { width: 8px; height: 8px; left: 23%; animation-duration: 7s; animation-delay: 3.7s; --drift: -7px; }
+        .bubble:nth-child(25) { width: 10px; height: 10px; left: 28%; animation-duration: 8s; animation-delay: 1.3s; --drift: 8px; }
+        .bubble:nth-child(26) { width: 6px; height: 6px; left: 33%; animation-duration: 9s; animation-delay: 2.7s; --drift: -10px; }
+        .bubble:nth-child(27) { width: 13px; height: 13px; left: 38%; animation-duration: 10s; animation-delay: 0.2s; --drift: 13px; }
+        .bubble:nth-child(28) { width: 9px; height: 9px; left: 43%; animation-duration: 8.5s; animation-delay: 3.8s; --drift: -8px; }
+        .bubble:nth-child(29) { width: 11px; height: 11px; left: 48%; animation-duration: 7.5s; animation-delay: 1.7s; --drift: 12px; }
+        .bubble:nth-child(30) { width: 7px; height: 7px; left: 53%; animation-duration: 9.5s; animation-delay: 2.2s; --drift: -7px; }
     </style>
 </head>
 <body>
+    <!-- Burbujas de cerveza -->
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+
+
     <div class="inicio-container">
         <!-- Logo y título -->
         <div class="logo-section">
@@ -164,7 +261,7 @@
                 <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
             </div>
             <h1>Sistema Sierra Maestra</h1>
-            <p>Bienvenido, por favor seleccione su tipo de acceso</p>
+            <p>Seleccione su tipo de acceso</p>
         </div>
         
         <!-- Opciones de acceso -->
@@ -201,6 +298,140 @@
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('login-modal');
+            const btnIniciarSesion = document.getElementById('btn-iniciar-sesion');
+            const closeModal = document.getElementById('close-modal');
+            const loginForm = document.getElementById('login-form');
+            const successMessage = document.getElementById('success-message');
+            const errorMessage = document.getElementById('error-message');
+            const btnLogin = document.getElementById('btn-login');
+            
+            // Verificar si el usuario está autenticado (URL con #)
+            if (window.location.hash === '#') {
+                // Usuario autenticado - cambiar el botón de "Iniciar sesión" a "Mi Perfil"
+                btnIniciarSesion.textContent = 'Mi Perfil';
+                btnIniciarSesion.classList.remove('active');
+                btnIniciarSesion.style.background = 'linear-gradient(135deg, #DAA520 0%, #FFD700 100%)';
+                btnIniciarSesion.style.color = '#8B4513';
+                btnIniciarSesion.style.border = '2px solid #FFD700';
+                
+                // Cambiar el comportamiento del botón
+                btnIniciarSesion.removeAttribute('href');
+                btnIniciarSesion.onclick = function(e) {
+                    e.preventDefault();
+                    alert('¡Bienvenido! Estás autenticado como cliente.');
+                };
+                
+                // Cambiar el contenido de bienvenida
+                const heroTitle = document.getElementById('hero-title');
+                const heroSubtitle = document.getElementById('hero-subtitle');
+                
+                if (heroTitle) {
+                    heroTitle.textContent = '¡Bienvenido Cliente Autenticado!';
+                    heroTitle.style.color = '#FFD700';
+                    heroTitle.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)';
+                }
+                
+                if (heroSubtitle) {
+                    heroSubtitle.textContent = 'Ahora puedes acceder a todas las funcionalidades del sistema';
+                    heroSubtitle.style.color = '#DAA520';
+                }
+            }
+            
+            // Mostrar modal al hacer clic en "Iniciar sesión"
+            btnIniciarSesion.addEventListener('click', function(e) {
+                e.preventDefault();
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+            });
+            
+            // Cerrar modal
+            closeModal.addEventListener('click', function() {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Cerrar modal al hacer clic fuera de él
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // Función para mostrar mensajes
+            function mostrarMensaje(mensaje, tipo) {
+                if (tipo === 'success') {
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                } else {
+                    errorMessage.style.display = 'block';
+                    errorMessage.textContent = mensaje;
+                    successMessage.style.display = 'none';
+                }
+            }
+            
+            // Manejo del formulario de login
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                // Validación básica
+                if (!email || !password) {
+                    mostrarMensaje('Por favor completa todos los campos', 'error');
+                    return;
+                }
+                
+                // Deshabilitar botón
+                btnLogin.disabled = true;
+                btnLogin.textContent = 'Iniciando...';
+                
+                try {
+                    // Credenciales de prueba
+                    if (email === 'dev@gmail.com' && password === '1234') {
+                        // Login exitoso
+                        mostrarMensaje('¡Inicio de sesión exitoso!', 'success');
+                        
+                        // Cerrar modal después de 2 segundos
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                            document.body.style.overflow = 'auto';
+                            
+                            // Redirigir a la misma página con indicador de autenticado
+                            window.location.href = 'http://localhost:8080/cliente-dashboard#';
+                        }, 2000);
+                    } else {
+                        // Credenciales incorrectas
+                        mostrarMensaje('Email o contraseña incorrectos', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('Error de conexión. Intenta nuevamente.', 'error');
+                } finally {
+                    // Rehabilitar botón
+                    btnLogin.disabled = false;
+                    btnLogin.textContent = 'Iniciar sesión';
+                }
+            });
+            
+            // Animación de entrada para los elementos
+            const elements = document.querySelectorAll('.nav-item, .hero-content');
+            elements.forEach((element, index) => {
+                element.style.opacity = '0';
+                element.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    element.style.transition = 'all 0.6s ease';
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
 </body>
 </html>
 
