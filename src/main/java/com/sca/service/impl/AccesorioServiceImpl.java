@@ -151,29 +151,6 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
     }
 
     @Override
-    public Respuesta findAccesoriosPorEstado(String estado) {
-        Respuesta respuesta = new Respuesta();
-        try {
-            List<Accesorio> accesorios = accesorioRepository.findAll()
-                .stream()
-                .filter(a -> a.getEstado() != null && a.getEstado().equalsIgnoreCase(estado))
-                .collect(Collectors.toList());
-
-            respuesta.setCodigo("200");
-            respuesta.setStatus("Ok");
-            respuesta.setDescripcion("Datos de los Accesorios por Estado");
-            respuesta.setData(accesorios);
-
-        } catch (Exception e) {
-            respuesta.setCodigo("400");
-            respuesta.setStatus("Error");
-            respuesta.setDescripcion("No se pudieron mostrar los datos de los Accesorios");
-            respuesta.setData(e.getMessage());
-        }
-        return respuesta;
-    }
-
-    @Override
     public Respuesta findAccesorioPorEstado(String estado) {
         Respuesta respuesta = new Respuesta();
         try {
