@@ -17,13 +17,13 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #F5A623 0%, #D4821F 50%, #C77619 100%);
+            background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
             min-height: 100vh;
         }
         
         /* Header */
         .header {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, rgb(99, 57, 18), rgb(2, 1, 0) 100%);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
@@ -35,6 +35,23 @@
             left: 0;
             right: 0;
             z-index: 100;
+        }
+                /* Hero Section */
+        .hero {
+            height: 30vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-top: 80px;
+            background: radial-gradient(ellipse at center, rgba(182, 185, 16, 0.1) 0%, transparent 70%);
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 10;
+            animation: fadeInUp 2s ease;
+            position: relative;
         }
         
         .logo {
@@ -70,7 +87,7 @@
         }
         
         .logo-text {
-            color: #333;
+            color: #ffffffbe;
             font-size: 1.5rem;
             font-weight: bold;
         }
@@ -82,7 +99,7 @@
         }
         
         .nav-item {
-            color: #8B4513;
+            color: #ceb7a5b2;
             text-decoration: none;
             font-weight: 600;
             padding: 0.5rem 1rem;
@@ -92,14 +109,14 @@
         }
         
         .nav-item:hover {
-            background-color: rgba(218, 165, 32, 0.3);
-            color: #654321;
+            background-color: rgba(216, 190, 124, 0.3);
+            color: #c46a0a;
         }
         
         .nav-item.active {
             background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
             border: 2px solid #DAA520;
-            color: #8B4513;
+            color: #583207;
             font-weight: bold;
         }
         
@@ -130,7 +147,41 @@
             z-index: 1;
             pointer-events: none;
         }
-        
+            .subtitle {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin-top: 1.4rem;
+            opacity: 2;
+            background: linear-gradient(135deg, rgb(21, 156, 9),rgb(255, 238, 0), rgba(255, 8, 8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            animation: ripple 3s ease-in-out infinite, waveGlow 4s ease-in-out infinite alternate  ;
+        }
+                @keyframes waveGlow {
+            0% { 
+                text-shadow: 0 0 30px rgba(64, 212, 6, 0.8),
+                           0 0 60px rgba(36, 238, 18, 0.6);
+            }
+            50% { 
+                text-shadow: 0 0 40px rgb(213, 250, 2),
+                             0 0 200px rgb(240, 236, 6),
+                           0 0 200px rgba(255, 238, 2, 0.993);
+            }
+            100% { 
+                text-shadow: 0 0 40px rgb(255, 30, 0),
+                           0 0 80px rgba(255, 2, 2, 0.925),
+                           0 0 200px rgba(250, 0, 0, 0.932);
+            }
+        }
+
+           @keyframes ripple {
+            0%, 100% { opacity: 0.8; transform: translateY(0px); }
+            50% { opacity: 1; transform: translateY(-5px); }
+        }
         @keyframes rise {
             0% {
                 bottom: -100px;
@@ -198,16 +249,16 @@
         
         .section-title {
             text-align: center;
-            color: #DAA520;
+            color: rgb(141, 78, 6);
             font-size: 3rem;
             font-weight: bold;
             margin-bottom: 3rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 2px 2px 4px rgba(56, 4, 4, 0.445);
         }
         
         .content-frame {
             background-color: #A0522D;
-            border: 3px solid #333;
+            border: 1rem solid #333;
             border-radius: 15px;
             overflow: hidden;
             position: relative;
@@ -220,10 +271,10 @@
         
         .hero-content {
             text-align: center;
-            color: white;
+            color: rgb(141, 78, 6);
             z-index: 2;
             padding: 1rem 2rem;
-        }
+        } 
         
         .hero-title {
             font-size: 3rem;
@@ -389,11 +440,12 @@
         }
         
         .about-text {
-            color: white;
+            color: rgb(141, 78, 6);
+
         }
         
         .about-text h3 {
-            color: #DAA520;
+            color: rgb(141, 78, 6);
             font-size: 1.8rem;
             margin-bottom: 1rem;
             margin-top: 2rem;
@@ -424,7 +476,7 @@
             content: "✓";
             position: absolute;
             left: 0;
-            color: #DAA520;
+            color: rgb(141, 78, 6);
             font-weight: bold;
             font-size: 1.2rem;
         }
@@ -650,10 +702,13 @@
     <header class="header">
         <a th:href="@{/inicio}" class="logo" style="text-decoration: none; cursor: pointer;">
             <div class="logo-circle">
-                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
+                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">   
             </div>
             <div class="logo-text">Sierra Maestra</div>
+
         </a>
+                            <p class="subtitle">Para todos la luz, para todos todo</p>
+
         
         <nav class="nav-menu">
             <a href="#cervezas" class="nav-item">Nuestras Cervezas</a>
@@ -697,12 +752,24 @@
         <div class="bubble"></div>
         <div class="bubble"></div>
         
+
         <!-- Sección Principal (Inicio) -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                    <img src="/images/logo.jpg" alt="Logo" style="height:  20rem; border-radius: 55%; object-fit: cover; vertical-align:middle; margin-right:8px;">
+            </div>
+          
+    </section>
+
+
+
+
         <section class="content-section">
             <div class="section-container">
                 <div class="hero-content">
                     <i class="bi bi-mountains beer-icon"></i>
                     <h1 class="hero-title" id="hero-title">¡Bienvenido Cliente!</h1>
+                    
                     <p class="hero-subtitle" id="hero-subtitle">Descubre nuestras cervezas artesanales de la Sierra Maestra</p>
                     
                     <div class="action-buttons">
@@ -714,6 +781,8 @@
                         </button>
                     </div>
                 </div>
+                                
+
             </div>
         </section>
         
