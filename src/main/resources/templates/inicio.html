@@ -17,6 +17,150 @@
             background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+                /* Login Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .login-modal {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .modal-title {
+            color: #8B4513;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .form-label {
+            color: #8B4513;
+            font-weight: 600;
+            min-width: 100px;
+        }
+        
+        .form-control {
+            background-color: white;
+            border: 2px solid #8B4513;
+            border-radius: 8px;
+            padding: 0.8rem;
+            font-size: 1rem;
+            color: #333;
+            flex-grow: 1;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(218, 165, 32, 0.3);
+        }
+        
+        .modal-links {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .modal-links a {
+            color: #8B4513;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .modal-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-modal {
+            background: white;
+            color: #8B4513;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-modal:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-login {
+            border: 3px solid #ff0000;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #8B4513;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-modal:hover {
+            background: rgba(139, 69, 19, 0.1);
+        }
         
         .inicio-container {
             background: rgb(139, 63, 0);
@@ -266,19 +410,7 @@
         
         <!-- Opciones de acceso -->
         <div class="opciones-container">
-            <!-- Opción Usuario/Administrador -->
-            <a th:href="@{/home}" class="opcion-card opcion-usuario">
-                <div class="opcion-icon">
-                    <i class="bi bi-person-gear"></i>
-                </div>
-                <div class="opcion-content">
-                    <h3>Soy Usuario</h3>
-                    <p>Acceso al sistema de gestión administrativa</p>
-                </div>
-                <div class="arrow-icon">
-                    <i class="bi bi-arrow-right-circle"></i>
-                </div>
-            </a>
+
             
             <!-- Opción Cliente -->
             <a th:href="@{/cliente-dashboard}" class="opcion-card opcion-cliente">
@@ -293,12 +425,106 @@
                     <i class="bi bi-arrow-right-circle"></i>
                 </div>
             </a>
+
+            <!-- Opción Usuario/Administrador -->
+<button class="opcion-card opcion-usuario" id="opcion-usuario">
+    <div class="opcion-icon">
+        <i class="bi bi-person-gear"></i>
+    </div>
+    <div class="opcion-content">
+        <h3>Soy Usuario</h3>
+        <p>Acceso al sistema de gestión administrativa</p>
+    </div>
+    <div class="arrow-icon">
+        <i class="bi bi-arrow-right-circle"></i>
+    </div>
+</button>
+
+<!-- Login Modal -->
+<div id="login-modal" class="modal-overlay">
+    <div class="login-modal">
+        <button class="close-modal" id="close-modal">&times;</button>
+        
+        <div class="modal-header">
+            <h2 class="modal-title">Iniciar Sesión</h2>
+        </div>
+        
+        <!-- Success Message -->
+        <div id="success-message" class="success-message">
+            ¡Inicio de sesión exitoso!
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-message" class="error-message">
+            <!-- Error messages will be inserted here -->
+        </div>
+        
+        <form id="login-form" class="modal-form">
+            <div class="form-group">
+                <label for="legajo" class="form-label">Legajo</label>
+                <input type="number" class="form-control" id="legajo" name="legajo" required
+                       placeholder="Legajo">
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" name="password" required
+                       placeholder="Ingrese su contraseña">
+            </div>
+            
+            <div class="modal-links">
+                <a href="#">¿Olvidaste tu contraseña?</a>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="button" class="btn-modal" onclick="window.location.href='http://localhost:8080/registro'">
+                    Registrarme
+                </button>
+                <button type="submit" class="btn-modal btn-login" id="btn-login">
+                    Iniciar sesión
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
         </div>
     </div>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
      <script>
+
+        // Agregar evento de clic al botón
+document.getElementById('opcion-usuario').addEventListener('click', function() {
+    // Mostrar el modal de inicio de sesión
+    document.getElementById('login-modal').style.display = 'flex';
+});
+
+// Agregar evento de clic al botón de cerrar
+document.getElementById('close-modal').addEventListener('click', function() {
+    // Ocultar el modal de inicio de sesión
+    document.getElementById('login-modal').style.display = 'none';
+});
+
+// Agregar evento de envío del formulario
+document.getElementById('login-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevenir que se envíe el formulario de forma tradicional
+    // Obtener los valores del formulario
+    var lejago = document.getElementById('lejago').value;
+    var password = document.getElementById('password').value;
+    
+    // Verificar los datos (en este caso, solo un ejemplo)
+    if (lejago === '123456' && password === 'password123') {
+        // Redirigir al usuario a una página específica
+        window.location.href = 'http://localhost:8080/home';
+    } else {
+        // Mostrar un mensaje de error
+        document.getElementById('error-message').innerHTML = 'Datos incorrectos';
+        document.getElementById('error-message').style.display = 'block';
+    }
+});
+
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('login-modal');
             const btnIniciarSesion = document.getElementById('btn-iniciar-sesion');
