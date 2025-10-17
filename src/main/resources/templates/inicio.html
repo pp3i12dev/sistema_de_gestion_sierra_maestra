@@ -18,6 +18,105 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
                 /* Login Modal */
+
+
+         #login-modal-cliente {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-modal-cliente {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 500px;
+        }
+
+        .close-modal-cliente {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-header-cliente {
+            text-align: center;
+        }
+
+        .modal-title-cliente {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .error-message-cliente {
+            color: #f00;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .modal-form-cliente {
+            margin-top: 20px;
+        }
+
+        .form-group-cliente {
+            margin-bottom: 20px;
+        }
+
+        .form-label-cliente {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .form-control-cliente {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .modal-links-cliente {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .modal-links-cliente a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+
+        .modal-buttons-cliente {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .btn-modal-cliente {
+            background-color: #337ab7;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-login-cliente {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -425,7 +524,7 @@
                 <div class="arrow-icon">
                     <i class="bi bi-arrow-right-circle"></i>
                 </div>
-</button>
+            </button>
 
             <!-- Opción Usuario/Administrador -->
 <button class="opcion-card opcion-usuario" id="opcion-usuario">
@@ -442,52 +541,100 @@
 </button>
 
 <!-- Login Modal -->
-<div id="login-modal" class="modal-overlay">
+    <div id="login-modal" class="modal-overlay">
+        <div class="login-modal">
+            <button class="close-modal" id="close-modal">&times;</button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Iniciar Sesión</h2>
+            </div>
+            
+            <!-- Success Message -->
+            <div id="success-message" class="success-message">
+                ¡Inicio de sesión exitoso!
+            </div>
+            
+            <!-- Error Message -->
+            <div id="error-message" class="error-message">
+                <!-- Error messages will be inserted here -->
+            </div>
+            
+            <form id="login-form" class="modal-form">
+                <div class="form-group">
+                    <label for="legajo" class="form-label">Legajo</label>
+                    <input type="number" class="form-control" id="legajo" name="legajo" required
+                        placeholder="Legajo">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" name="password" required
+                        placeholder="Ingrese su contraseña">
+                </div>
+                
+                <div class="modal-links">
+                    <a href="#">¿Olvidaste tu contraseña?</a>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal" onclick="window.location.href='http://localhost:8080/registro'">
+                        Registrarme
+                    </button>
+                    <button type="submit" class="btn-modal btn-login" id="btn-login">
+                        Iniciar sesión
+                    </button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+<!-- Login Modal Cliente -->
+  <!-- Login Modal Cliente -->
+<div id="login-modal-cliente" class="modal-overlay">
     <div class="login-modal">
-        <button class="close-modal" id="close-modal">&times;</button>
+        <button class="close-modal-cliente" id="close-modal-cliente">&times;</button>
         
         <div class="modal-header">
-            <h2 class="modal-title">Iniciar Sesión</h2>
-        </div>
-        
-        <!-- Success Message -->
-        <div id="success-message" class="success-message">
-            ¡Inicio de sesión exitoso!
+            <h2 class="modal-title">Iniciar Sesión como Cliente</h2>
         </div>
         
         <!-- Error Message -->
-        <div id="error-message" class="error-message">
+        <div id="error-message-cliente" class="error-message">
             <!-- Error messages will be inserted here -->
         </div>
         
-        <form id="login-form" class="modal-form">
+        <form id="login-form-cliente" class="modal-form">
             <div class="form-group">
-                <label for="legajo" class="form-label">Legajo</label>
-                <input type="number" class="form-control" id="legajo" name="legajo" required
-                       placeholder="Legajo">
+                <label for="email-cliente" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email-cliente" name="email-cliente" required
+                       placeholder="Email">
             </div>
             
             <div class="form-group">
-                <label for="password" class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password" name="password" required
+                <label for="password-cliente" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password-cliente" name="password-cliente" required
                        placeholder="Ingrese su contraseña">
             </div>
             
             <div class="modal-links">
                 <a href="#">¿Olvidaste tu contraseña?</a>
+                 
             </div>
             
             <div class="modal-buttons">
-                <button type="button" class="btn-modal" onclick="window.location.href='http://localhost:8080/registro'">
-                    Registrarme
-                </button>
-                <button type="submit" class="btn-modal btn-login" id="btn-login">
+                <button type="submit" class="btn-modal btn-login-cliente" id="btn-login-cliente">
                     Iniciar sesión
                 </button>
+                <div class="modal-links">
+                        <a href="http://localhost:8080/registro">Registrate</a>
+                </div>
             </div>
         </form>
+        
     </div>
 </div>
+
+
 
         </div>
     </div>
@@ -495,6 +642,35 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
      <script>
+// Agregar evento de clic al botón "Soy Cliente"
+document.getElementById('opcion-cliente').addEventListener('click', function() {
+    // Mostrar el modal de inicio de sesión de cliente
+    document.getElementById('login-modal-cliente').style.display = 'flex';
+});
+
+// Agregar evento de clic al botón de cerrar del modal de cliente
+document.getElementById('close-modal-cliente').addEventListener('click', function() {
+    // Ocultar el modal de inicio de sesión de cliente
+    document.getElementById('login-modal-cliente').style.display = 'none';
+});
+
+// Agregar evento de envío del formulario de cliente
+document.getElementById('login-form-cliente').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevenir que se envíe el formulario de forma tradicional
+    // Obtener los valores del formulario
+    var emailCliente = document.getElementById('email-cliente').value;
+    var passwordCliente = document.getElementById('password-cliente').value;
+    
+    // Verificar los datos (en este caso, solo un ejemplo)
+    if (emailCliente === 'cliente@gmail.com' && passwordCliente === 'cliente123') {
+        // Redirigir al cliente a una página específica
+        window.location.href = 'http://localhost:8080/cliente-dashboard';
+    } else {
+        // Mostrar un mensaje de error
+        document.getElementById('error-message-cliente').innerHTML = 'Datos incorrectos';
+        document.getElementById('error-message-cliente').style.display = 'block';
+    }
+});
 
         // Agregar evento de clic al botón
 document.getElementById('opcion-usuario').addEventListener('click', function() {
