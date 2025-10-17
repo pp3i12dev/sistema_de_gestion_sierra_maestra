@@ -21,7 +21,7 @@ public interface AccesorioService {
 
     public Respuesta findById(Long id);
 
-    public Respuesta findAccesorioPorEstado(String estado);
+    public Respuesta findAccesoriosPorEstado(String estado);
 
 	Respuesta findDisponiblesByNombre(String nombre);
 
@@ -30,7 +30,6 @@ public interface AccesorioService {
     // 🔹 Nuevo método
     void marcarComoDisponibles(List<Long> accesorioIds);
 
-    // 🔹 Nuevo método para exportar a Excel
-    ResponseEntity<byte[]> exportarAccesoriosExcel(String estado);
-
+    // Agrega este método en la interfaz AccesorioService
+    ResponseEntity<Object> updateReservaAccesorio(Accesorio accesorio);
 }

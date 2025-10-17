@@ -367,23 +367,55 @@ function isoDateInputFromMillis(ms) {
     return `${year}-${month}-${day}`;
 }
 
-async function fetchJSON(url, opts) {
+async function fetchJSON(url, opts = {}) {
     try {
-        const res = await fetch(url, Object.assign({ headers: { 'Accept': 'application/json' } }, opts));
-        const text = await res.text();
-        if (!res.ok) throw new Error(`HTTP ${res.status} - ${text || res.statusText}`);
-        if (!text) return null;
-        return JSON.parse(text);
+        const fullUrl = url.startsWith('http') ? url : API + url;
+        const options = {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            ...opts
+        };
+
+        // Si tiene body, asegurarse de que sea string
+        if (options.body && typeof options.body !== 'string') {
+            options.body = JSON.stringify(options.body);
+        }
+
+        console.log(`📡 Fetch: ${options.method || 'GET'} ${fullUrl}`);
+        
+        const res = await fetch(fullUrl, options);
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
+        }
+
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return await res.json();
+        } else {
+            const text = await res.text();
+            return text ? { message: text } : { success: true };
+        }
     } catch (err) {
-        throw err;
+        console.error('❌ Fetch error:', err);
+        throw new Error(`Error de conexión: ${err.message}`);
     }
 }
+
+
 
 // ========== SISTEMA DE RESERVAS COMPLETO ==========
 class SistemaReservas {
     constructor() {
         this.reservas = new Map();
         this.iniciarMonitor();
+        
+        setTimeout(() => {
+            this.verificarReservasBD();
+        }, 2000);
     }
 
     // Crear una nueva reserva
@@ -395,7 +427,6 @@ class SistemaReservas {
             throw new Error(`Recurso ${tipo} ${recursoId} no encontrado`);
         }
 
-        // Verificar que el recurso esté disponible
         if (!this.estaDisponible(recurso, tipo)) {
             throw new Error(`Recurso ${tipo} ${recursoId} no disponible (estado: ${recurso.estado})`);
         }
@@ -409,17 +440,16 @@ class SistemaReservas {
             recursoId,
             usuario,
             timestampInicio: Date.now(),
-            timestampExpiracion: Date.now() + TIEMPO_RESERVA,
+            timestampExpiracion: Date.now() + (5 * 60 * 1000),
             timestampReserva: timestampReserva,
             estado: 'reservado'
         };
 
-        // Actualizar estado en base de datos
         await this.actualizarEstadoBD(tipo, recursoId, 'Alquilado', reservaId, timestampReserva);
         
         this.reservas.set(reservaId, reserva);
         
-        console.log(`✅ Reserva creada: ${reservaId}`);
+        console.log(`✅ Reserva creada: ${reservaId} - Expira en 5 minutos`);
         this.mostrarAlertaReserva();
         return reservaId;
     }
@@ -434,7 +464,6 @@ class SistemaReservas {
 
         console.log(`🔄 Liberando reserva: ${reservaId}`);
 
-        // Restaurar estado original en BD
         const nuevoEstado = reserva.tipo === 'barril' ? 'Cargado' : 'Disponible';
         await this.actualizarEstadoBD(reserva.tipo, reserva.recursoId, nuevoEstado, null, null);
 
@@ -444,6 +473,21 @@ class SistemaReservas {
         this.actualizarAlertaReserva();
     }
 
+    // Liberar recurso directamente sin necesidad de reservaId - SOLO SI NO TIENE PEDIDO
+    async liberarRecursoDirecto(tipo, recursoId) {
+        console.log(`🔄 Liberando ${tipo} ${recursoId} directamente`);
+        
+        const nuevoEstado = tipo === 'barril' ? 'Cargado' : 'Disponible';
+        const resultado = await this.actualizarEstadoBD(tipo, recursoId, nuevoEstado, null, null);
+        
+        if (resultado) {
+            console.log(`✅ ${tipo} ${recursoId} liberado correctamente`);
+            this.mostrarNotificacionExpiracion({ tipo, recursoId });
+        }
+        
+        return resultado;
+    }
+
     // Confirmar reserva (cuando se guarda el pedido)
     async confirmar(reservaId) {
         const reserva = this.reservas.get(reservaId);
@@ -451,7 +495,6 @@ class SistemaReservas {
 
         console.log(`✅ Confirmando reserva permanente: ${reservaId}`);
         
-        // Limpiar campos de reserva pero mantener estado Alquilado
         await this.actualizarEstadoBD(reserva.tipo, reserva.recursoId, 'Alquilado', null, null);
 
         this.reservas.delete(reservaId);
@@ -470,55 +513,213 @@ class SistemaReservas {
         });
 
         expiradas.forEach(({ reservaId, reserva }) => {
-            console.log(`⏰ Reserva expirada: ${reservaId}`);
+            const minutosTranscurridos = Math.round((ahora - reserva.timestampInicio) / 60000);
+            console.log(`⏰ Reserva expirada: ${reservaId} - ${minutosTranscurridos} minutos transcurridos`);
             this.liberar(reservaId);
             this.mostrarNotificacionExpiracion(reserva);
         });
     }
 
-    // Verificar reservas en BD al cargar la página
+    // VERIFICACIÓN DE BD - CORREGIDA PARA MANEJAR TIMESTAMPS COMO ARRAY
     async verificarReservasBD() {
         try {
-            console.log('🔍 Verificando reservas expiradas en BD...');
+            console.log('🔍 INICIANDO VERIFICACIÓN DE RESERVAS EN BD');
+            console.log('⏰ Tiempo de espera para rollback: 5 minutos');
             
-            // Verificar barriles con reserva expirada
-            const barrilesConReserva = barrilesList.filter(b => 
-                b.session_reserva && b.timestamp_reserva
-            );
-            
-            for (const barril of barrilesConReserva) {
-                const timestampReserva = new Date(barril.timestamp_reserva).getTime();
-                if (Date.now() - timestampReserva > TIEMPO_RESERVA) {
-                    console.log(`🔄 Liberando barril ${barril.id} por reserva expirada en BD`);
-                    await this.actualizarEstadoBD('barril', barril.id, 'Cargado', null, null);
+            let recursosLiberados = 0;
+            const ahora = Date.now();
+            const cincoMinutosEnMs = 5 * 60 * 1000;
+
+            // VERIFICAR BARRILES - CORREGIDO PARA MANEJAR TIMESTAMPS COMO ARRAY
+            const barrilesReservados = barrilesList.filter(b => {
+                const tieneReserva = b.estado === 'Alquilado' && 
+                                   (b.sessionReserva || b.timestampReserva);
+                const sinPedido = !b.pedido_id && !b.pedido_cliente_id;
+                
+                return tieneReserva && sinPedido;
+            });
+
+            console.log(`🎯 Barriles "Alquilado" con datos de reserva y SIN pedido: ${barrilesReservados.length}`);
+
+            for (const barril of barrilesReservados) {
+                try {
+                    // CORRECCIÓN CRÍTICA: Manejo robusto de timestampReserva
+                    let timestampReserva;
+                    
+                    if (Array.isArray(barril.timestampReserva)) {
+                        console.warn(`⚠️ Barril ${barril.id} tiene timestampReserva como array:`, barril.timestampReserva);
+                        // Si es array, usar la hora actual menos 10 minutos (forzar liberación)
+                        timestampReserva = ahora - (10 * 60 * 1000);
+                    } else if (typeof barril.timestampReserva === 'string') {
+                        timestampReserva = new Date(barril.timestampReserva).getTime();
+                    } else if (barril.timestampReserva instanceof Date) {
+                        timestampReserva = barril.timestampReserva.getTime();
+                    } else {
+                        // Si no se puede determinar, usar hora actual menos 10 minutos
+                        timestampReserva = ahora - (10 * 60 * 1000);
+                    }
+
+                    // Si todavía no es un número válido, forzar liberación
+                    if (isNaN(timestampReserva) || timestampReserva <= 0) {
+                        timestampReserva = ahora - (10 * 60 * 1000);
+                    }
+
+                    const tiempoTranscurrido = ahora - timestampReserva;
+                    const minutosTranscurridos = Math.round(tiempoTranscurrido / 60000);
+
+                    console.log(`🔎 Analizando barril ${barril.id}:`, {
+                        estado: barril.estado,
+                        pedido_id: barril.pedido_id,
+                        pedido_cliente_id: barril.pedido_cliente_id,
+                        timestampOriginal: barril.timestampReserva,
+                        timestampCalculado: new Date(timestampReserva).toISOString(),
+                        minutosTranscurridos: minutosTranscurridos,
+                        requiereLiberacion: tiempoTranscurrido > cincoMinutosEnMs
+                    });
+
+                    const reservaActiva = Array.from(this.reservas.values()).find(r => 
+                        r.tipo === 'barril' && r.recursoId == barril.id
+                    );
+
+                    if (!reservaActiva && tiempoTranscurrido > cincoMinutosEnMs) {
+                        console.log(`🔄 Barril ${barril.id} SIN pedido, SIN reserva activa y con ${minutosTranscurridos} minutos - LIBERANDO`);
+                        await this.liberarRecursoDirecto('barril', barril.id);
+                        recursosLiberados++;
+                    } else if (reservaActiva) {
+                        console.log(`✅ Barril ${barril.id} tiene reserva activa, manteniendo estado`);
+                    } else if (tiempoTranscurrido <= cincoMinutosEnMs) {
+                        console.log(`⏳ Barril ${barril.id} esperando... (${minutosTranscurridos}/5 minutos)`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Error procesando barril ${barril.id}:`, error);
                 }
             }
 
-            // Verificar accesorios con reserva expirada
-            const accesoriosConReserva = accesoriosList.filter(a => 
-                a.session_reserva && a.timestamp_reserva
-            );
-            
-            for (const accesorio of accesoriosConReserva) {
-                const timestampReserva = new Date(accesorio.timestamp_reserva).getTime();
-                if (Date.now() - timestampReserva > TIEMPO_RESERVA) {
-                    console.log(`🔄 Liberando accesorio ${accesorio.id} por reserva expirada en BD`);
-                    await this.actualizarEstadoBD('accesorio', accesorio.id, 'Disponible', null, null);
+            // VERIFICAR ACCESORIOS
+            const accesoriosReservados = accesoriosList.filter(a => {
+                const tieneReserva = a.estado === 'Alquilado' && 
+                                   (a.sessionReserva || a.timestampReserva);
+                const sinPedido = !a.pedido_id;
+                
+                return tieneReserva && sinPedido;
+            });
+
+            console.log(`🎯 Accesorios "Alquilado" con datos de reserva y SIN pedido: ${accesoriosReservados.length}`);
+
+            for (const accesorio of accesoriosReservados) {
+                try {
+                    let timestampReserva;
+                    
+                    if (Array.isArray(accesorio.timestampReserva)) {
+                        timestampReserva = ahora - (10 * 60 * 1000);
+                    } else if (typeof accesorio.timestampReserva === 'string') {
+                        timestampReserva = new Date(accesorio.timestampReserva).getTime();
+                    } else {
+                        timestampReserva = ahora - (10 * 60 * 1000);
+                    }
+
+                    if (isNaN(timestampReserva) || timestampReserva <= 0) {
+                        timestampReserva = ahora - (10 * 60 * 1000);
+                    }
+
+                    const tiempoTranscurrido = ahora - timestampReserva;
+                    const minutosTranscurridos = Math.round(tiempoTranscurrido / 60000);
+
+                    console.log(`🔎 Analizando accesorio ${accesorio.id}:`, {
+                        estado: accesorio.estado,
+                        pedido_id: accesorio.pedido_id,
+                        timestampOriginal: accesorio.timestampReserva,
+                        minutosTranscurridos: minutosTranscurridos,
+                        requiereLiberacion: tiempoTranscurrido > cincoMinutosEnMs
+                    });
+
+                    const reservaActiva = Array.from(this.reservas.values()).find(r => 
+                        r.tipo === 'accesorio' && r.recursoId == accesorio.id
+                    );
+
+                    if (!reservaActiva && tiempoTranscurrido > cincoMinutosEnMs) {
+                        console.log(`🔄 Accesorio ${accesorio.id} SIN pedido, SIN reserva activa y con ${minutosTranscurridos} minutos - LIBERANDO`);
+                        await this.liberarRecursoDirecto('accesorio', accesorio.id);
+                        recursosLiberados++;
+                    } else if (reservaActiva) {
+                        console.log(`✅ Accesorio ${accesorio.id} tiene reserva activa, manteniendo estado`);
+                    } else if (tiempoTranscurrido <= cincoMinutosEnMs) {
+                        console.log(`⏳ Accesorio ${accesorio.id} esperando... (${minutosTranscurridos}/5 minutos)`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Error procesando accesorio ${accesorio.id}:`, error);
                 }
             }
+
+            console.log(`✅ VERIFICACIÓN COMPLETADA: ${recursosLiberados} recursos liberados (solo > 5 minutos)`);
+            
+            if (recursosLiberados > 0) {
+                mostrarNotificacionGlobal(`🔄 Se liberaron ${recursosLiberados} recursos con reservas vencidas (>5min) y sin pedido`, 'success');
+            }
+
         } catch (error) {
-            console.error('Error verificando reservas en BD:', error);
+            console.error('❌ Error crítico en verificarReservasBD:', error);
         }
     }
 
     // ========== FUNCIONES DE APOYO ==========
-    async obtenerRecurso(tipo, recursoId) {
+        async obtenerRecurso(tipo, recursoId) {
+        console.log(`🔍 Buscando recurso: ${tipo} ${recursoId}`);
+        
+        // Primero buscar en memoria
+        let recurso;
         if (tipo === 'barril') {
-            return barrilesList.find(b => b.id == recursoId);
+            recurso = barrilesList.find(b => b.id == recursoId);
         } else if (tipo === 'accesorio') {
-            return accesoriosList.find(a => a.id == recursoId);
+            recurso = accesoriosList.find(a => a.id == recursoId);
         }
-        return null;
+
+        // Si no está en memoria, cargar desde API
+        if (!recurso) {
+            console.log(`📥 Recurso ${recursoId} no en memoria, cargando desde API...`);
+            try {
+                let endpoint;
+                if (tipo === 'barril') {
+                    endpoint = `${API}/getBarril/${recursoId}`;
+                } else if (tipo === 'accesorio') {
+                    endpoint = `${API}/getAccesorio/${recursoId}`;
+                }
+                
+                if (endpoint) {
+                    const response = await fetchJSON(endpoint);
+                    recurso = response.data || response;
+                    
+                    if (recurso) {
+                        // Actualizar en memoria
+                        if (tipo === 'barril') {
+                            const index = barrilesList.findIndex(b => b.id == recursoId);
+                            if (index >= 0) {
+                                barrilesList[index] = recurso;
+                            } else {
+                                barrilesList.push(recurso);
+                            }
+                        } else if (tipo === 'accesorio') {
+                            const index = accesoriosList.findIndex(a => a.id == recursoId);
+                            if (index >= 0) {
+                                accesoriosList[index] = recurso;
+                            } else {
+                                accesoriosList.push(recurso);
+                            }
+                        }
+                        console.log(`✅ Recurso ${recursoId} cargado desde API`);
+                    }
+                }
+            } catch (error) {
+                console.error(`❌ Error cargando ${tipo} ${recursoId}:`, error);
+                throw new Error(`No se pudo cargar el ${tipo} ${recursoId}`);
+            }
+        }
+
+        if (!recurso) {
+            throw new Error(`${tipo} ${recursoId} no encontrado`);
+        }
+
+        return recurso;
     }
 
     estaDisponible(recurso, tipo) {
@@ -534,6 +735,9 @@ class SistemaReservas {
         try {
             let url, payload;
 
+            const timestampFormateado = timestampReserva;
+            const sessionFormateado = sessionReserva;
+
             if (tipo === 'barril') {
                 const barril = barrilesList.find(b => b.id == recursoId);
                 if (!barril) throw new Error(`Barril ${recursoId} no encontrado`);
@@ -543,9 +747,9 @@ class SistemaReservas {
                     estado: nuevoEstado,
                     litros: barril.litros,
                     notas: barril.notas || "",
-                    lote: { id: barril.loteId }, // Enviar objeto lote
-                    session_reserva: sessionReserva,
-                    timestamp_reserva: timestampReserva
+                    lote: { id: barril.loteId },
+                    sessionReserva: sessionFormateado,
+                    timestampReserva: timestampFormateado
                 };
 
                 url = `${API}/updateBarril`;
@@ -554,20 +758,20 @@ class SistemaReservas {
                 const accesorio = accesoriosList.find(a => a.id == recursoId);
                 if (!accesorio) throw new Error(`Accesorio ${recursoId} no encontrado`);
 
+                // CORREGIDO: Sin campo precio que causa error en el backend
                 payload = {
                     id: accesorio.id,
                     nombre: accesorio.nombre,
                     estado: nuevoEstado,
                     notas: accesorio.notas || "",
-                    precio: accesorio.precio || 0,
-                    session_reserva: sessionReserva,
-                    timestamp_reserva: timestampReserva
+                    sessionReserva: sessionFormateado,
+                    timestampReserva: timestampFormateado
                 };
 
                 url = `${API}/updateAccesorio`;
             }
 
-            console.log(`📤 Actualizando ${tipo} ${recursoId}:`, payload);
+            console.log(`📤 Actualizando ${tipo} ${recursoId} a estado: ${nuevoEstado}`);
 
             const res = await fetchJSON(url, {
                 method: "PUT",
@@ -576,22 +780,22 @@ class SistemaReservas {
             });
 
             if (res && (res.codigo === "200" || res.status === "success")) {
-                console.log(`✅ ${tipo} ${recursoId} actualizado a: ${nuevoEstado}`);
+                console.log(`✅ ${tipo} ${recursoId} actualizado exitosamente a: ${nuevoEstado}`);
                 
                 // Actualizar en memoria
                 if (tipo === 'barril') {
                     const barril = barrilesList.find(b => b.id == recursoId);
                     if (barril) {
                         barril.estado = nuevoEstado;
-                        barril.session_reserva = sessionReserva;
-                        barril.timestamp_reserva = timestampReserva;
+                        barril.sessionReserva = sessionFormateado;
+                        barril.timestampReserva = timestampFormateado;
                     }
                 } else if (tipo === 'accesorio') {
                     const accesorio = accesoriosList.find(a => a.id == recursoId);
                     if (accesorio) {
                         accesorio.estado = nuevoEstado;
-                        accesorio.session_reserva = sessionReserva;
-                        accesorio.timestamp_reserva = timestampReserva;
+                        accesorio.sessionReserva = sessionFormateado;
+                        accesorio.timestampReserva = timestampFormateado;
                     }
                 }
                 
@@ -623,7 +827,6 @@ class SistemaReservas {
             return;
         }
 
-        // Encontrar el tiempo de expiración más cercano
         let tiempoMinimo = Infinity;
         this.reservas.forEach(reserva => {
             const tiempoRestante = reserva.timestampExpiracion - Date.now();
@@ -643,7 +846,7 @@ class SistemaReservas {
 
     mostrarNotificacionExpiracion(reserva) {
         const tipoTexto = reserva.tipo === 'barril' ? 'barril' : 'accesorio';
-        const mensaje = `⏰ La reserva para el ${tipoTexto} #${reserva.recursoId} ha expirado. Se ha liberado automáticamente.`;
+        const mensaje = `⏰ La reserva para el ${tipoTexto} #${reserva.recursoId} ha expirado (5 minutos). Se ha liberado automáticamente.`;
         mostrarNotificacionGlobal(mensaje, 'warning');
     }
 
@@ -653,6 +856,9 @@ class SistemaReservas {
         
         // Actualizar UI cada segundo
         setInterval(() => this.actualizarAlertaReserva(), 1000);
+        
+        // Verificar BD cada minuto para rollbacks automáticos
+        setInterval(() => this.verificarReservasBD(), 60000);
     }
 }
 
@@ -697,52 +903,130 @@ const sistemaReservas = new SistemaReservas();
 </script>
 <script>
 // ========== SISTEMA DE ALERTAS DE STOCK ==========
+// ========== SISTEMA DE ALERTAS DE STOCK (Importado del Home) ==========
 function initAlertasStock() {
-    const alertasContainer = $('#alertas-container');
-    if (!alertasContainer) return;
+    const DEFAULT_THRESHOLDS = { cervezas: 100, barriles: 10, lotes: 5, maduradores: 2 };
+    const STORAGE_KEY = 'lowstock_thresholds';
+    const ENDPOINTS = {
+        cervezas: ['/reports/cervezas/check-threshold?threshold={t}', '/checkStockCerveza?threshold={t}'],
+        barriles: ['/reports/barriles/check-threshold?threshold={t}', '/checkStockBarril?threshold={t}'],
+        lotes: ['/reports/lotes/check-threshold?threshold={t}', '/reports/lotes/check-threshold?threshold={t}'],
+        maduradores: ['/reports/maduradores/check-threshold?threshold={t}', '/finByEstado/Activo?threshold={t}']
+    };
 
-    function actualizarAlertas() {
+    function loadThresholds() {
         try {
-            let alertasHTML = '';
-            
-            // Verificar cervezas con stock bajo
-            if (cervezasList && cervezasList.length > 0) {
-                const cervezasBajas = cervezasList.filter(c => 
-                    (c.stock !== undefined && c.stock < 50) ||
-                    (c.cantidad !== undefined && c.cantidad < 50)
-                );
-                if (cervezasBajas.length > 0) {
-                    alertasHTML += `<div class="text-warning mb-1">⚠️ ${cervezasBajas.length} cerveza(s) con stock bajo</div>`;
-                }
-            }
+            const s = localStorage.getItem(STORAGE_KEY);
+            return s ? Object.assign({}, DEFAULT_THRESHOLDS, JSON.parse(s)) : Object.assign({}, DEFAULT_THRESHOLDS);
+        } catch(e) { return Object.assign({}, DEFAULT_THRESHOLDS); }
+    }
 
-            // Verificar barriles cargados
-            if (barrilesList && barrilesList.length > 0) {
-                const barrilesCargados = barrilesList.filter(b => b.estado === "Cargado");
-                if (barrilesCargados.length < 5) {
-                    alertasHTML += `<div class="text-danger mb-1">🚨 Solo ${barrilesCargados.length} barril(es) cargado(s)</div>`;
-                }
-            }
+    function escapeHtml(unsafe) {
+        if (unsafe==null) return '';
+        return String(unsafe)
+            .replace(/&/g,"&amp;")
+            .replace(/</g,"&lt;")
+            .replace(/>/g,"&gt;")
+            .replace(/"/g,"&quot;")
+            .replace(/'/g,"&#039;");
+    }
 
-            // Verificar accesorios disponibles
-            if (accesoriosList && accesoriosList.length > 0) {
-                const accesoriosDisponibles = accesoriosList.filter(a => a.estado === "Disponible");
-                if (accesoriosDisponibles.length < 3) {
-                    alertasHTML += `<div class="text-warning mb-1">⚠️ Solo ${accesoriosDisponibles.length} accesorio(s) disponible(s)</div>`;
-                }
-            }
-
-            alertasContainer.innerHTML = alertasHTML || '<div class="text-success">✅ Stock en niveles normales</div>';
-        } catch (error) {
-            console.error('Error en alertas:', error);
-            alertasContainer.innerHTML = '<div class="text-danger">❌ Error cargando alertas</div>';
+    async function safeParse(resp) {
+        const ct = resp.headers.get('content-type') || '';
+        try {
+            if (ct.includes('application/json')) {
+                const obj = await resp.json();
+                if (typeof obj === 'string') return obj;
+                if (obj.descripcion) return obj.descripcion;
+                if (obj.message) return obj.message;
+                if (obj.data && typeof obj.data === 'string') return obj.data;
+                if (obj.data && Array.isArray(obj.data)) return obj.data.length === 0 ? 'OK' : JSON.stringify(obj.data);
+                return JSON.stringify(obj);
+            } else return await resp.text();
+        } catch(e) {
+            try { return await resp.text(); } catch(_) { return String(e); }
         }
     }
 
-    setInterval(actualizarAlertas, 30000);
-    setTimeout(actualizarAlertas, 2000);
-}
+    async function callCheckEndpoint(url) {
+        try {
+            const fullUrl = API + url;
+            const r = await fetch(fullUrl);
+            const msg = await safeParse(r);
+            return { ok: r.ok, message: msg, status: r.status };
+        } catch(e) { 
+            return { ok: false, message: e.message || String(e) }; 
+        }
+    }
 
+    async function tryEndpointsForCategory(category, threshold) {
+        const list = ENDPOINTS[category] || [];
+        if (!list.length) return { ok: false, message: 'No hay endpoints configurados' };
+        
+        let last = null;
+        for (const pattern of list) {
+            const url = pattern.replace('{t}', encodeURIComponent(threshold));
+            last = await callCheckEndpoint(url);
+            if (last.ok) return last;
+        }
+        return last;
+    }
+
+    function isBelowText(msg) {
+        if (!msg) return false;
+        const s = (typeof msg === 'string') ? msg : String(msg);
+        return /por debajo|⚠|baj[oa]|insuficient|no alcanza|below|insufficient/i.test(s);
+    }
+
+    function capitalize(s){ 
+        return s.charAt(0).toUpperCase() + s.slice(1); 
+    }
+
+    function formatMessage(category, res) {
+        if (!res) return `<li class="text-danger">Error (${capitalize(category)}): respuesta vacía</li>`;
+        
+        if (res.ok) {
+            if (isBelowText(res.message)) {
+                return `<li><span class="text-warning">🚨 ${capitalize(category)} por debajo del mínimo</span></li>`;
+            } else {
+                return `<li><span class="text-success">✅ ${capitalize(category)} en niveles normales</span></li>`;
+            }
+        } else {
+            const msg = (typeof res.message === 'object') ? 
+                (res.message.descripcion || res.message.message || JSON.stringify(res.message)) : 
+                res.message;
+            return `<li class="text-danger">⚠ ${capitalize(category)}: ${escapeHtml(msg)}</li>`;
+        }
+    }
+
+    async function loadLowStock() {
+        const contentEl = document.getElementById('alertas-container');
+        if (!contentEl) return;
+        
+        contentEl.innerHTML = '<p class="small text-muted mb-0">Cargando alertas de stock...</p>';
+        
+        const thresholds = loadThresholds();
+        const categories = ['cervezas', 'barriles', 'lotes', 'maduradores'];
+        const items = [];
+        
+        for (const cat of categories) {
+            const thr = thresholds[cat] !== undefined ? thresholds[cat] : DEFAULT_THRESHOLDS[cat];
+            const res = await tryEndpointsForCategory(cat, thr);
+            items.push(formatMessage(cat, res));
+        }
+        
+        contentEl.innerHTML = `
+            <div class="alertas-stock">
+                <h6 class="mb-2">📊 Estado del Stock</h6>
+                <ul class="list-unstyled small mb-0">${items.join('\n')}</ul>
+            </div>
+        `;
+    }
+
+    // Inicializar y configurar intervalo de actualización
+    loadLowStock();
+    setInterval(loadLowStock, 60000); // Actualizar cada minuto
+}
 // ========== FUNCIONES PARA BARRILES ==========
 function obtenerBarrilesPorCerveza(cervezaId) {
     const lotesDeCerveza = lotesList.filter(lote =>
@@ -871,24 +1155,40 @@ async function loadAll() {
 
         const [pedRes, cerRes, lotRes, accRes, barRes, cliRes, asoRes] = results;
 
+        // Procesar pedidos
         window._allPedidos = (pedRes && pedRes.data) ? pedRes.data : (Array.isArray(pedRes) ? pedRes : []);
+        
+        // Procesar cervezas
         cervezasList = (cerRes && cerRes.data) ? cerRes.data : (Array.isArray(cerRes) ? cerRes : []);
+        
+        // Procesar lotes
         lotesList = (lotRes && lotRes.data) ? lotRes.data : (Array.isArray(lotRes) ? lotRes : []);
         
+        // Procesar accesorios - SOLO DISPONIBLES
         const todosAccesorios = (accRes && accRes.data) ? accRes.data : (Array.isArray(accRes) ? accRes : []);
-        accesoriosList = todosAccesorios.filter(a =>
-            a.estado && String(a.estado).toLowerCase() === 'disponible'
-        );
+        accesoriosList = todosAccesorios.filter(a => {
+            const estado = String(a.estado || '').toLowerCase().trim();
+            return estado === 'disponible';
+        });
         
+        // Procesar barriles
         barrilesList = (barRes && barRes.data) ? barRes.data : (Array.isArray(barRes) ? barRes : []);
+        
+        // Procesar clientes
         clientesList = (cliRes && cliRes.data) ? cliRes.data : (Array.isArray(cliRes) ? cliRes : []);
+        
+        // Procesar asociados
         asociadosList = (asoRes && asoRes.data) ? asoRes.data : (Array.isArray(asoRes) ? asoRes : []);
 
         console.log("=== DATOS CARGADOS ===");
         console.log("Cervezas:", cervezasList.length);
         console.log("Barriles:", barrilesList.length);
-        console.log("Accesorios:", accesoriosList.length);
+        console.log("Accesorios DISPONIBLES:", accesoriosList.length);
+        console.log("Lotes:", lotesList.length);
+        console.log("Clientes:", clientesList.length);
+        console.log("Asociados:", asociadosList.length);
 
+        // Inicializar componentes
         populateSelects();
         renderAccesorios();
         renderPedidosTable(window._allPedidos);
@@ -897,13 +1197,13 @@ async function loadAll() {
         // Verificar reservas expiradas en BD al cargar
         await sistemaReservas.verificarReservasBD();
 
-        mensaje('Datos cargados correctamente', 'success');
+        mensaje(`Datos cargados correctamente: ${cervezasList.length} cervezas, ${barrilesList.length} barriles, ${accesoriosList.length} accesorios disponibles`, 'success');
+        
     } catch (err) {
         console.error('Error en loadAll:', err);
         mensaje('Error cargando datos: ' + (err.message || err), 'error');
     }
 }
-
 // ========== RENDER TABLA PEDIDOS ==========
 function renderPedidosTable(items) {
     const tbody = $('#pedidosTableBody');
@@ -1702,40 +2002,34 @@ async function submitFormHandler(e) {
             }
         });
 
-        // Confirmar todas las reservas (convertirlas a permanentes)
-        for (const reservaId of todasLasReservas) {
-            if (reservaId) {
-                await sistemaReservas.confirmar(reservaId);
-            }
-        }
-
-        // Construir payload del pedido
+        // Construir payload del pedido CORREGIDO
         const accesoriosSeleccionados = [];
         const cervezasPayload = [];
         const barrilesPayload = [];
 
-        // Procesar filas de detalle para el payload
+        // Procesar filas de detalle para el payload CORREGIDO
         $$('#detalleTable tbody tr').forEach(tr => {
             const tipo = tr.dataset.tipo;
             const id = tr.dataset.id;
             
             if (tipo === 'accesorio') {
-                const acc = accesoriosList.find(x => String(x.id) === String(id));
-                if (acc) {
-                    accesoriosSeleccionados.push({
-                        id: acc.id,
-                        nombre: acc.nombre,
-                        notas: acc.notas,
-                        estado: 'Alquilado',
-                        precio: parseFloat(tr.querySelector('.unit').textContent || 0)
-                    });
-                }
+                // SOLO enviar ID del accesorio, no objeto completo
+                accesoriosSeleccionados.push({ id: Number(id) });
             } else if (tipo === 'cerveza') {
                 const qty = Number(tr.querySelector('.qty').textContent || 1);
                 cervezasPayload.push({ 
                     id: Number(id), 
                     cantidad: qty 
                 });
+                
+                // AGREGAR BARRILES: obtener los IDs de barriles de las reservas
+                const reservasIds = JSON.parse(tr.dataset.reservas || '[]');
+                for (const reservaId of reservasIds) {
+                    const reserva = sistemaReservas.reservas.get(reservaId);
+                    if (reserva && reserva.tipo === 'barril') {
+                        barrilesPayload.push({ id: Number(reserva.recursoId) });
+                    }
+                }
             }
         });
 
@@ -1747,7 +2041,7 @@ async function submitFormHandler(e) {
         const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
         const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
 
-        // Payload del pedido
+        // Payload del pedido CORREGIDO - INCLUIR BARRILES
         const payload = {
             id: $('#pedidoId').value ? Number($('#pedidoId').value) : 0,
             fechaPedido: fechaPedidoMillis,
@@ -1756,15 +2050,24 @@ async function submitFormHandler(e) {
             estado: $('#estado').value || 'Pendiente',
             estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
             envio: envio,
-            accesorios: accesoriosSeleccionados,
-            cervezas: cervezasPayload,
+            accesorios: accesoriosSeleccionados,  // ✅ Solo IDs
+            cervezas: cervezasPayload,            // ✅ IDs y cantidad
+            barriles: barrilesPayload,            // ✅ AGREGADO: IDs de barriles
             usuario: { id: Number(usuarioId) },
             cliente: { id: Number(clienteId) },
             totalGral: total,
             nota: notaValor
         };
 
-        console.log('📦 Payload del pedido:', payload);
+        console.log('📦 Payload CORREGIDO del pedido:', payload);
+        
+        // 🔍 DEBUG - Estructura detallada del payload
+        console.log('🔍 DEBUG - Estructura del payload:');
+        console.log('- Accesorios:', accesoriosSeleccionados);
+        console.log('- Cervezas:', cervezasPayload);
+        console.log('- Barriles:', barrilesPayload);
+        console.log('- Total reservas activas:', todasLasReservas.length);
+        console.log('- IDs de reservas:', todasLasReservas);
 
         const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
         const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
@@ -1791,6 +2094,13 @@ async function submitFormHandler(e) {
         if (ok) {
             console.log('✅ Pedido guardado exitosamente');
             
+            // ✅ CONFIRMAR RESERVAS SOLO DESPUÉS DE GUARDAR EXITOSAMENTE
+            for (const reservaId of todasLasReservas) {
+                if (reservaId) {
+                    await sistemaReservas.confirmar(reservaId);
+                }
+            }
+            
             // Limpiar formulario
             resetForm();
             
@@ -1798,9 +2108,11 @@ async function submitFormHandler(e) {
             await loadAll();
             
         } else {
-            // REVERTIR: Si falla el pedido, liberar las reservas confirmadas
+            // REVERTIR: Si falla el pedido, liberar las reservas
             for (const reservaId of todasLasReservas) {
-                await sistemaReservas.liberar(reservaId);
+                if (reservaId) {
+                    await sistemaReservas.liberar(reservaId);
+                }
             }
             
             let errorMsg = 'No se pudo guardar el pedido';
@@ -1835,6 +2147,7 @@ async function submitFormHandler(e) {
         mostrarNotificacionGlobal('Error al guardar: ' + (err.message || err), 'error');
     }
 }
+
 
 // ========== RESET FORM CON LIBERACIÓN DE RESERVAS ==========
 function resetForm() {

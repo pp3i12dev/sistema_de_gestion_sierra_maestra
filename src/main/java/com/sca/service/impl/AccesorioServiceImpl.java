@@ -1,12 +1,9 @@
 package com.sca.service.impl;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,7 +110,7 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
             respuesta.setDescripcion("Datos del Accesorio");
-            respuesta.setData(accesorioRepository.findById(id).orElse(null));
+            respuesta.setData(accesorioRepository.findById(id));
         } catch (Exception e) {
             respuesta.setCodigo("400");
             respuesta.setStatus("Error");
@@ -127,14 +124,47 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
     public ResponseEntity<Object> update(Accesorio accesorio, BindingResult bindingResult) throws BindException {
         respuesta = new Respuesta();
         try {
+            log.info("📤 Actualizando accesorio - ID: {}, sessionReserva: {}, timestampReserva: {}", 
+                    accesorio.getId(), accesorio.getSessionReserva(), accesorio.getTimestampReserva());
+            
+            // ✅ BUSCAR EL ACCESORIO EXISTENTE EN LA BD
+            Optional<Accesorio> optionalAccesorio = accesorioRepository.findById(accesorio.getId());
+            if (!optionalAccesorio.isPresent()) {
+                respuesta.setCodigo("404");
+                respuesta.setStatus("Not Found");
+                respuesta.setDescripcion("Accesorio no encontrado");
+                respuesta.setData(null);
+                return new ResponseEntity<>(respuesta, HttpStatus.NOT_FOUND);
+            }
+            
+            Accesorio accesorioExistente = optionalAccesorio.get();
+            
+            // ✅ ACTUALIZAR SOLO LOS CAMPOS NECESARIOS
+            accesorioExistente.setNombre(accesorio.getNombre());
+            accesorioExistente.setEstado(accesorio.getEstado());
+            accesorioExistente.setNotas(accesorio.getNotas());
+            //accesorioExistente.setPrecio(accesorio.getPrecio());
+            
+            // ✅ ACTUALIZAR CAMPOS DE RESERVA (CRÍTICO)
+            accesorioExistente.setSessionReserva(accesorio.getSessionReserva());
+            accesorioExistente.setTimestampReserva(accesorio.getTimestampReserva());
+            
+            Accesorio accesorioActualizado = accesorioRepository.save(accesorioExistente);
+            
+            log.info("✅ Accesorio actualizado exitosamente - ID: {}, Nuevo estado: {}, sessionReserva: {}", 
+                    accesorioActualizado.getId(), accesorioActualizado.getEstado(), accesorioActualizado.getSessionReserva());
+            
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
             respuesta.setDescripcion("Se modificaron los datos del Accesorio");
-            respuesta.setData(accesorioRepository.save(accesorio));
+            respuesta.setData(accesorioActualizado);
+            
         } catch (Exception e) {
+            log.error("❌ Error actualizando accesorio ID {}: {}", accesorio.getId(), e.getMessage());
             respuesta.setCodigo(String.valueOf(HttpStatus.BAD_REQUEST.value()));
             respuesta.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
             respuesta.setDescripcion("No se pudo modificar el Accesorio");
+            
             if (bindingResult.hasErrors()) {
                 bindingResult.getAllErrors().forEach(r -> {
                     resp = resp + r.getDefaultMessage() + ";";
@@ -147,23 +177,56 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
                 return handleExceptionInternal(e, respuesta, new HttpHeaders(), HttpStatus.BAD_REQUEST, null);
             }
         }
-        return new ResponseEntity<Object>(respuesta, null, HttpStatus.CREATED);
+        return new ResponseEntity<Object>(respuesta, null, HttpStatus.OK);
+    }
+
+    // ✅ NUEVO MÉTODO PARA ACTUALIZAR RESERVAS
+    @Override
+    public ResponseEntity<Object> updateReservaAccesorio(Accesorio accesorio) {
+        try {
+            log.info("📤 Actualizando reserva accesorio - ID: {}, sessionReserva: {}, timestampReserva: {}", 
+                    accesorio.getId(), accesorio.getSessionReserva(), accesorio.getTimestampReserva());
+            
+            // Buscar el accesorio existente
+            Optional<Accesorio> optionalAccesorio = accesorioRepository.findById(accesorio.getId());
+            if (!optionalAccesorio.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Accesorio no encontrado");
+            }
+            
+            Accesorio accesorioExistente = optionalAccesorio.get();
+            
+            // ✅ SOLO ACTUALIZAR CAMPOS DE RESERVA Y ESTADO
+            accesorioExistente.setSessionReserva(accesorio.getSessionReserva());
+            accesorioExistente.setTimestampReserva(accesorio.getTimestampReserva());
+            accesorioExistente.setEstado(accesorio.getEstado());
+            
+            Accesorio accesorioActualizado = accesorioRepository.save(accesorioExistente);
+            
+            log.info("✅ Reserva de accesorio actualizada - ID: {}, Estado: {}, Session: {}", 
+                    accesorioActualizado.getId(), accesorioActualizado.getEstado(), accesorioActualizado.getSessionReserva());
+            
+            return ResponseEntity.ok(accesorioActualizado);
+            
+        } catch (Exception e) {
+            log.error("❌ Error actualizando reserva de accesorio: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error actualizando reserva: " + e.getMessage());
+        }
     }
 
     @Override
-    public Respuesta findAccesorioPorEstado(String estado) {
-        Respuesta respuesta = new Respuesta();
+    public Respuesta findAccesoriosPorEstado(String estado) {
+        respuesta = new Respuesta();
         try {
-            List<Accesorio> accesorios = accesorioRepository.findAll()
-                .stream()
-                .filter(a -> a.getEstado() != null && a.getEstado().equalsIgnoreCase(estado))
-                .collect(Collectors.toList());
-
             respuesta.setCodigo("200");
             respuesta.setStatus("Ok");
             respuesta.setDescripcion("Datos de los Accesorios por Estado");
-            respuesta.setData(accesorios);
-
+            respuesta.setData(
+                accesorioRepository.findAll()
+                                   .stream()
+                                   .filter(a -> estado.equalsIgnoreCase(a.getEstado()))
+                                   .collect(Collectors.toList())
+            );
         } catch (Exception e) {
             respuesta.setCodigo("400");
             respuesta.setStatus("Error");
@@ -172,8 +235,6 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
         }
         return respuesta;
     }
-
-
 
     @Override
     public void marcarComoAlquilados(List<Long> ids) {
@@ -197,78 +258,26 @@ public class AccesorioServiceImpl extends ResponseEntityExceptionHandler impleme
     });
     }
 
-@Override
-public Respuesta findDisponiblesByNombre(String nombre) {
-    respuesta = new Respuesta();
-    try {
-        respuesta.setCodigo("200");
-        respuesta.setStatus("Ok");
-        respuesta.setDescripcion("Accesorios disponibles por nombre");
-        respuesta.setData(
-            accesorioRepository.findAll()
-                .stream()
-                .filter(a -> "Disponible".equalsIgnoreCase(a.getEstado()) 
-                          && nombre.equalsIgnoreCase(a.getNombre()))
-                .collect(Collectors.toList())
-        );
-    } catch (Exception e) {
-        respuesta.setCodigo("400");
-        respuesta.setStatus("Error");
-        respuesta.setDescripcion("No se pudieron obtener los accesorios disponibles");
-        respuesta.setData(e.getMessage());
+    @Override
+    public Respuesta findDisponiblesByNombre(String nombre) {
+        respuesta = new Respuesta();
+        try {
+            respuesta.setCodigo("200");
+            respuesta.setStatus("Ok");
+            respuesta.setDescripcion("Accesorios disponibles por nombre");
+            respuesta.setData(
+                accesorioRepository.findAll()
+                    .stream()
+                    .filter(a -> "Disponible".equalsIgnoreCase(a.getEstado()) 
+                              && nombre.equalsIgnoreCase(a.getNombre()))
+                    .collect(Collectors.toList())
+            );
+        } catch (Exception e) {
+            respuesta.setCodigo("400");
+            respuesta.setStatus("Error");
+            respuesta.setDescripcion("No se pudieron obtener los accesorios disponibles");
+            respuesta.setData(e.getMessage());
+        }
+        return respuesta;
     }
-    return respuesta;
-}
-
-
-@Override
-public ResponseEntity<byte[]> exportarAccesoriosExcel(String estado) {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-        Sheet sheet = workbook.createSheet("Accesorios");
-
-        // Fila de encabezado
-        Row header = sheet.createRow(0);
-        String[] columnas = {"ID", "Nombre", "Estado", "Notas"};
-        for (int i = 0; i < columnas.length; i++) {
-            header.createCell(i).setCellValue(columnas[i]);
-        }
-
-        // Filtrar por estado si se pasa
-        List<Accesorio> accesorios;
-        if (estado != null && !estado.isEmpty()) {
-            accesorios = accesorioRepository.findAll()
-                            .stream()
-                            .filter(a -> estado.equalsIgnoreCase(a.getEstado()))
-                            .collect(Collectors.toList());
-        } else {
-            accesorios = accesorioRepository.findAll();
-        }
-
-        // Llenar datos
-        int rowNum = 1;
-        for (Accesorio a : accesorios) {
-            Row row = sheet.createRow(rowNum++);
-            row.createCell(0).setCellValue(a.getId());
-            row.createCell(1).setCellValue(a.getNombre());
-            row.createCell(2).setCellValue(a.getEstado());
-            row.createCell(3).setCellValue(a.getNotas() != null ? a.getNotas() : "");
-        }
-
-        for (int i = 0; i < columnas.length; i++) sheet.autoSizeColumn(i);
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        workbook.write(out);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=accesorios.xlsx");
-
-        return ResponseEntity.ok().headers(headers).body(out.toByteArray());
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-}
-
-
-
-
 }

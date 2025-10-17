@@ -3,6 +3,7 @@ package com.sca.controller;
 import javax.websocket.server.PathParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -15,9 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sca.model.Accesorio;
@@ -29,14 +28,11 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/accesorios")   // <- esto define el prefijo para todos los endpoints
 @Api(tags = "Accesorio")
 @CrossOrigin(origins = "*", methods= {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
 @Slf4j
 public class AccesorioController {
 
-	// Logger log = LoggerFactory.getLogger(String.class);
-	
 	@Autowired
 	AccesorioServiceImpl accesoriosServiceImpl;
 	
@@ -70,15 +66,27 @@ public class AccesorioController {
 		return accesoriosServiceImpl.update(accesorio, bindingResult);
 	}
 
-	@GetMapping(value = "/findAccesorioPorEstado/{estado}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public Respuesta findAccesorioPorEstado(@PathVariable String estado) {
-    	return accesoriosServiceImpl.findAccesorioPorEstado(estado);
+	// ✅ NUEVO ENDPOINT ESPECÍFICO PARA RESERVAS
+	@PutMapping(value = "/updateReservaAccesorio", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Actualizar reserva de Accesorio", notes = "Actualiza solo los campos de reserva de un Accesorio")
+	public ResponseEntity<Object> updateReservaAccesorio(@RequestBody Accesorio accesorio) {
+		try {
+			log.info("🔄 Actualizando reserva accesorio - ID: {}, sessionReserva: {}, timestampReserva: {}", 
+					accesorio.getId(), accesorio.getSessionReserva(), accesorio.getTimestampReserva());
+			
+			// Usar el servicio existente para la actualización
+			return accesoriosServiceImpl.updateReservaAccesorio(accesorio);
+			
+		} catch (Exception e) {
+			log.error("❌ Error actualizando reserva de accesorio: {}", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body("Error actualizando reserva: " + e.getMessage());
+		}
 	}
 
-
-	@GetMapping(value = "/exportarExcel", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	public ResponseEntity<byte[]> exportarAccesoriosExcel(@RequestParam(required = false) String estado) {
-		return accesoriosServiceImpl.exportarAccesoriosExcel(estado);
+	@GetMapping(value = "/findAccesoriosPorEstado/{estado}", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Consultar Accesorios por Estado", notes = "Esta operación devuelve todos los Accesorios filtrados por estado")
+	public Respuesta findAccesoriosPorEstado(@PathVariable String estado) {
+    	return accesoriosServiceImpl.findAccesoriosPorEstado(estado);
 	}
-
 }
