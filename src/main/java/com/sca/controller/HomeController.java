@@ -21,6 +21,6 @@ public class HomeController {
     @GetMapping("/")
     public String root() {
         // si alguien entra a http://localhost:8080/ lo redirige a la página de inicio
-        return "redirect:/inicio";
+        return "redirect:/cliente-dashboard";
     }
 }
