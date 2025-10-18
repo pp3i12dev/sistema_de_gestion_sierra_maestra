@@ -9,7 +9,7 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-    * {
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -35,23 +35,6 @@
             left: 0;
             right: 0;
             z-index: 100;
-        }
-                /* Hero Section */
-        .hero {
-            height: 30vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin-top: 80px;
-            background: radial-gradient(ellipse at center, rgba(182, 185, 16, 0.1) 0%, transparent 70%);
-        }
-
-        .hero-content {
-            text-align: center;
-            z-index: 10;
-            animation: fadeInUp 2s ease;
-            position: relative;
         }
         
         .logo {
@@ -147,7 +130,8 @@
             z-index: 1;
             pointer-events: none;
         }
-            .subtitle {
+        
+        .subtitle {
             font-family: 'Outfit', sans-serif;
             font-size: 1.3rem;
             font-weight: 400;
@@ -159,9 +143,10 @@
             background-clip: text;
             letter-spacing: 10px;
             text-transform: uppercase;
-            animation: ripple 3s ease-in-out infinite, waveGlow 4s ease-in-out infinite alternate  ;
+            animation: ripple 3s ease-in-out infinite, waveGlow 4s ease-in-out infinite alternate;
         }
-                @keyframes waveGlow {
+        
+        @keyframes waveGlow {
             0% { 
                 text-shadow: 0 0 30px rgba(64, 212, 6, 0.8),
                            0 0 60px rgba(36, 238, 18, 0.6);
@@ -182,6 +167,7 @@
             0%, 100% { opacity: 0.8; transform: translateY(0px); }
             50% { opacity: 1; transform: translateY(-5px); }
         }
+        
         @keyframes rise {
             0% {
                 bottom: -100px;
@@ -208,26 +194,6 @@
         .bubble:nth-child(8) { width: 7px; height: 7px; left: 40%; animation-duration: 7.5s; animation-delay: 3.5s; --drift: -8px; }
         .bubble:nth-child(9) { width: 13px; height: 13px; left: 45%; animation-duration: 10.5s; animation-delay: 1s; --drift: 15px; }
         .bubble:nth-child(10) { width: 9px; height: 9px; left: 50%; animation-duration: 8s; animation-delay: 4s; --drift: -9px; }
-        .bubble:nth-child(11) { width: 10px; height: 10px; left: 55%; animation-duration: 9s; animation-delay: 2s; --drift: 11px; }
-        .bubble:nth-child(12) { width: 6px; height: 6px; left: 60%; animation-duration: 7s; animation-delay: 3s; --drift: -6px; }
-        .bubble:nth-child(13) { width: 12px; height: 12px; left: 65%; animation-duration: 10s; animation-delay: 1.5s; --drift: 14px; }
-        .bubble:nth-child(14) { width: 9px; height: 9px; left: 70%; animation-duration: 8.5s; animation-delay: 2.5s; --drift: -10px; }
-        .bubble:nth-child(15) { width: 8px; height: 8px; left: 75%; animation-duration: 7.5s; animation-delay: 3.5s; --drift: 8px; }
-        .bubble:nth-child(16) { width: 11px; height: 11px; left: 80%; animation-duration: 9s; animation-delay: 0.8s; --drift: -11px; }
-        .bubble:nth-child(17) { width: 7px; height: 7px; left: 85%; animation-duration: 8s; animation-delay: 2.8s; --drift: 9px; }
-        .bubble:nth-child(18) { width: 10px; height: 10px; left: 90%; animation-duration: 10s; animation-delay: 1.2s; --drift: -12px; }
-        .bubble:nth-child(19) { width: 8px; height: 8px; left: 95%; animation-duration: 9s; animation-delay: 3.2s; --drift: 10px; }
-        .bubble:nth-child(20) { width: 12px; height: 12px; left: 3%; animation-duration: 7.5s; animation-delay: 0.3s; --drift: -8px; }
-        .bubble:nth-child(21) { width: 9px; height: 9px; left: 8%; animation-duration: 8.5s; animation-delay: 1.8s; --drift: 7px; }
-        .bubble:nth-child(22) { width: 7px; height: 7px; left: 13%; animation-duration: 9.5s; animation-delay: 2.3s; --drift: -9px; }
-        .bubble:nth-child(23) { width: 11px; height: 11px; left: 18%; animation-duration: 10.5s; animation-delay: 0.7s; --drift: 11px; }
-        .bubble:nth-child(24) { width: 8px; height: 8px; left: 23%; animation-duration: 7s; animation-delay: 3.7s; --drift: -7px; }
-        .bubble:nth-child(25) { width: 10px; height: 10px; left: 28%; animation-duration: 8s; animation-delay: 1.3s; --drift: 8px; }
-        .bubble:nth-child(26) { width: 6px; height: 6px; left: 33%; animation-duration: 9s; animation-delay: 2.7s; --drift: -10px; }
-        .bubble:nth-child(27) { width: 13px; height: 13px; left: 38%; animation-duration: 10s; animation-delay: 0.2s; --drift: 13px; }
-        .bubble:nth-child(28) { width: 9px; height: 9px; left: 43%; animation-duration: 8.5s; animation-delay: 3.8s; --drift: -8px; }
-        .bubble:nth-child(29) { width: 11px; height: 11px; left: 48%; animation-duration: 7.5s; animation-delay: 1.7s; --drift: 12px; }
-        .bubble:nth-child(30) { width: 7px; height: 7px; left: 53%; animation-duration: 9.5s; animation-delay: 2.2s; --drift: -7px; }
         
         .form-container {
             max-width: 1000px;
@@ -238,10 +204,9 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             color: #333; 
             padding: 2rem 3rem;
-            
         }
         
-        .form-container h2 {
+        .form-container h1 {
             color: #47138b;
             text-align: center;
             margin-bottom: 2rem;
@@ -302,30 +267,6 @@
             box-shadow: 0 10px 30px rgba(218, 165, 32, 0.5);
             display: none;
             border: 3px solid #FFD700;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .success-message::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shine 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes shine {
-            0% { left: -100%; }
-            100% { left: 100%; }
         }
         
         .error-message {
@@ -366,27 +307,6 @@
             transform: none;
         }
         
-        /* Back Button */
-        .btn-back {
-            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .btn-back:hover {
-            background: linear-gradient(135deg, #A0522D 0%, #8B4513 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            color: white;
-        }
-        
         /* Responsive */
         @media (max-width: 768px) {
             .form-row {
@@ -409,10 +329,6 @@
                 padding: 1rem;
                 flex-direction: column;
                 gap: 1rem;
-            }
-            
-            .header-title {
-                font-size: 1.5rem;
             }
             
             .main-content {
@@ -442,25 +358,20 @@
 </head>
 <body>
     <!-- Header -->
-    <!-- Header -->
     <header class="header">
         <a th:href="@{/inicio}" class="logo" style="text-decoration: none; cursor: pointer;">
             <div class="logo-circle">
                 <img src="/images/logo.jpg" alt="Sierra Maestra Logo">   
             </div>
             <div class="logo-text">Sierra Maestra</div>
-
         </a>
-            <p class="subtitle">Para todos la luz, para todos todo</p>
-
+        <p class="subtitle">Para todos la luz, para todos todo</p>
         
         <nav class="nav-menu">
             <a href="#cervezas" class="nav-item">Nuestras Cervezas</a>
             <a href="#promos" class="nav-item">Promos</a>
             <a href="#quienes-somos" class="nav-item">¿Quiénes somos?</a>
-        
             <a th:href="@{/inicio}" class=" nav-item active" id="btn-iniciar-sesion">Iniciar sesión</a>
-
         </nav>
     </header>
     
@@ -477,80 +388,57 @@
         <div class="bubble"></div>
         <div class="bubble"></div>
         <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
         
-          
-            
-    </section>
-    
-    <!-- Main Content -->
-    <main class="main-content">
         <div class="form-container">
-
-                    <h1 class="section-title">Crear Cuenta</h1>
-
+            <h1>Crear Cuenta</h1>
 
             <!-- Success Message -->
             <div id="success-message" class="success-message">
                 ¡REGISTRADO CON ÉXITO!
-          </div>
+            </div>
 
             <!-- Error Message -->
             <div id="error-message" class="error-message">
                 <!-- Error messages will be inserted here -->
-          </div>
+            </div>
 
-     
             <!-- Registration Form -->
-              <form id="formulario-registro" novalidate>
+            <form id="formulario-registro" novalidate>
                 <div class="form-row">
                     <!-- Left Column -->
                     <div class="form-column">
                         <div class="form-group">
                             <label for="nombre" class="form-label">Nombre</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" required
+                            <input type="text" class="form-control" id="nombre" name="nombre" required
                                    placeholder="Ingrese su nombre">
                             <div class="invalid-feedback"></div>
-                  </div>
+                        </div>
 
                         <div class="form-group">
                             <label for="documento" class="form-label">DNI</label>
-                            <input type="text" class="form-control" id="documento" name="documento" required
-                                   placeholder="Ej: 12345678" maxlength="15">
-                            <div class="invalid-feedback"></div>
-                  </div>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="documento" 
+                                   name="documento" 
+                                   required
+                                   placeholder="Ej: 12345678" 
+                                   maxlength="8"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <div class="invalid-feedback">El DNI debe contener 8 dígitos numéricos</div>
+                        </div>
 
                         <div class="form-group">
                             <label for="mail" class="form-label">Email</label>
                             <input type="email" class="form-control" id="mail" name="mail" required
                                    placeholder="ejemplo@email.com">
                             <div class="invalid-feedback"></div>
-                  </div>
+                        </div>
 
                         <div class="form-group">
                             <label for="fecha_nacimiento" class="form-label">Fecha de nacimiento</label>
-                    <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required>
+                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required>
                             <div class="invalid-feedback"></div>
-                  </div>
+                        </div>
                     </div>
                     
                     <!-- Right Column -->
@@ -560,77 +448,91 @@
                             <input type="text" class="form-control" id="apellido" name="apellido" required
                                    placeholder="Ingrese su apellido">
                             <div class="invalid-feedback"></div>
-                  </div>
+                        </div>
 
                         <div class="form-group">
                             <label for="direccion" class="form-label">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" name="direccion" required
+                            <input type="text" class="form-control" id="direccion" name="direccion" required
                                    placeholder="Calle, número, ciudad">
                             <div class="invalid-feedback"></div>
-                  </div>
+                        </div>
 
                         <div class="form-group">
                             <label for="telefono" class="form-label">Teléfono</label>
-                    <input type="tel" class="form-control" id="telefono" name="telefono" required
+                            <input type="tel" class="form-control" id="telefono" name="telefono" required
                                    placeholder="Ej: 1123456789" maxlength="15">
                             <div class="invalid-feedback"></div>
-                  </div>
+                        </div>
 
                         <div class="form-group">
                             <label for="cuit" class="form-label">Cuit</label>
-                    <input type="text" class="form-control" id="cuit" name="cuit"
+                            <input type="text" class="form-control" id="cuit" name="cuit"
                                    placeholder="Ej: 20-12345678-9">
                             <div class="invalid-feedback"></div>
                         </div>
                     </div>
-                  </div>
+                </div>
 
                 <!-- Password Fields -->
                 <div class="form-row">
                     <div class="form-group">
                         <label for="contrasenia" class="form-label">Contraseña</label>
-                      <input type="password" class="form-control" id="contrasenia" name="contrasenia" required
+                        <input type="password" class="form-control" id="contrasenia" name="contrasenia" required
                                placeholder="Mínimo 6 caracteres" minlength="6">
                         <div class="invalid-feedback"></div>
-                  </div>
+                    </div>
 
                     <div class="form-group">
                         <label for="confirmar_contrasenia" class="form-label">Confirmar contraseña</label>
-                      <input type="password" class="form-control" id="confirmar_contrasenia" required
+                        <input type="password" class="form-control" id="confirmar_contrasenia" required
                                placeholder="Repita su contraseña">
                         <div class="invalid-feedback"></div>
-                  </div>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
                 <button type="submit" class="btn-register" id="btn-registrar">
                     Registrarte
                 </button>
-                       <!-- Back Button -->
-        
-                     <button type="button" class="btn-register" onclick="window.location.href='http://localhost:8080/'">   
-                        <i class="bi bi-arrow-left"></i>
-                        Volver
-                    </button>
-              </form>
+                
+                <!-- Back Button -->
+                <button type="button" class="btn-register" onclick="window.location.href='http://localhost:8080/'">   
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+                </button>
+            </form>
         </div>
     </main>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const formulario = document.getElementById('formulario-registro');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const formulario = document.getElementById('formulario-registro');
             const successMessage = document.getElementById('success-message');
             const errorMessage = document.getElementById('error-message');
-    const btnRegistrar = document.getElementById('btn-registrar');
+            const btnRegistrar = document.getElementById('btn-registrar');
 
-            // Función para mostrar mensajes
-    function mostrarMensaje(mensaje, tipo) {
-        if (tipo === 'success') {
+            // URL base de la API
+            const API_BASE_URL = 'http://localhost:8080';
+            const API_ENDPOINT = '/addCliente';
+
+            // Función para formatear fecha de yyyy-mm-dd a dd/mm/aaaa
+            function formatearFecha(fechaISO) {
+                if (!fechaISO) return '';
+                const fecha = new Date(fechaISO);
+                const dia = fecha.getDate().toString().padStart(2, '0');
+                const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+                const año = fecha.getFullYear();
+                return `${dia}/${mes}/${año}`;
+            }
+
+            function mostrarMensaje(mensaje, tipo) {
+                if (tipo === 'success') {
                     successMessage.style.display = 'block';
                     errorMessage.style.display = 'none';
+                    successMessage.textContent = mensaje;
                 } else {
                     errorMessage.style.display = 'block';
                     errorMessage.textContent = mensaje;
@@ -638,160 +540,179 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // Función para validar formulario
-    function validarFormulario() {
-        const contrasenia = document.getElementById('contrasenia').value;
-        const confirmarContrasenia = document.getElementById('confirmar_contrasenia').value;
-        
-        // Validar que las contraseñas coincidan
-        if (contrasenia !== confirmarContrasenia) {
-            document.getElementById('confirmar_contrasenia').setCustomValidity('Las contraseñas no coinciden');
-            return false;
-        } else {
-            document.getElementById('confirmar_contrasenia').setCustomValidity('');
-        }
-
-        // Validar campos requeridos
-        const camposRequeridos = [
-            'nombre', 'apellido', 'documento', 'fecha_nacimiento', 
-            'mail', 'direccion', 'telefono', 'contrasenia', 'confirmar_contrasenia'
-        ];
-
-        let esValido = true;
-        camposRequeridos.forEach(campo => {
-            const elemento = document.getElementById(campo);
-            if (!elemento.checkValidity()) {
-                elemento.classList.add('is-invalid');
-                esValido = false;
-            } else {
-                elemento.classList.remove('is-invalid');
-                        elemento.classList.add('is-valid');
-            }
-        });
-
-        return esValido;
-    }
-
-            // Event listener para el formulario
-    formulario.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        // Validar formulario antes de enviar
-        if (!validarFormulario()) {
-                    mostrarMensaje('Por favor corrija los errores en el formulario', 'error');
-            return;
-        }
-
-        // Deshabilitar botón para evitar envíos múltiples
-        btnRegistrar.disabled = true;
-                btnRegistrar.textContent = 'Registrando...';
-
-        try {
-            // Preparar datos del formulario
-            const formData = new FormData(formulario);
-            const clienteData = {
-                nombre: formData.get('nombre'),
-                apellido: formData.get('apellido'),
-                documento: formData.get('documento'),
-                fecha_nacimiento: formData.get('fecha_nacimiento'),
-                mail: formData.get('mail'),
-                direccion: formData.get('direccion'),
-                telefono: formData.get('telefono'),
-                cuit: formData.get('cuit') || null,
-                contrasenia: formData.get('contrasenia')
-            };
-
-            // Enviar petición al backend
-            const response = await fetch('/registrarCliente', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(clienteData)
-            });
-
-            const resultado = await response.json();
-
-            if (response.ok) {
-                // CREACIÓN DE CUENTA EXITOSA
-                        mostrarMensaje('', 'success');
-                formulario.reset();
+            function validarFormulario() {
+                const contrasenia = document.getElementById('contrasenia').value;
+                const confirmarContrasenia = document.getElementById('confirmar_contrasenia').value;
+                const dni = document.getElementById('documento').value;
                 
-                        // Mostrar mensaje de éxito más prominente
-                        successMessage.style.display = 'block';
-                        successMessage.style.animation = 'pulse 0.5s ease-in-out';
-                        successMessage.innerHTML = '¡REGISTRADO CON ÉXITO!';
-                        
-                        // Scroll hacia el mensaje de éxito
-                        successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        
-                        // Redirigir al home después de 4 segundos
-                setTimeout(() => {
-                            window.location.href = '/inicio';
-                        }, 4000);
+                // Validar DNI - EXACTAMENTE 8 dígitos
+                if (!/^\d{8}$/.test(dni)) {
+                    document.getElementById('documento').setCustomValidity('El DNI debe contener exactamente 8 dígitos numéricos');
+                    document.getElementById('documento').classList.add('is-invalid');
+                    return false;
                 } else {
-                    // ERROR EN LA CREACIÓN DE CUENTA
-                    if (response.status === 409) {
-                        // Conflicto: DNI o email ya existe
-                            mostrarMensaje(resultado.data || resultado.descripcion, 'error');
-                    } else {
-                        // Otros errores
-                            mostrarMensaje(resultado.data || 'Error al crear la cuenta. Intente nuevamente.', 'error');
-                        }
+                    document.getElementById('documento').setCustomValidity('');
                 }
 
-        } catch (error) {
-            // ERROR DE CONEXIÓN
-            console.error('Error:', error);
+                // Validar que las contraseñas coincidan
+                if (contrasenia !== confirmarContrasenia) {
+                    document.getElementById('confirmar_contrasenia').setCustomValidity('Las contraseñas no coinciden');
+                    return false;
+                } else {
+                    document.getElementById('confirmar_contrasenia').setCustomValidity('');
+                }
+
+                // Validar campos requeridos
+                const camposRequeridos = [
+                    'nombre', 'apellido', 'documento', 'fecha_nacimiento', 
+                    'mail', 'direccion', 'telefono', 'contrasenia', 'confirmar_contrasenia'
+                ];
+
+                let esValido = true;
+                camposRequeridos.forEach(campo => {
+                    const elemento = document.getElementById(campo);
+                    if (!elemento.checkValidity()) {
+                        elemento.classList.add('is-invalid');
+                        esValido = false;
+                    } else {
+                        elemento.classList.remove('is-invalid');
+                        elemento.classList.add('is-valid');
+                    }
+                });
+
+                return esValido;
+            }
+
+            // Event listener para el formulario
+            formulario.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!validarFormulario()) {
+                    mostrarMensaje('Por favor corrija los errores en el formulario', 'error');
+                    return;
+                }
+
+                btnRegistrar.disabled = true;
+                btnRegistrar.textContent = 'Registrando...';
+
+                try {
+                    const formData = new FormData(formulario);
+                    
+                    // Crear objeto con la estructura exacta que espera la entidad Cliente
+                    const clienteData = {
+                        activo: true, // SIEMPRE true
+                        apellido: formData.get('apellido').trim(),
+                        contrasenia: formData.get('contrasenia'),
+                        cuit: formData.get('cuit') ? formData.get('cuit').trim() : null,
+                        direccion: formData.get('direccion').trim(),
+                        documento: formData.get('documento'), // String con solo números
+                        fecha_nacimiento: formatearFecha(formData.get('fecha_nacimiento')), // Formato dd/mm/aaaa
+                        legajo: "", // Campo requerido pero puede estar vacío
+                        mail: formData.get('mail').trim(),
+                        nombre: formData.get('nombre').trim(),
+                        telefono: formData.get('telefono').trim(),
+                        tipo: "cliente" // En minúsculas como en tu BD
+                    };
+
+                    console.log('Enviando datos:', clienteData);
+                    console.log('Endpoint:', API_BASE_URL + API_ENDPOINT);
+
+                    // Enviar petición al endpoint
+                    const response = await fetch(API_BASE_URL + API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(clienteData)
+                    });
+
+                    const resultado = await response.json();
+                    console.log('Respuesta del servidor:', resultado);
+
+                    if (response.ok) {
+                        mostrarMensaje('¡REGISTRADO CON ÉXITO!', 'success');
+                        formulario.reset();
+                        
+                        // Redirigir al home después de 3 segundos
+                        setTimeout(() => {
+                            window.location.href = '/inicio';
+                        }, 3000);
+                    } else {
+                        // Mostrar error específico del servidor
+                        if (resultado.descripcion) {
+                            mostrarMensaje(resultado.descripcion, 'error');
+                        } else if (resultado.data) {
+                            mostrarMensaje(resultado.data, 'error');
+                        } else {
+                            mostrarMensaje('Error al crear la cuenta. Intente nuevamente.', 'error');
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Error:', error);
                     mostrarMensaje('Error de conexión. Verifique su internet e intente nuevamente.', 'error');
-        } finally {
-            // Rehabilitar botón
-            btnRegistrar.disabled = false;
+                } finally {
+                    btnRegistrar.disabled = false;
                     btnRegistrar.textContent = 'Registrarte';
-        }
-    });
+                }
+            });
 
-            // Validaciones en tiempo real
-    const camposValidacion = document.querySelectorAll('#formulario-registro input');
-    camposValidacion.forEach(campo => {
-        campo.addEventListener('blur', function() {
-            if (this.checkValidity()) {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            } else {
-                this.classList.remove('is-valid');
-                this.classList.add('is-invalid');
-            }
-        });
+            // Validación en tiempo real para DNI
+            document.getElementById('documento').addEventListener('input', function() {
+                const dni = this.value;
+                if (/^\d{8}$/.test(dni)) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    this.setCustomValidity('');
+                } else {
+                    this.classList.remove('is-valid');
+                    if (dni.length > 0) {
+                        this.classList.add('is-invalid');
+                    }
+                }
+            });
 
-        // Limpiar validación visual al escribir
-        campo.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid')) {
-                this.classList.remove('is-invalid');
-            }
-            if (this.classList.contains('is-valid')) {
-                this.classList.remove('is-valid');
-            }
-        });
-    });
+            // Validaciones en tiempo real para el resto de campos
+            const camposValidacion = document.querySelectorAll('#formulario-registro input');
+            camposValidacion.forEach(campo => {
+                campo.addEventListener('blur', function() {
+                    if (this.checkValidity()) {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                    }
+                });
+
+                // Limpiar validación visual al escribir
+                campo.addEventListener('input', function() {
+                    if (this.classList.contains('is-invalid')) {
+                        this.classList.remove('is-invalid');
+                    }
+                    if (this.classList.contains('is-valid')) {
+                        this.classList.remove('is-valid');
+                    }
+                });
+            });
 
             // Validación especial: Confirmar contraseña
-    document.getElementById('confirmar_contrasenia').addEventListener('input', function() {
-        const contrasenia = document.getElementById('contrasenia').value;
-        const confirmar = this.value;
-        
-        if (confirmar && contrasenia !== confirmar) {
-            this.setCustomValidity('Las contraseñas no coinciden');
-            this.classList.add('is-invalid');
-        } else {
-            this.setCustomValidity('');
-            this.classList.remove('is-invalid');
-            if (confirmar && contrasenia === confirmar) {
-                this.classList.add('is-valid');
-            }
-        }
-    });
-});
-</script>
+            document.getElementById('confirmar_contrasenia').addEventListener('input', function() {
+                const contrasenia = document.getElementById('contrasenia').value;
+                const confirmar = this.value;
+                
+                if (confirmar && contrasenia !== confirmar) {
+                    this.setCustomValidity('Las contraseñas no coinciden');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.setCustomValidity('');
+                    this.classList.remove('is-invalid');
+                    if (confirmar && contrasenia === confirmar) {
+                        this.classList.add('is-valid');
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
