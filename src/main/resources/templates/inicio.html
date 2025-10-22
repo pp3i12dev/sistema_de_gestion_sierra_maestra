@@ -17,102 +17,27 @@
             background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-                /* Login Modal */
 
-
-         #login-modal-cliente {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-modal-cliente {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-            width: 500px;
-        }
-
-        .close-modal-cliente {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .modal-header-cliente {
-            text-align: center;
-        }
-
-        .modal-title-cliente {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .error-message-cliente {
-            color: #f00;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
-        .modal-form-cliente {
-            margin-top: 20px;
-        }
-
-        .form-group-cliente {
-            margin-bottom: 20px;
-        }
-
-        .form-label-cliente {
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        .form-control-cliente {
-            width: 100%;
-            height: 40px;
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
             padding: 10px;
-            border: 1px solid #ccc;
             border-radius: 5px;
-        }
-                /* Buttons */
-        .btn-come-back {
-            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
-            color: #8B4513;
-            border: 2px solid #DAA520;
-            padding: 1rem 3rem;
-            border-radius: 25px;    
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: block;
-            margin: 2rem auto;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #c3e6cb;
         }
         
-        .btn-btn-come-back {
-            background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(218, 165, 32, 0.4);
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #f5c6cb;
         }
-
-        .btn-login-cliente {
-            background-color: #4CAF50;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -321,6 +246,7 @@
             align-items: center;
             gap: 1.5rem;
             background: #ad6200;
+            cursor: pointer;
         }
         
         .opcion-card:hover {
@@ -370,31 +296,31 @@
             color: #f8d616;
         }
         
-        @media (max-width: 576px) {
-            .inicio-container {
-                padding: 2rem 1.5rem;
-            }
-            
-            .logo-section h1 {
-                font-size: 1.5rem;
-            }
-            
-            .opcion-card {
-                padding: 1.5rem;
-                gap: 1rem;
-            }
-            
-            .opcion-icon {
-                font-size: 2.5rem;
-                min-width: 50px;
-            }
-            
-            .opcion-content h3 {
-                font-size: 1.2rem;
-            }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn-come-back {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            border: 2px solid #DAA520;
+            padding: 1rem 3rem;
+            border-radius: 25px;    
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-come-back:hover {
+            background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(218, 165, 32, 0.4);
         }
 
-           /* Burbujas de cerveza */
+        /* Burbujas de cerveza */
         .bubble {
             position: fixed;
             bottom: -100px;
@@ -407,10 +333,6 @@
             pointer-events: none;
         }
 
-         @keyframes ripple {
-            0%, 100% { opacity: 0.8; transform: translateY(0px); }
-            50% { opacity: 1; transform: translateY(-5px); }
-        }
         @keyframes rise {
             0% {
                 bottom: -100px;
@@ -427,7 +349,8 @@
             }
         }
 
-     .bubble:nth-child(1) { width: 8px; height: 8px; left: 5%; animation-duration: 8s; animation-delay: 0s; --drift: 10px; }
+        /* Mantén todas las burbujas igual */
+        .bubble:nth-child(1) { width: 8px; height: 8px; left: 5%; animation-duration: 8s; animation-delay: 0s; --drift: 10px; }
         .bubble:nth-child(2) { width: 12px; height: 12px; left: 10%; animation-duration: 10s; animation-delay: 2s; --drift: -15px; }
         .bubble:nth-child(3) { width: 10px; height: 10px; left: 15%; animation-duration: 9s; animation-delay: 1s; --drift: 8px; }
         .bubble:nth-child(4) { width: 6px; height: 6px; left: 20%; animation-duration: 7s; animation-delay: 3s; --drift: -12px; }
@@ -457,46 +380,67 @@
         .bubble:nth-child(28) { width: 9px; height: 9px; left: 43%; animation-duration: 8.5s; animation-delay: 3.8s; --drift: -8px; }
         .bubble:nth-child(29) { width: 11px; height: 11px; left: 48%; animation-duration: 7.5s; animation-delay: 1.7s; --drift: 12px; }
         .bubble:nth-child(30) { width: 7px; height: 7px; left: 53%; animation-duration: 9.5s; animation-delay: 2.2s; --drift: -7px; }
+
+        @media (max-width: 576px) {
+            .inicio-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .logo-section h1 {
+                font-size: 1.5rem;
+            }
+            
+            .opcion-card {
+                padding: 1.5rem;
+                gap: 1rem;
+            }
+            
+            .opcion-icon {
+                font-size: 2.5rem;
+                min-width: 50px;
+            }
+            
+            .opcion-content h3 {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Burbujas de cerveza -->
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
 
     <div class="inicio-container">
         <!-- Logo y título -->
-
-        
         <div class="logo-section">
             <div class="logo">
                 <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
@@ -507,11 +451,8 @@
         
         <!-- Opciones de acceso -->
         <div class="opciones-container">
-
-            
             <!-- Opción Cliente -->
-
-            <button class="opcion-card opcion-cliente" id="opcion-cliente" th:href="@{/cliente-dashboard}">
+            <button class="opcion-card opcion-cliente" id="opcion-cliente">
                 <div class="opcion-icon">
                     <i class="bi bi-cart-check"></i>
                 </div>
@@ -525,28 +466,78 @@
             </button>
 
             <!-- Opción Usuario/Administrador -->
-<button class="opcion-card opcion-usuario" id="opcion-usuario">
-    <div class="opcion-icon">
-        <i class="bi bi-person-gear"></i>
-    </div>
-    <div class="opcion-content">
-        <h3>Soy Usuario</h3>
-        <p>Acceso al sistema de gestión administrativa</p>
-    </div>
-    <div class="arrow-icon">
-        <i class="bi bi-arrow-right-circle"></i>
-    </div>
-</button>
-     <div class="btn-container">
-                    <button type="button" class="btn-come-back" onclick="window.location.href='http://localhost:8080/'">   
-                        <i class="bi bi-arrow-left"></i>
-                        Volver
-                    </button>
-
-              
+            <button class="opcion-card opcion-usuario" id="opcion-usuario">
+                <div class="opcion-icon">
+                    <i class="bi bi-person-gear"></i>
                 </div>
+                <div class="opcion-content">
+                    <h3>Soy Usuario</h3>
+                    <p>Acceso al sistema de gestión administrativa</p>
+                </div>
+                <div class="arrow-icon">
+                    <i class="bi bi-arrow-right-circle"></i>
+                </div>
+            </button>
+            
+            <div class="btn-container">
+                <button type="button" class="btn-come-back" onclick="window.location.href='http://localhost:8080/'">   
+                    <i class="bi bi-arrow-left"></i>
+                    Volver
+                </button>
+            </div>
+        </div>
+    </div>
 
-<!-- Login Modal -->
+    <!-- Login Modal para Cliente -->
+    <div id="login-modal-cliente" class="modal-overlay">
+        <div class="login-modal">
+            <button class="close-modal" id="close-modal-cliente">&times;</button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Iniciar Sesión como Cliente</h2>
+            </div>
+            
+            <!-- Success Message -->
+            <div id="success-message-cliente" class="success-message">
+                ¡Inicio de sesión exitoso!
+            </div>
+            
+            <!-- Error Message -->
+            <div id="error-message-cliente" class="error-message">
+                <!-- Error messages will be inserted here -->
+            </div>
+            
+            <form id="login-form-cliente" class="modal-form">
+                <div class="form-group">
+                    <label for="email-cliente" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email-cliente" name="email" required
+                           placeholder="Ingrese su email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password-cliente" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password-cliente" name="password" required
+                           placeholder="Ingrese su contraseña">
+                </div>
+                
+                <div class="modal-links">
+                    <a href="#">¿Olvidaste tu contraseña?</a>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-modal btn-login" id="btn-login-cliente">
+                        Iniciar sesión
+                    </button>
+                </div>
+                
+                <div class="modal-links" style="text-align: center; margin-top: 15px;">
+                    <a href="http://localhost:8080/registro">¿No tienes cuenta? ¡Regístrate!</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal para Usuario -->
     <div id="login-modal" class="modal-overlay">
         <div class="login-modal">
             <button class="close-modal" id="close-modal">&times;</button>
@@ -583,262 +574,409 @@
                 </div>
                 
                 <div class="modal-buttons">
-
                     <button type="submit" class="btn-modal btn-login" id="btn-login">
                         Iniciar sesión
                     </button>
                 </div>
             </form>
-            
         </div>
     </div>
 
-  <!-- Login Modal Cliente -->
-<div id="login-modal-cliente" class="modal-overlay">
-    <div class="login-modal">
-        <button class="close-modal-cliente" id="close-modal-cliente">&times;</button>
-        
-        <div class="modal-header">
-            <h2 class="modal-title">Iniciar Sesión como Cliente</h2>
-        </div>
-        
-        <!-- Error Message -->
-        <div id="error-message-cliente" class="error-message">
-            <!-- Error messages will be inserted here -->
-        </div>
-        
-        <form id="login-form-cliente" class="modal-form">
-            <div class="form-group">
-                <label for="email-cliente" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email-cliente" name="email-cliente" required
-                       placeholder="Email">
-            </div>
-            
-            <div class="form-group">
-                <label for="password-cliente" class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password-cliente" name="password-cliente" required
-                       placeholder="Ingrese su contraseña">
-            </div>
-            
-            <div class="modal-links">
-                <a href="#">¿Olvidaste tu contraseña?</a>
-                 
-            </div>
-            
-            <div class="modal-buttons">
-                <button type="submit" class="btn-modal btn-login-cliente" id="btn-login-cliente">
-                    Iniciar sesión
-                </button>
-                <div class="modal-links">
-                        <a href="http://localhost:8080/registro">Registrate!</a>
-                </div>
-            </div>
-        </form>
-        
-    </div>
-</div>
-
-
-
-        </div>
-    </div>
-    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-     <script>
-// Agregar evento de clic al botón "Soy Cliente"
-document.getElementById('opcion-cliente').addEventListener('click', function() {
-    // Mostrar el modal de inicio de sesión de cliente
-    document.getElementById('login-modal-cliente').style.display = 'flex';
-});
-
-// Agregar evento de clic al botón de cerrar del modal de cliente
-document.getElementById('close-modal-cliente').addEventListener('click', function() {
-    // Ocultar el modal de inicio de sesión de cliente
-    document.getElementById('login-modal-cliente').style.display = 'none';
-});
-
-// Agregar evento de envío del formulario de cliente
-document.getElementById('login-form-cliente').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevenir que se envíe el formulario de forma tradicional
-    // Obtener los valores del formulario
-    var emailCliente = document.getElementById('email-cliente').value;
-    var passwordCliente = document.getElementById('password-cliente').value;
     
-    // Verificar los datos (en este caso, solo un ejemplo)
-    if (emailCliente === 'cliente@gmail.com' && passwordCliente === 'cliente123') {
-        // Redirigir al cliente a una página específica
-        window.location.href = 'http://localhost:8080/cliente-dashboard';
-    } else {
-        // Mostrar un mensaje de error
-        document.getElementById('error-message-cliente').innerHTML = 'Datos incorrectos';
-        document.getElementById('error-message-cliente').style.display = 'block';
-    }
-});
+    <script>
+    // Configuración de API
+    const API = 'http://localhost:8080';
 
-        // Agregar evento de clic al botón
-document.getElementById('opcion-usuario').addEventListener('click', function() {
-    // Mostrar el modal de inicio de sesión
-    document.getElementById('login-modal').style.display = 'flex';
-});
-
-// Agregar evento de clic al botón de cerrar
-document.getElementById('close-modal').addEventListener('click', function() {
-    // Ocultar el modal de inicio de sesión
-    document.getElementById('login-modal').style.display = 'none';
-});
-
-// Agregar evento de envío del formulario
-document.getElementById('login-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevenir que se envíe el formulario de forma tradicional
-    // Obtener los valores del formulario
-    var lejago = document.getElementById('lejago').value;
-    var password = document.getElementById('password').value;
-    
-    // Verificar los datos (en este caso, solo un ejemplo)
-    if (lejago === '123456' && password === 'password123') {
-        // Redirigir al usuario a una página específica
-        window.location.href = 'http://localhost:8080/home';
-    } else {
-        // Mostrar un mensaje de error
-        document.getElementById('error-message').innerHTML = 'Datos incorrectos';
-        document.getElementById('error-message').style.display = 'block';
-    }
-});
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('login-modal');
-            const btnIniciarSesion = document.getElementById('btn-iniciar-sesion');
-            const closeModal = document.getElementById('close-modal');
-            const loginForm = document.getElementById('login-form');
-            const successMessage = document.getElementById('success-message');
-            const errorMessage = document.getElementById('error-message');
-            const btnLogin = document.getElementById('btn-login');
-            
-            // Verificar si el usuario está autenticado (URL con #)
-            if (window.location.hash === '#') {
-                // Usuario autenticado - cambiar el botón de "Iniciar sesión" a "Mi Perfil"
-                btnIniciarSesion.textContent = 'Mi Perfil';
-                btnIniciarSesion.classList.remove('active');
-                btnIniciarSesion.style.background = 'linear-gradient(135deg, #DAA520 0%, #FFD700 100%)';
-                btnIniciarSesion.style.color = '#8B4513';
-                btnIniciarSesion.style.border = '2px solid #FFD700';
-                
-                // Cambiar el comportamiento del botón
-                btnIniciarSesion.removeAttribute('href');
-                btnIniciarSesion.onclick = function(e) {
-                    e.preventDefault();
-                    alert('¡Bienvenido! Estás autenticado como cliente.');
-                };
-                
-                // Cambiar el contenido de bienvenida
-                const heroTitle = document.getElementById('hero-title');
-                const heroSubtitle = document.getElementById('hero-subtitle');
-                
-                if (heroTitle) {
-                    heroTitle.textContent = '¡Bienvenido Cliente Autenticado!';
-                    heroTitle.style.color = '#FFD700';
-                    heroTitle.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)';
-                }
-                
-                if (heroSubtitle) {
-                    heroSubtitle.textContent = 'Ahora puedes acceder a todas las funcionalidades del sistema';
-                    heroSubtitle.style.color = '#DAA520';
+    // Función para procesar la respuesta del servidor
+    function procesarRespuestaServidor(data, endpoint) {
+        console.log(`Respuesta cruda de ${endpoint}:`, data);
+        
+        // Si ya es un array, devolverlo directamente
+        if (Array.isArray(data)) {
+            return data;
+        }
+        
+        // Si es un objeto, buscar arrays dentro de él
+        if (typeof data === 'object' && data !== null) {
+            // Buscar cualquier propiedad que sea un array
+            for (let key in data) {
+                if (Array.isArray(data[key])) {
+                    console.log(`Encontrado array en propiedad "${key}"`);
+                    return data[key];
                 }
             }
             
-            // Mostrar modal al hacer clic en "Iniciar sesión"
-            btnIniciarSesion.addEventListener('click', function(e) {
-                e.preventDefault();
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden'; // Prevenir scroll del body
-            });
+            // Si no hay arrays, intentar convertir el objeto en array
+            if (Object.keys(data).length > 0) {
+                console.log('Convirtiendo objeto a array');
+                return [data];
+            }
+        }
+        
+        // Si es un string, intentar parsear como JSON
+        if (typeof data === 'string') {
+            try {
+                const parsed = JSON.parse(data);
+                return procesarRespuestaServidor(parsed, endpoint);
+            } catch (e) {
+                console.warn('No se pudo parsear la respuesta como JSON:', e);
+            }
+        }
+        
+        throw new Error(`Formato de respuesta no reconocido para ${endpoint}`);
+    }
+
+    // Función para debuggear la búsqueda de cliente - MEJORADA
+    function debugBusquedaCliente(clientes, email, password) {
+        console.log('🔍 INICIANDO DEBUG DE BÚSQUEDA DE CLIENTE...');
+        console.log('Email buscado:', `"${email}"`);
+        console.log('Password buscado:', `"${password}"`);
+        console.log('Total de clientes:', clientes.length);
+        
+        // Mostrar información de TODOS los clientes para debugging
+        console.log('📋 LISTA COMPLETA DE CLIENTES:');
+        clientes.forEach((cliente, index) => {
+            const coincideEmail = cliente.mail === email;
+            const coincidePassword = cliente.contrasenia === password;
+            // CORRECCIÓN: Usar activo === true en lugar de activo === 1
+            const estaActivo = cliente.activo === true;
             
-            // Cerrar modal
-            closeModal.addEventListener('click', function() {
-                modal.style.display = 'none';
+            console.log(`Cliente ${index + 1}:`, {
+                id: cliente.id,
+                mail: cliente.mail,
+                contrasenia: cliente.contrasenia,
+                activo: cliente.activo,
+                tipoActivo: typeof cliente.activo,
+                nombre: cliente.nombre || 'No disponible',
+                coincideEmail: coincideEmail,
+                coincidePassword: coincidePassword,
+                estaActivo: estaActivo,
+                ES_VALIDO: (coincideEmail && coincidePassword && estaActivo) ? '✅ SÍ' : '❌ NO'
+            });
+        });
+        
+        // CORRECCIÓN: Buscar con activo === true en lugar de activo === 1
+        const clienteExacto = clientes.find(c => 
+            c.mail === email && 
+            c.contrasenia === password &&
+            c.activo === true  // ← ¡CORREGIDO!
+        );
+        
+        console.log('🎯 RESULTADO DE BÚSQUEDA EXACTA:', clienteExacto);
+        
+        // Si no encuentra coincidencia exacta, buscar por partes para diagnosticar
+        if (!clienteExacto) {
+            console.log('🔎 DIAGNÓSTICO DEL PROBLEMA:');
+            
+            const clientePorEmail = clientes.find(c => c.mail === email);
+            if (clientePorEmail) {
+                console.log('✅ Se encontró cliente con el email:', clientePorEmail);
+                console.log('   - ¿Coincide la contraseña?:', clientePorEmail.contrasenia === password ? '✅ SÍ' : '❌ NO');
+                // CORRECCIÓN: Verificar con activo === true
+                console.log('   - ¿Está activo?:', clientePorEmail.activo === true ? '✅ SÍ' : '❌ NO');
+                console.log('   - Tipo de dato de activo:', typeof clientePorEmail.activo);
+                console.log('   - Valor de activo:', clientePorEmail.activo);
+                
+                if (clientePorEmail.contrasenia !== password) {
+                    console.log('   - Contraseña en BD:', `"${clientePorEmail.contrasenia}"`);
+                    console.log('   - Contraseña ingresada:', `"${password}"`);
+                    console.log('   - ¿Son iguales?:', clientePorEmail.contrasenia === password ? 'SÍ' : 'NO');
+                }
+            } else {
+                console.log('❌ NO se encontró ningún cliente con ese email');
+                console.log('Emails disponibles:', clientes.map(c => c.mail));
+            }
+        }
+        
+        return clienteExacto;
+    }
+
+    // Función para inicializar todo cuando el DOM esté listo
+    function init() {
+        // ===== LOGIN CLIENTE =====
+        const modalCliente = document.getElementById('login-modal-cliente');
+        const btnOpcionCliente = document.getElementById('opcion-cliente');
+        const closeModalCliente = document.getElementById('close-modal-cliente');
+        const loginFormCliente = document.getElementById('login-form-cliente');
+        const successMessageCliente = document.getElementById('success-message-cliente');
+        const errorMessageCliente = document.getElementById('error-message-cliente');
+        const btnLoginCliente = document.getElementById('btn-login-cliente');
+
+        // ===== LOGIN ASOCIADO/USUARIO =====
+        const modalUsuario = document.getElementById('login-modal');
+        const btnOpcionUsuario = document.getElementById('opcion-usuario');
+        const closeModalUsuario = document.getElementById('close-modal');
+        const loginFormUsuario = document.getElementById('login-form');
+        const successMessageUsuario = document.getElementById('success-message');
+        const errorMessageUsuario = document.getElementById('error-message');
+        const btnLoginUsuario = document.getElementById('btn-login');
+
+        // Mostrar modal cliente
+        if (btnOpcionCliente && modalCliente) {
+            btnOpcionCliente.addEventListener('click', function() {
+                modalCliente.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                if (loginFormCliente) loginFormCliente.reset();
+                if (errorMessageCliente) errorMessageCliente.style.display = 'none';
+                if (successMessageCliente) successMessageCliente.style.display = 'none';
+            });
+        }
+
+        // Cerrar modal cliente
+        if (closeModalCliente && modalCliente) {
+            closeModalCliente.addEventListener('click', function() {
+                modalCliente.style.display = 'none';
                 document.body.style.overflow = 'auto';
             });
-            
-            // Cerrar modal al hacer clic fuera de él
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
+        }
+
+        // Cerrar modal al hacer clic fuera (cliente)
+        if (modalCliente) {
+            modalCliente.addEventListener('click', function(e) {
+                if (e.target === modalCliente) {
+                    modalCliente.style.display = 'none';
                     document.body.style.overflow = 'auto';
                 }
             });
-            
-            // Función para mostrar mensajes
-            function mostrarMensaje(mensaje, tipo) {
-                if (tipo === 'success') {
-                    successMessage.style.display = 'block';
-                    errorMessage.style.display = 'none';
-                } else {
-                    errorMessage.style.display = 'block';
-                    errorMessage.textContent = mensaje;
-                    successMessage.style.display = 'none';
+        }
+
+        // Mostrar modal usuario
+        if (btnOpcionUsuario && modalUsuario) {
+            btnOpcionUsuario.addEventListener('click', function() {
+                modalUsuario.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                if (loginFormUsuario) loginFormUsuario.reset();
+                if (errorMessageUsuario) errorMessageUsuario.style.display = 'none';
+                if (successMessageUsuario) successMessageUsuario.style.display = 'none';
+            });
+        }
+
+        // Cerrar modal usuario
+        if (closeModalUsuario && modalUsuario) {
+            closeModalUsuario.addEventListener('click', function() {
+                modalUsuario.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+        }
+
+        // Cerrar modal al hacer clic fuera (usuario)
+        if (modalUsuario) {
+            modalUsuario.addEventListener('click', function(e) {
+                if (e.target === modalUsuario) {
+                    modalUsuario.style.display = 'none';
+                    document.body.style.overflow = 'auto';
                 }
-            }
+            });
+        }
+
+        // Función para mostrar mensajes cliente
+        function mostrarMensajeCliente(mensaje, tipo) {
+            if (!errorMessageCliente || !successMessageCliente) return;
             
-            // Manejo del formulario de login
-            loginForm.addEventListener('submit', async function(e) {
+            if (tipo === 'success') {
+                successMessageCliente.style.display = 'block';
+                successMessageCliente.textContent = mensaje;
+                errorMessageCliente.style.display = 'none';
+            } else {
+                errorMessageCliente.style.display = 'block';
+                errorMessageCliente.textContent = mensaje;
+                successMessageCliente.style.display = 'none';
+            }
+        }
+
+        // Función para mostrar mensajes usuario
+        function mostrarMensajeUsuario(mensaje, tipo) {
+            if (!errorMessageUsuario || !successMessageUsuario) return;
+            
+            if (tipo === 'success') {
+                successMessageUsuario.style.display = 'block';
+                successMessageUsuario.textContent = mensaje;
+                errorMessageUsuario.style.display = 'none';
+            } else {
+                errorMessageUsuario.style.display = 'block';
+                errorMessageUsuario.textContent = mensaje;
+                successMessageUsuario.style.display = 'none';
+            }
+        }
+
+        // Manejo del formulario de login de cliente - VERSIÓN CORREGIDA
+        if (loginFormCliente && btnLoginCliente) {
+            loginFormCliente.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                // Validación básica
+                const email = document.getElementById('email-cliente')?.value;
+                const password = document.getElementById('password-cliente')?.value;
+
                 if (!email || !password) {
-                    mostrarMensaje('Por favor completa todos los campos', 'error');
+                    mostrarMensajeCliente('Por favor complete todos los campos', 'error');
                     return;
                 }
-                
-                // Deshabilitar botón
-                btnLogin.disabled = true;
-                btnLogin.textContent = 'Iniciando...';
-                
+
+                btnLoginCliente.disabled = true;
+                btnLoginCliente.textContent = 'Iniciando...';
+
                 try {
-                    // Credenciales de prueba
-                    if (email === 'dev@gmail.com' && password === '1234') {
-                        // Login exitoso
-                        mostrarMensaje('¡Inicio de sesión exitoso!', 'success');
+                    console.log('🔄 Obteniendo clientes del servidor...');
+                    
+                    // Obtener clientes del servidor
+                    const response = await fetch(`${API}/getAllCliente`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ Clientes obtenidos correctamente');
+                    
+                    // Procesar la respuesta
+                    const clientes = procesarRespuestaServidor(data, 'getAllCliente');
+                    console.log(`📊 ${clientes.length} clientes procesados`);
+                    
+                    // Debug detallado de la búsqueda
+                    const cliente = debugBusquedaCliente(clientes, email, password);
+                    
+                    if (cliente) {
+                        console.log('✅ Cliente encontrado y activo:', cliente);
+                        mostrarMensajeCliente('¡Inicio de sesión exitoso!', 'success');
                         
-                        // Cerrar modal después de 2 segundos
+                        // Guardar datos del cliente en sessionStorage para usar en otras páginas
+                        sessionStorage.setItem('clienteLogueado', JSON.stringify({
+                            id: cliente.id,
+                            email: cliente.mail,
+                            nombre: cliente.nombre,
+                            telefono: cliente.telefono
+                        }));
+                        
                         setTimeout(() => {
-                            modal.style.display = 'none';
-                            document.body.style.overflow = 'auto';
-                            
-                            // Redirigir a la misma página con indicador de autenticado
-                            window.location.href = 'http://localhost:8080/cliente-dashboard#';
-                        }, 2000);
+                            window.location.href = '/pedidos-clientes/';
+                        }, 1500);
                     } else {
-                        // Credenciales incorrectas
-                        mostrarMensaje('Email o contraseña incorrectos', 'error');
+                        console.log('❌ No se encontró cliente con esas credenciales exactas');
+                        mostrarMensajeCliente('Email o contraseña incorrectos', 'error');
                     }
                 } catch (error) {
-                    console.error('Error:', error);
-                    mostrarMensaje('Error de conexión. Intenta nuevamente.', 'error');
+                    console.error('❌ Error en el proceso de login:', error);
+                    mostrarMensajeCliente('Error de conexión. Intente nuevamente.', 'error');
                 } finally {
-                    // Rehabilitar botón
-                    btnLogin.disabled = false;
-                    btnLogin.textContent = 'Iniciar sesión';
+                    btnLoginCliente.disabled = false;
+                    btnLoginCliente.textContent = 'Iniciar sesión';
                 }
             });
-            
-            // Animación de entrada para los elementos
-            const elements = document.querySelectorAll('.nav-item, .hero-content');
-            elements.forEach((element, index) => {
-                element.style.opacity = '0';
-                element.style.transform = 'translateY(20px)';
+        }
+
+        // Manejo del formulario de login de usuario/asociado - VERSIÓN CORREGIDA
+        if (loginFormUsuario && btnLoginUsuario) {
+            loginFormUsuario.addEventListener('submit', async function(e) {
+                e.preventDefault();
                 
-                setTimeout(() => {
-                    element.style.transition = 'all 0.6s ease';
-                    element.style.opacity = '1';
-                    element.style.transform = 'translateY(0)';
-                }, index * 100);
+                const legajo = document.getElementById('legajo')?.value;
+                const password = document.getElementById('password')?.value;
+
+                if (!legajo || !password) {
+                    mostrarMensajeUsuario('Por favor complete todos los campos', 'error');
+                    return;
+                }
+
+                btnLoginUsuario.disabled = true;
+                btnLoginUsuario.textContent = 'Iniciando...';
+
+                try {
+                    console.log('🔄 Obteniendo asociados del servidor...');
+                    
+                    // Obtener asociados del servidor
+                    const response = await fetch(`${API}/getAllAsociados`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ Asociados obtenidos correctamente');
+                    
+                    // Procesar la respuesta
+                    const asociados = procesarRespuestaServidor(data, 'getAllAsociados');
+                    console.log(`📊 ${asociados.length} asociados procesados`);
+                    
+                    // DEBUG: Mostrar estructura de los asociados
+                    console.log('🔍 ESTRUCTURA DE ASOCIADOS:');
+                    if (asociados.length > 0) {
+                        console.log('Campos del primer asociado:', Object.keys(asociados[0]));
+                        asociados.forEach((asoc, index) => {
+                            console.log(`Asociado ${index + 1}:`, {
+                                legajo: asoc.legajo,
+                                // CORRECCIÓN: Usar contrasenia en lugar de contrasena
+                                contrasenia: asoc.contrasenia,
+                                activo: asoc.activo,
+                                nombre: asoc.nombre
+                            });
+                        });
+                    }
+                    
+                    // Buscar asociado que coincida - CORREGIDO para usar contrasenia
+                    const asociado = asociados.find(a => {
+                        // CORRECCIÓN: Usar el campo correcto contrasenia
+                        const contraseniaCorrecta = a.contrasenia;
+                        // Manejar tanto activo booleano como numérico
+                        const estaActivo = a.activo === true || a.activo === 1;
+                        
+                        const coincide = a.legajo == legajo && 
+                                       contraseniaCorrecta === password && 
+                                       estaActivo;
+                        
+                        if (a.legajo == legajo) {
+                            console.log('🔍 Asociado encontrado con ese legajo:', {
+                                legajoBD: a.legajo,
+                                legajoInput: legajo,
+                                contraseniaBD: contraseniaCorrecta,
+                                contraseniaInput: password,
+                                coincideContrasenia: contraseniaCorrecta === password,
+                                activoBD: a.activo,
+                                estaActivo: estaActivo,
+                                coincideTodo: coincide
+                            });
+                        }
+                        
+                        return coincide;
+                    });
+
+                    if (asociado) {
+                        console.log('✅ LOGIN EXITOSO - Asociado encontrado:', asociado);
+                        mostrarMensajeUsuario('¡Inicio de sesión exitoso!', 'success');
+                        
+                        // Guardar datos del asociado en sessionStorage
+                        sessionStorage.setItem('usuarioLogueado', JSON.stringify({
+                            legajo: asociado.legajo,
+                            nombre: asociado.nombre,
+                            rol: asociado.rol
+                        }));
+                        
+                        setTimeout(() => {
+                            window.location.href = '/pedidos/';
+                        }, 1500);
+                    } else {
+                        console.log('❌ LOGIN FALLIDO - No se encontró asociado con esas credenciales');
+                        console.log('🔍 Legajos disponibles:', asociados.map(a => a.legajo));
+                        mostrarMensajeUsuario('Legajo o contraseña incorrectos', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ Error en el proceso de login:', error);
+                    mostrarMensajeUsuario('Error de conexión. Intente nuevamente.', 'error');
+                } finally {
+                    btnLoginUsuario.disabled = false;
+                    btnLoginUsuario.textContent = 'Iniciar sesión';
+                }
             });
-        });
-    </script>
+        }
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+</script>
 </body>
 </html>
-

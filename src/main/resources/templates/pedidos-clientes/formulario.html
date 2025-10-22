@@ -1,1053 +1,873 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agregar Pedido - Sistema de Gestión</title>
-  <link rel="stylesheet" th:href="@{/css/styles.css}">
-  <link rel="stylesheet" th:href="@{/css/styles-sistema.css}">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <meta charset="utf-8">
+  <title>Mi Historial de Pedidos - Sierra Maestra</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
     body {
-      background-color: #f5f5f5;
-      color: #333;
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
+        min-height: 100vh;
     }
-
-    header {
-      background-color: #2c3e50;
-      color: white;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    
+    /* Header */
+    .header {
+        background: linear-gradient(135deg, rgb(99, 57, 18), rgb(2, 1, 0) 100%);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-bottom: 3px solid #DAA520;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
     }
-
-    .logo h1 {
-      margin: 0;
-      font-size: 1.5rem;
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s ease;
     }
-
-    nav ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      gap: 1rem;
+    
+    .logo:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
     }
-
-    nav a {
-      color: white;
-      text-decoration: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      transition: background-color 0.3s;
+    
+    .logo-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 3px solid #DAA520;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(218, 165, 32, 0.3);
     }
-
-    nav a:hover {
-      background-color: #34495e;
-    }
-
-    .main-content {
-      padding: 2rem;
-    }
-
-    main {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    h2 {
-      color: #2c3e50;
-      margin-bottom: 1.5rem;
-    }
-
-    .card {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .form-block {
-      background-color: #f8f9fa;
-      padding: 1rem;
-      border-radius: 6px;
-      border-left: 4px solid #3498db;
-    }
-
-    .form-block.full-span {
-      grid-column: 1 / -1;
-    }
-
-    .form-block h5 {
-      margin: 0 0 1rem 0;
-      color: #2c3e50;
-      font-size: 1rem;
-      font-weight: bold;
-    }
-
-    .form-title {
-      color: #2c3e50;
-    }
-
-    .form-title.edit-mode {
-      color: #3498db;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: #555;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      box-sizing: border-box;
-      transition: border-color 0.3s;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-    }
-
-    input[readonly] {
-      background-color: #ecf0f1;
-      color: #7f8c8d;
-      cursor: not-allowed;
-    }
-
-    input[type="checkbox"] {
-      width: auto;
-      margin-right: 0.5rem;
-    }
-
-    textarea {
-      font-family: inherit;
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    .btn {
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.3s;
-      text-decoration: none;
-      display: inline-block;
-      text-align: center;
-    }
-
-    .btn-primary {
-      background-color: #3498db;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background-color: #2980b9;
-    }
-
-    .btn-success {
-      background-color: #27ae60;
-      color: white;
-      padding: 0.4rem 0.8rem;
-      font-size: 12px;
-    }
-
-    .btn-success:hover {
-      background-color: #229954;
-    }
-
-    .btn-danger {
-      background-color: #e74c3c;
-      color: white;
-      padding: 0.3rem 0.6rem;
-      font-size: 11px;
-    }
-
-    .btn-danger:hover {
-      background-color: #c0392b;
-    }
-
-    .btn-sm {
-      padding: 0.3rem 0.6rem;
-      font-size: 12px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .actions .btn {
-      flex: 1;
-      min-width: 100px;
-    }
-
-    small {
-      display: block;
-      color: #7f8c8d;
-      font-size: 12px;
-      margin-top: 0.25rem;
-    }
-
-    #productosAgregados {
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 1rem;
-      background-color: #f8f9fa;
-      min-height: 100px;
-    }
-
-    .producto-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.5rem;
-      background-color: white;
-      border-radius: 4px;
-      margin-bottom: 0.5rem;
-      border: 1px solid #ecf0f1;
-    }
-
-    .producto-info {
-      flex: 1;
-    }
-
-    .producto-acciones {
-      margin-left: 1rem;
-    }
-
-    #msg {
-      margin-bottom: 1rem;
-    }
-
-    .success {
-      background-color: #d4edda;
-      color: #155724;
-      padding: 0.75rem;
-      border-radius: 4px;
-      border: 1px solid #c3e6cb;
-    }
-
-    .error {
-      background-color: #f8d7da;
-      color: #721c24;
-      padding: 0.75rem;
-      border-radius: 4px;
-      border: 1px solid #f5c6cb;
-    }
-
-    @media (max-width: 768px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .actions {
-        flex-direction: column;
-      }
-      
-      .actions .btn {
+    
+    .logo-circle img {
         width: 100%;
-      }
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .logo-text {
+        color: #ffffffbe;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    
+    .nav-menu {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+    
+    .nav-item {
+        color: #ceb7a5b2;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .nav-item:hover {
+        background-color: rgba(216, 190, 124, 0.3);
+        color: #c46a0a;
+    }
+    
+    .nav-item.active {
+        background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+        border: 2px solid #DAA520;
+        color: #583207;
+        font-weight: bold;
+    }
+    
+    /* Main Content */
+    .main-content {
+        background: transparent;
+        min-height: calc(100vh - 80px);
+        padding-top: 90px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .section-container {
+        max-width: 1200px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .section-title {
+        text-align: center;
+        color: rgb(141, 78, 6);
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(56, 4, 4, 0.445);
+    }
+    
+    /* Cards */
+    .card { 
+        background: linear-gradient(135deg, #dfba15f8 0%, #eca814 100%); 
+        border: 2px solid #DAA520; 
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        color: #333; 
+        margin-bottom: 2rem;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+        color: #8B4513;
+        font-weight: bold;
+        border-radius: 13px 13px 0 0;
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .btn-action {
+        background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+        color: #8B4513;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-action:hover {
+        background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(218, 165, 32, 0.4);
+        color: #8B4513;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 2px solid #DAA520;
+        color: #8B4513;
+    }
+    
+    .btn-outline:hover {
+        background: rgba(218, 165, 32, 0.1);
+    }
+    
+    /* Table styling */
+    .table thead {
+        background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+        color: white;
+    }
+    
+    .table tbody tr:hover {
+        background-color: rgba(218, 165, 32, 0.1);
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .status-pendiente { background: #fff3cd; color: #856404; }
+    .status-confirmado { background: #d1ecf1; color: #0c5460; }
+    .status-preparacion { background: #d1ecf1; color: #0c5460; }
+    .status-camino { background: #ffeaa7; color: #e17055; }
+    .status-entregado { background: #d4edda; color: #155724; }
+    .status-cancelado { background: #f8d7da; color: #721c24; }
+    
+    /* Modal detalles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+    
+    .modal-content {
+        background: linear-gradient(135deg, #dfba15f8 0%, #eca814 100%);
+        border-radius: 15px;
+        padding: 2rem;
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        position: relative;
+        border: 3px solid #DAA520;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #DAA520;
+    }
+    
+    .modal-title {
+        color: #8B4513;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #8B4513;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+    
+    .close-modal:hover {
+        background: rgba(139, 69, 19, 0.1);
+    }
+    
+    .detail-section {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    
+    .detail-section h5 {
+        color: #8B4513;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #DAA520;
+        padding-bottom: 0.5rem;
+    }
+    
+    .product-item {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 0.75rem;
+        border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+    }
+    
+    .product-item:last-child {
+        border-bottom: none;
+    }
+    
+    .product-info {
+        flex: 1;
+    }
+    
+    .product-name {
+        font-weight: 600;
+        color: #8B4513;
+    }
+    
+    .product-meta {
+        font-size: 0.875rem;
+        color: #666;
+    }
+    
+    .product-total {
+        font-weight: bold;
+        color: #8B4513;
+    }
+    
+    .order-summary {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    /* Filtros y ordenamiento */
+    .filters-container {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-label {
+        color: #8B4513;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    
+    .form-select, .form-control {
+        background: #fff;
+        color: #000;
+        border: 2px solid #DAA520;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #8B4513;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .nav-menu {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .header {
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+        }
+        
+        .filters-container {
+            flex-direction: column;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
     }
   </style>
 </head>
 <body>
-  <header>
-    <!-- Logo arriba a la izquierda -->
-    <div class="logo">
-      <h1>Sistema de Gestión</h1>
-    </div>
-    
-    <!-- Navegación principal -->
-    <nav>
-      <ul>
-        <li><a th:href="@{/home}">Inicio</a></li>
-        <li><a th:href="@{/pedidos-clientes}">← Volver a la lista</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <section class="main-content">
-    <main>
-      <h2>Gestión de Pedidos de Clientes</h2>
-
-      <div id="msg"></div>
-
-      <div class="container">
-        <!-- FORM -->
-        <div class="card">
-          <h3 id="formTitle" class="form-title">Agregar Pedido</h3>
-          <form id="pedidoClienteForm" autocomplete="off">
-            <input type="hidden" id="pedidoClienteId" value="">
-
-            <div class="form-grid">
-              <div class="form-block">
-                <h5>Información del Cliente</h5>
-                <label>Nombre y Apellido / Razón Social
-                  <input type="text" id="nombreCliente" required maxlength="100">
-                </label>
-                <label>Email
-                  <input type="email" id="emailCliente" required maxlength="100">
-                </label>
-                <label>Teléfono
-                  <input type="tel" id="telefonoCliente" required maxlength="100">
-                </label>
-              </div>
-
-              <div class="form-block">
-                <h5>Fechas</h5>
-                <label>Fecha Pedido
-                  <input type="date" id="fechaPedido" required readonly>
-                </label>
-                <label>Fecha Entrega
-                  <input type="date" id="fechaEntrega" required maxlength="100">
-                </label>
-              </div>
-
-              <div class="form-block">
-                <h5>Envío</h5>
-                <label><input type="checkbox" id="envio"> Requiere envío</label>
-                <label>Lugar de Entrega
-                  <input type="text" id="lugarEntrega" maxlength="100">
-                </label>
-              </div>
-
-              <div class="form-block">
-                <h5>Productos</h5>
-                <label>Cerveza
-                  <select id="cervezaSelect">
-                    <option value="">-- Elegir cerveza --</option>
-                  </select>
-                </label>
-                <small>Precio: <span id="cervezaPrecio">-</span></small>
-                <button type="button" id="agregarCerveza" class="btn btn-sm btn-primary">+ Agregar Cerveza</button>
-              </div>
-
-              <div class="form-block">
-                <h5>Accesorios</h5>
-                <label>Accesorio
-                  <select id="accesorioSelect">
-                    <option value="">-- Elegir accesorio --</option>
-                  </select>
-                </label>
-                <small>Precio: <span id="accesorioPrecio">-</span></small>
-                <button type="button" id="agregarAccesorio" class="btn btn-sm btn-primary">+ Agregar Accesorio</button>
-              </div>
-
-              <div class="form-block full-span">
-                <h5>Productos Agregados</h5>
-                <div id="productosAgregados" style="border: 1px solid #ccc; padding: 10px; min-height: 100px; background-color: #f9f9f9;">
-                  <p style="color: #666; font-style: italic;">No hay productos agregados</p>
-                </div>
-              </div>
-
-              <div class="form-block">
-                <h5>Estado</h5>
-                <label>Estado del pedido
-                  <input type="text" id="estadoSelect" value="Pendiente" readonly maxlength="100">
-                </label>
-                <label>Estado de Pago
-                  <input type="checkbox" id="estadoPagoCheck">
-                </label>
-              </div>
-
-              <div class="form-block full-span">
-                <h5>Notas</h5>
-                <label>
-                  <textarea id="nota" rows="4" placeholder="Información adicional sobre el pedido..." style="width: 100%; resize: vertical;" maxlength="100"></textarea>
-                </label>
-              </div>
-
-              <div class="form-block full-span">
-                <h5>Total</h5>
-                <label>Total general
-                  <div id="totalGralDisplay" style="font-weight: bold; font-size: 1.2em; color: #2c3e50; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; min-height: 20px;">$0.00</div>
-                  <input type="hidden" id="totalGral" step="0.01" readonly>
-                </label>
-              </div>
-
-              <div class="actions full-span">
-                <button class="btn btn-primary" type="submit">Guardar</button>
-                <button class="btn btn-primary" type="button" id="resetBtn">Cancelar</button>
-              </div>
+    <!-- Header -->
+    <header class="header">
+        <a th:href="@{/inicio}" class="logo" style="text-decoration: none; cursor: pointer;">
+            <div class="logo-circle">
+                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">   
             </div>
-          </form>
+            <div class="logo-text">Sierra Maestra</div>
+        </a>
+        
+        <nav class="nav-menu">
+            <a href="#cervezas" class="nav-item">Nuestras Cervezas</a>
+            <a href="#promos" class="nav-item">Promos</a>
+            <a href="#quienes-somos" class="nav-item">¿Quiénes somos?</a>
+            <a th:href="@{/inicio}" class="nav-item active">Mi Cuenta</a>
+        </nav>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="section-container">
+            <h1 class="section-title">Mi Historial de Pedidos</h1>
+            
+            <!-- Filtros y Ordenamiento -->
+            <div class="card p-3 mb-4">
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label class="filter-label">Ordenar por:</label>
+                        <select id="ordenarPor" class="form-select">
+                            <option value="fechaDesc">Fecha (más recientes primero)</option>
+                            <option value="fechaAsc">Fecha (más antiguos primero)</option>
+                            <option value="montoDesc">Monto (mayor a menor)</option>
+                            <option value="montoAsc">Monto (menor a mayor)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Estado:</label>
+                        <select id="filtroEstado" class="form-select">
+                            <option value="">Todos los estados</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Confirmado">Confirmado</option>
+                            <option value="En preparación">En preparación</option>
+                            <option value="En camino">En camino</option>
+                            <option value="Entregado">Entregado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Buscar:</label>
+                        <input type="text" id="buscarPedido" class="form-control" placeholder="Nº pedido o producto...">
+                    </div>
+                    
+                    <button id="btnAplicarFiltros" class="btn-action">Aplicar Filtros</button>
+                </div>
+            </div>
+            
+            <!-- Lista de Pedidos -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="m-0">Mis Pedidos</h4>
+                    <span id="totalPedidos" class="badge bg-dark">0 pedidos encontrados</span>
+                </div>
+                
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nº Pedido</th>
+                                    <th>Fecha Pedido</th>
+                                    <th>Fecha Entrega</th>
+                                    <th>Productos</th>
+                                    <th>Monto Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaPedidosBody">
+                                <!-- Los pedidos se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Estado vacío -->
+                    <div id="estadoVacio" class="empty-state" style="display: none;">
+                        <i class="bi bi-inbox"></i>
+                        <h4>No se encontraron pedidos</h4>
+                        <p>Parece que aún no has realizado ningún pedido.</p>
+                        <a th:href="@{/cervezas}" class="btn-action mt-3">Explorar Cervezas</a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </main>
-  </section>
-
-<script>
-/*
- * Pedidos Cliente Form - Standalone form page
- */
-
-/* constants */
-const API = '/api';
-
-/* DOM elements */
-const pedidoClienteForm = document.getElementById('pedidoClienteForm');
-const pedidoClienteIdInput = document.getElementById('pedidoClienteId');
-const fechaPedidoInput = $('#fechaPedido');
-const fechaEntregaInput = $('#fechaEntrega');
-const envioInput = $('#envio');
-const direccionEntregaInput = $('#lugarEntrega');
-const nombreClienteInput = $('#nombreCliente');
-const emailClienteInput = $('#emailCliente');
-const telefonoClienteInput = $('#telefonoCliente');
-const lugarEntregaInput = $('#lugarEntrega');
-const cervezaSelect = $('#cervezaSelect');
-const cervezaPrecioSpan = $('#cervezaPrecio');
-const accesorioSelect = $('#accesorioSelect');
-const accesorioPrecioSpan = $('#accesorioPrecio');
-const estadoSelect = $('#estadoSelect');
-const estadoPagoCheck = $('#estadoPagoCheck');
-const productosAgregadosContainer = $('#productosAgregados');
-const notaInput = $('#nota');
-const totalInput = $('#totalGral');
-const totalDisplay = $('#totalGralDisplay');
-
-// Función para actualizar el display del total con formato de moneda
-function updateTotalDisplay(total) {
-  const formattedTotal = `$${total.toFixed(2)}`;
-  totalDisplay.text(formattedTotal);
-}
-const resetBtn = $('#resetBtn');
-const formTitle = $('#formTitle');
-
-let accesoriosList = [];
-let cervezasList = [];
-let productosAgregados = [];
-
-/* Utils */
-function formatDateFromMillis(ms) {
-  if (ms === null || ms === undefined) return '';
-  const d = new Date(Number(ms));
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-function isoDateInputFromMillis(ms) {
-  if (ms === null || ms === undefined) return '';
-  const d = new Date(Number(ms));
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function mensaje(msg, tipo) {
-  const msgEl = document.getElementById('msg');
-  if (!msgEl) return;
-  
-  msgEl.textContent = msg || '';
-  msgEl.className = tipo || '';
-}
-
-/* Load all catalogs */
-async function loadAll() {
-  try {
-    mensaje('Cargando datos...', '');
-    const endpoints = [
-      `${API}/getAllCerveza`,
-      `${API}/getAllAccesorio`
-    ];
-    const [cerRes, accRes] = await Promise.all(
-      endpoints.map(u => fetchJSON(u).catch(err=>({status:'Error', descripcion:err.message, data:[]})))
-    );
-    cervezasList = (cerRes && cerRes.data) ? cerRes.data : (Array.isArray(cerRes) ? cerRes : []);
-    accesoriosList = ((accRes && accRes.data) ? accRes.data : (Array.isArray(accRes) ? accRes : [])).filter(a => (a.estado||'').toLowerCase() === 'disponible');
-    accesoriosList = accesoriosList.filter((v,i,a) => a.findIndex(x => x.id===v.id)===i);
-
-    populateSelects();
-    renderProductosAgregados();
     
-    mensaje('', '');
-  } catch (err) {
-    console.error(err);
-    mensaje('Error cargando datos: ' + (err.message || err), 'error');
-  }
-}
-
-/* populate selects */
-function populateSelects() {
-  console.log('Populating selects...');
-  
-  // Cervezas predefinidas
-  cervezaSelect.html(`<option value="">-- Elegir cerveza --</option>`);
-  
-  const cervezasPredefinidas = [
-    { id: 'rubia', nombre: 'Rubia', precio: 8000 },
-    { id: 'ipa', nombre: 'IPA', precio: 9500 },
-    { id: 'negra', nombre: 'Negra', precio: 7000 },
-    { id: 'roja', nombre: 'Roja', precio: 7500 },
-    { id: 'pilsner', nombre: 'Pilsner', precio: 8200 },
-    { id: 'stout', nombre: 'Stout', precio: 9000 },
-    { id: 'porter', nombre: 'Porter', precio: 8800 },
-    { id: 'lager', nombre: 'Lager', precio: 7800 },
-    { id: 'ale', nombre: 'Ale', precio: 8500 },
-    { id: 'weiss', nombre: 'Weiss', precio: 8000 }
-  ];
-  
-  console.log('Adding predefined beers:', cervezasPredefinidas.length);
-  cervezasPredefinidas.forEach(c => {
-    cervezaSelect.append(`<option value="${c.id}" data-price="${c.precio}">${c.nombre} - $${c.precio}</option>`);
-  });
-
-  // Agregar cervezas desde la base de datos si existen
-  console.log('Total cervezas cargadas desde BD:', cervezasList.length);
-  cervezasList.forEach(c => {
-    const price = (c.precioPorLitro !== undefined && c.precioPorLitro !== null) ? c.precioPorLitro : 0;
-    const label = (c.nombreCerveza || c.nombre || 'Sin nombre') + (price > 0 ? ` - $${price}` : '');
-    cervezaSelect.append(`<option value="bd_${c.id}" data-price="${price}">${label} (BD)</option>`);
-  });
-
-  // Accesorios predefinidos
-  accesorioSelect.html(`<option value="">-- Elegir accesorio --</option>`);
-  
-  const accesoriosPredefinidos = [
-    { id: 'canilla', nombre: 'Canilla', precio: 5000 },
-    { id: 'gas', nombre: 'Gas', precio: 3500 },
-    { id: 'chopera', nombre: 'Chopera', precio: 7000 }
-  ];
-  
-  console.log('Adding predefined accessories:', accesoriosPredefinidos.length);
-  accesoriosPredefinidos.forEach(a => {
-    accesorioSelect.append(`<option value="${a.id}" data-precio="${a.precio}">${a.nombre} - $${a.precio}</option>`);
-  });
-
-  // Agregar accesorios de la base de datos si existen
-  console.log('Total accesorios cargados desde BD:', accesoriosList.length);
-  accesoriosList.forEach(a => {
-    const precio = a.precio || 0;
-    const label = `${a.nombre || 'Accesorio ' + a.id} ${precio > 0 ? `- $${precio}` : ''} ${a.notas ? '- ' + a.notas : ''}`;
-    accesorioSelect.append(`<option value="bd_${a.id}" data-precio="${precio}">${label} (BD)</option>`);
-  });
-
-  updateCervezaInfo();
-  updateAccesorioInfo();
-  
-  console.log('Selects populated successfully');
-  console.log('Cerveza options:', cervezaSelect.children.length);
-  console.log('Accesorio options:', accesorioSelect.children.length);
-}
-
-/* update displays */
-function updateCervezaInfo() {
-  const v = cervezaSelect.val();
-  if (!v) {
-    cervezaPrecioSpan.textContent = '-';
-  } else {
-    // Obtener el precio desde el atributo data-price del option seleccionado
-    const selectedOption = cervezaSelect.find('option:selected');
-    const price = selectedOption.attr('data-price');
-    cervezaPrecioSpan.textContent = price ? ('$' + price) : '-';
-  }
-  recalcTotal();
-}
-
-function updateAccesorioInfo() {
-  const v = accesorioSelect.val();
-  if (!v) {
-    accesorioPrecioSpan.textContent = '-';
-  } else {
-    // Obtener el precio desde el atributo data-precio del option seleccionado
-    const selectedOption = accesorioSelect.find('option:selected');
-    const precio = selectedOption.attr('data-precio');
-    accesorioPrecioSpan.textContent = precio ? ('$' + precio) : '-';
-  }
-}
-
-/* Funciones para manejar productos agregados */
-function agregarCerveza() {
-  const cervezaId = cervezaSelect.val();
-  if (!cervezaId) {
-    mensaje('Seleccione una cerveza', 'error');
-    return;
-  }
-  
-  // Obtener información del option seleccionado
-  const selectedOption = cervezaSelect.find('option:selected');
-  const precio = parseFloat(selectedOption.attr('data-price')) || 0;
-  const nombre = selectedOption.text().split(' - ')[0]; // Obtener solo el nombre sin el precio
-  
-  // Determinar si es una cerveza predefinida o de BD
-  let idFinal = cervezaId;
-  if (cervezaId.startsWith('bd_')) {
-    // Es de la base de datos
-    idFinal = cervezaId.replace('bd_', '');
-  }
-  
-  const producto = {
-    id: Date.now(),
-    tipo: 'cerveza',
-    cerveza: { id: idFinal, nombre: nombre, precio: precio },
-    precio: precio,
-    subtotal: precio
-  };
-  
-  productosAgregados.push(producto);
-  renderProductosAgregados();
-  recalcTotal();
-  
-  // Limpiar selección
-  cervezaSelect.val('');
-  updateCervezaInfo();
-}
-
-function agregarAccesorio() {
-  const accesorioId = accesorioSelect.val();
-  if (!accesorioId) {
-    mensaje('Seleccione un accesorio', 'error');
-    return;
-  }
-  
-  // Obtener información del option seleccionado
-  const selectedOption = accesorioSelect.find('option:selected');
-  const precio = parseFloat(selectedOption.attr('data-precio')) || 0;
-  const nombre = selectedOption.text().split(' - ')[0]; // Obtener solo el nombre sin el precio
-  
-  // Determinar si es un accesorio predefinido o de BD
-  let idFinal = accesorioId;
-  if (accesorioId.startsWith('bd_')) {
-    // Es de la base de datos
-    idFinal = accesorioId.replace('bd_', '');
-  }
-  
-  const producto = {
-    id: Date.now(),
-    tipo: 'accesorio',
-    accesorio: { id: idFinal, nombre: nombre, precio: precio },
-    precio: precio,
-    subtotal: precio
-  };
-  
-  productosAgregados.push(producto);
-  renderProductosAgregados();
-  recalcTotal();
-  
-  // Limpiar selección
-  accesorioSelect.val('');
-  updateAccesorioInfo();
-}
-
-function renderProductosAgregados() {
-  if (productosAgregados.length === 0) {
-    productosAgregadosContainer.html('<p style="color: #666; font-style: italic;">No hay productos agregados</p>');
-    return;
-  }
-  
-  let html = '';
-  productosAgregados.forEach(producto => {
-    if (producto.tipo === 'cerveza') {
-      html += `
-        <div class="producto-item">
-          <div class="producto-info">
-            <strong>Cerveza:</strong> ${producto.cerveza.nombre} 
-            <br><small>Precio: $${producto.subtotal.toFixed(2)}</small>
-          </div>
-          <div class="producto-acciones">
-            <button class="btn-danger" onclick="eliminarProducto(${producto.id})">Borrar</button>
-          </div>
+    <!-- Modal Detalles del Pedido -->
+    <div class="modal-overlay" id="modalDetalles">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Detalles del Pedido #<span id="detalleNumeroPedido"></span></h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Información General -->
+                <div class="detail-section">
+                    <h5>Información General</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Fecha de Pedido:</strong> <span id="detalleFechaPedido"></span></p>
+                            <p><strong>Fecha de Entrega:</strong> <span id="detalleFechaEntrega"></span></p>
+                            <p><strong>Estado:</strong> <span id="detalleEstado" class="status-badge"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Forma de Pago:</strong> <span id="detalleFormaPago"></span></p>
+                            <p><strong>Estado de Pago:</strong> <span id="detalleEstadoPago"></span></p>
+                            <p><strong>Requiere Envío:</strong> <span id="detalleEnvio"></span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dirección de Envío -->
+                <div class="detail-section" id="seccionDireccion" style="display: none;">
+                    <h5>Dirección de Entrega</h5>
+                    <p id="detalleDireccion"></p>
+                </div>
+                
+                <!-- Productos -->
+                <div class="detail-section">
+                    <h5>Productos del Pedido</h5>
+                    <div id="detalleProductos">
+                        <!-- Los productos se cargarán aquí -->
+                    </div>
+                </div>
+                
+                <!-- Resumen -->
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span>Subtotal Cervezas:</span>
+                        <span id="resumenSubtotalCervezas">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Subtotal Accesorios:</span>
+                        <span id="resumenSubtotalAccesorios">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Costo de Envío:</span>
+                        <span id="resumenCostoEnvio">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Total del Pedido:</span>
+                        <span id="resumenTotal">$0.00</span>
+                    </div>
+                </div>
+                
+                <!-- Notas -->
+                <div class="detail-section" id="seccionNotas" style="display: none;">
+                    <h5>Notas Adicionales</h5>
+                    <p id="detalleNotas"></p>
+                </div>
+            </div>
+            
+            <div class="modal-footer mt-3">
+                <button class="btn-action btn-outline" id="btnCerrarDetalles">Cerrar</button>
+                <button class="btn-action" id="btnDescargarTicket">
+                    <i class="bi bi-download"></i> Descargar Ticket
+                </button>
+            </div>
         </div>
-      `;
-    } else if (producto.tipo === 'accesorio') {
-      html += `
-        <div class="producto-item">
-          <div class="producto-info">
-            <strong>Accesorio:</strong> ${producto.accesorio.nombre} 
-            <br><small>Precio: $${producto.subtotal.toFixed(2)}</small>
-          </div>
-          <div class="producto-acciones">
-            <button class="btn-danger" onclick="eliminarProducto(${producto.id})">Borrar</button>
-          </div>
-        </div>
-      `;
-    }
-  });
-  
-  productosAgregadosContainer.html(html);
-}
+    </div>
 
-function eliminarProducto(id) {
-  productosAgregados = productosAgregados.filter(p => p.id !== id);
-  renderProductosAgregados();
-  recalcTotal();
-}
-
-function recalcTotal() {
-  let total = 0;
-  productosAgregados.forEach(producto => {
-    total += producto.subtotal || 0;
-  });
-  
-  total = Math.round((total + Number.EPSILON) * 100) / 100;
-  totalInput.val(total);
-  updateTotalDisplay(total);
-  return total;
-}
-
-/* reset form */
-function resetForm() {
-  pedidoClienteIdInput.value = '';
-  pedidoClienteForm.reset();
-  totalInput.val('');
-  updateTotalDisplay(0);
-  formTitle.textContent = 'Agregar Pedido';
-  formTitle.removeClass('edit-mode');
-  productosAgregados = [];
-  renderProductosAgregados();
-  updateCervezaInfo();
-  updateAccesorioInfo();
-}
-
-/* submit form (create or update) */
-async function submitForm(e) {
-  e.preventDefault();
-  try {
-    const fechaP = fechaPedidoInput.val();
-    const fechaE = fechaEntregaInput.val();
-    if (!fechaP || !fechaE) { mensaje('Fechas obligatorias', 'error'); return; }
-    const dP = new Date(fechaP);
-    const dE = new Date(fechaE);
-    if (dE <= dP) { mensaje('La fecha de entrega no puede ser anterior a la fecha de pedido', 'error'); return; }
-
-    const envio = envioInput.prop('checked');
-    const lugarEntrega = lugarEntregaInput.val().trim();
-    if (envio && !lugarEntrega) { mensaje('Si seleccionás envío, el lugar de entrega es obligatorio', 'error'); return; }
-
-    const nombreCliente = nombreClienteInput.val().trim();
-    if (!nombreCliente) { mensaje('El nombre del cliente es obligatorio', 'error'); return; }
-
-    if (productosAgregados.length === 0) { mensaje('Debe agregar al menos un producto', 'error'); return; }
-
-    // Preparar productos para el payload
-    const cervezas = [];
-    const accesorios = [];
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    productosAgregados.forEach(producto => {
-      if (producto.tipo === 'cerveza') {
-        cervezas.push({ id: Number(producto.cerveza.id) });
-      } else if (producto.tipo === 'accesorio') {
-        accesorios.push({ id: Number(producto.accesorio.id) });
-      }
-    });
+    <script>
+        // Datos de ejemplo - En una aplicación real estos vendrían del backend
+        const pedidosEjemplo = [
+            {
+                id: "SM-2023-001",
+                fechaPedido: "2023-10-15",
+                fechaEntrega: "2023-10-18",
+                productos: ["Cerveza Artesanal IPA", "Cerveza Porter"],
+                montoTotal: 125.50,
+                estado: "Entregado",
+                estadoPago: "Pagado",
+                formaPago: "Tarjeta de Crédito",
+                envio: true,
+                direccion: "Av. Siempre Viva 123, Springfield",
+                cervezas: [
+                    { nombre: "Cerveza Artesanal IPA", cantidad: 2, precioUnitario: 45.00, litros: 5 },
+                    { nombre: "Cerveza Porter", cantidad: 1, precioUnitario: 35.50, litros: 5 }
+                ],
+                accesorios: [
+                    { nombre: "Vaso Cervecero", cantidad: 1, precioUnitario: 15.00 }
+                ],
+                costoEnvio: 10.00,
+                notas: "Entregar después de las 18:00 hrs"
+            },
+            {
+                id: "SM-2023-002",
+                fechaPedido: "2023-11-02",
+                fechaEntrega: "2023-11-05",
+                productos: ["Cerveza Lager", "Set Degustación"],
+                montoTotal: 89.75,
+                estado: "En preparación",
+                estadoPago: "Pagado",
+                formaPago: "Transferencia Bancaria",
+                envio: false,
+                direccion: "",
+                cervezas: [
+                    { nombre: "Cerveza Lager", cantidad: 1, precioUnitario: 40.00, litros: 5 },
+                    { nombre: "Set Degustación", cantidad: 1, precioUnitario: 49.75, litros: 2.5 }
+                ],
+                accesorios: [],
+                costoEnvio: 0.00,
+                notas: ""
+            },
+            {
+                id: "SM-2023-003",
+                fechaPedido: "2023-11-10",
+                fechaEntrega: null,
+                productos: ["Cerveza Stout", "Cerveza Amber"],
+                montoTotal: 95.00,
+                estado: "Pendiente",
+                estadoPago: "Pendiente",
+                formaPago: "Efectivo",
+                envio: true,
+                direccion: "Calle Falsa 123, Ciudad",
+                cervezas: [
+                    { nombre: "Cerveza Stout", cantidad: 1, precioUnitario: 42.50, litros: 5 },
+                    { nombre: "Cerveza Amber", cantidad: 1, precioUnitario: 42.50, litros: 5 }
+                ],
+                accesorios: [
+                    { nombre: "Abridor de Botellas", cantidad: 1, precioUnitario: 10.00 }
+                ],
+                costoEnvio: 10.00,
+                notas: "Llamar antes de entregar"
+            }
+        ];
 
-    // 🔹 VALIDACIÓN DE NEGOCIO: Verificar que si hay accesorios, debe haber al menos una cerveza
-    if (accesorios.length > 0 && cervezas.length === 0) {
-      mensaje('No se puede crear un pedido de accesorios sin al menos una cerveza', 'error');
-      return;
-    }
+        // Variables globales
+        let pedidosFiltrados = [...pedidosEjemplo];
+        let pedidoSeleccionado = null;
 
-    const idVal = pedidoClienteIdInput.value ? Number(pedidoClienteIdInput.value) : 0;
-    const total = Number(recalcTotal()) || 0;
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarHistorial();
+            configurarEventListeners();
+            aplicarFiltros();
+        });
 
-    const payload = {
-      id: idVal,
-      fechaPedido: new Date(fechaPedidoInput.val()).getTime(),
-      fechaEntrega: new Date(fechaEntregaInput.val()).getTime(),
-      direccionEntrega: envio ? lugarEntrega : 'Sin envío',
-      estado: 'Pendiente', // Siempre pendiente para clientes
-      estadoPago: estadoPagoCheck.prop('checked') ? 'Pagado' : 'Pendiente',
-      envio: envio,
-      nombreCliente: nombreCliente,
-      emailCliente: emailClienteInput.val().trim() || null,
-      telefonoCliente: telefonoClienteInput.val().trim() || null,
-      lugarEntrega: lugarEntregaInput.val().trim() || null,
-      nota: notaInput.val().trim() || null,
-      accesorios: accesorios,
-      cervezas: cervezas,
-      totalGral: total
-    };
+        function inicializarHistorial() {
+            // En una aplicación real, aquí se haría una llamada al backend
+            console.log("Inicializando historial de pedidos...");
+        }
 
-    const isNew = !pedidoClienteIdInput.value || Number(pedidoClienteIdInput.value) === 0;
-    const method = isNew ? 'POST' : 'PUT';
-    const url = isNew ? `${API}/addPedidoCliente` : `${API}/updatePedidoCliente`;
+        function configurarEventListeners() {
+            // Filtros
+            document.getElementById('btnAplicarFiltros').addEventListener('click', aplicarFiltros);
+            document.getElementById('ordenarPor').addEventListener('change', aplicarFiltros);
+            document.getElementById('filtroEstado').addEventListener('change', aplicarFiltros);
+            document.getElementById('buscarPedido').addEventListener('input', aplicarFiltros);
 
-    console.log('Payload enviado:', payload);
-    
-    const res = await fetchJSON(url, {
-      method,
-      headers: {'Content-Type':'application/json', 'Accept':'application/json'},
-      body: JSON.stringify(payload)
-    });
+            // Modal
+            document.querySelector('.close-modal').addEventListener('click', cerrarModal);
+            document.getElementById('btnCerrarDetalles').addEventListener('click', cerrarModal);
+            document.getElementById('btnDescargarTicket').addEventListener('click', descargarTicket);
 
-    console.log('Respuesta del servidor:', res);
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('modalDetalles').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    cerrarModal();
+                }
+            });
+        }
 
-    const ok = res && (res.codigo === '200' || res.codigo === '201' || res.status === 'Ok' || res.status === 'OK');
-    if (ok) {
-      mensaje('Pedido guardado correctamente.', 'success');
-      // Redirigir a la lista después de guardar
-      setTimeout(() => {
-        window.location.href = '/pedidos-clientes';
-      }, 1500);
-    } else {
-      const txt = (res && res.descripcion) ? res.descripcion : 'No se pudo guardar el pedido';
-      const data = (res && res.data) ? res.data : '';
-      console.error('Error detallado:', { respuesta: res, texto: txt, data: data });
-      mensaje(`${txt} ${data ? '- Detalle: ' + data : ''}`, 'error');
-    }
-  } catch (err) {
-    console.error(err);
-    mensaje('Error al guardar: ' + err.message, 'error');
-  }
-}
+        function aplicarFiltros() {
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            const busqueda = document.getElementById('buscarPedido').value.toLowerCase();
+            const orden = document.getElementById('ordenarPor').value;
 
-/* Utils */
-async function fetchJSON(url, options = {}) {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    });
-    
-    const text = await response.text();
-    console.log('Response status:', response.status);
-    console.log('Response text:', text);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${text}`);
-    }
-    
-    if (!text) return null;
-    return JSON.parse(text);
-  } catch (error) {
-    console.error('Error en fetchJSON:', error);
-    throw error;
-  }
-}
+            // Aplicar filtros
+            pedidosFiltrados = pedidosEjemplo.filter(pedido => {
+                const coincideEstado = !filtroEstado || pedido.estado === filtroEstado;
+                const coincideBusqueda = !busqueda || 
+                    pedido.id.toLowerCase().includes(busqueda) ||
+                    pedido.productos.some(producto => producto.toLowerCase().includes(busqueda));
+                
+                return coincideEstado && coincideBusqueda;
+            });
 
-/* listeners */
-pedidoClienteForm.addEventListener('submit', submitForm);
-resetBtn.on('click', () => { 
-  resetForm(); 
-  mensaje('', ''); 
-});
-cervezaSelect.on('change', updateCervezaInfo);
-accesorioSelect.on('change', updateAccesorioInfo);
+            // Aplicar ordenamiento
+            pedidosFiltrados.sort((a, b) => {
+                switch(orden) {
+                    case 'fechaDesc':
+                        return new Date(b.fechaPedido) - new Date(a.fechaPedido);
+                    case 'fechaAsc':
+                        return new Date(a.fechaPedido) - new Date(b.fechaPedido);
+                    case 'montoDesc':
+                        return b.montoTotal - a.montoTotal;
+                    case 'montoAsc':
+                        return a.montoTotal - b.montoTotal;
+                    default:
+                        return 0;
+                }
+            });
 
-// Botones para agregar productos
-document.getElementById('agregarCerveza').addEventListener('click', agregarCerveza);
-document.getElementById('agregarAccesorio').addEventListener('click', agregarAccesorio);
+            renderizarPedidos();
+        }
 
-/* Load pedido for editing */
-async function loadPedidoClienteForEdit(id) {
-  try {
-    const res = await fetchJSON(`${API}/getByIdPedidoCliente/${id}`);
-    if (res && res.data) {
-      const p = res.data;
-      loadPedidoClienteIntoForm(p);
-    } else {
-      mensaje('Pedido no encontrado', 'error');
-    }
-  } catch (err) {
-    console.error(err);
-    mensaje('Error cargando pedido: ' + err.message, 'error');
-  }
-}
+        function renderizarPedidos() {
+            const tbody = document.getElementById('tablaPedidosBody');
+            const estadoVacio = document.getElementById('estadoVacio');
+            const totalPedidos = document.getElementById('totalPedidos');
 
-/* Load pedido into form */
-function loadPedidoClienteIntoForm(p) {
-  pedidoClienteIdInput.value = p.id || '';
-  formTitle.textContent = 'Cargar Pedido';
-  formTitle.addClass('edit-mode');
-  
-  // Fechas
-  fechaPedidoInput.val(isoDateInputFromMillis(p.fechaPedido));
-  fechaEntregaInput.val(isoDateInputFromMillis(p.fechaEntrega));
-  
-  // Cliente
-  nombreClienteInput.val(p.nombreCliente || '');
-  emailClienteInput.val(p.emailCliente || '');
-  telefonoClienteInput.val(p.telefonoCliente || '');
-  lugarEntregaInput.val(p.lugarEntrega || p.direccionEntrega || '');
-  
-  // Envío
-  envioInput.prop('checked', p.envio || false);
-  
-  // Estado
-  estadoSelect.val(p.estado || 'Pendiente');
-  estadoPagoCheck.prop('checked', (p.estadoPago || '').toLowerCase() === 'pagado');
-  
-  // Nota
-  notaInput.val(p.nota || '');
-  
-  // Total
-  const total = p.totalGral || 0;
-  totalInput.val(total);
-  updateTotalDisplay(total);
-  
-  // Cargar productos (esto requeriría endpoints adicionales para obtener los productos del pedido)
-  // Por ahora, solo mostramos el total
-  productosAgregados = [];
-  renderProductosAgregados();
-}
+            // Actualizar contador
+            totalPedidos.textContent = `${pedidosFiltrados.length} pedido${pedidosFiltrados.length !== 1 ? 's' : ''} encontrado${pedidosFiltrados.length !== 1 ? 's' : ''}`;
 
-// Validación de nombre: solo letras y espacios
-function validateNombre(value) {
-  // Solo permite letras (incluye acentos y ñ) y espacios
-  const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
-  return nombreRegex.test(value);
-}
+            if (pedidosFiltrados.length === 0) {
+                tbody.innerHTML = '';
+                estadoVacio.style.display = 'block';
+                return;
+            }
 
-// Validación de teléfono: solo números
-function validateTelefono(value) {
-  // Solo permite números
-  const telefonoRegex = /^[0-9]+$/;
-  return telefonoRegex.test(value);
-}
+            estadoVacio.style.display = 'none';
+            
+            // Renderizar pedidos
+            tbody.innerHTML = pedidosFiltrados.map(pedido => `
+                <tr>
+                    <td><strong>${pedido.id}</strong></td>
+                    <td>${formatearFecha(pedido.fechaPedido)}</td>
+                    <td>${pedido.fechaEntrega ? formatearFecha(pedido.fechaEntrega) : 'Por confirmar'}</td>
+                    <td>
+                        <div>${pedido.productos.slice(0, 2).join(', ')}</div>
+                        <small class="text-muted">${pedido.productos.length > 2 ? `+${pedido.productos.length - 2} más` : ''}</small>
+                    </td>
+                    <td><strong>$${pedido.montoTotal.toFixed(2)}</strong></td>
+                    <td>
+                        <span class="status-badge status-${pedido.estado.toLowerCase().replace(' ', '')}">
+                            ${pedido.estado}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-action btn-outline btn-sm" onclick="verDetalles('${pedido.id}')">
+                            <i class="bi bi-eye"></i> Ver Detalles
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
 
-// Validación de email: solo @gmail.com y @hotmail.com
-function validateEmail(value) {
-  // Solo permite @gmail.com y @hotmail.com
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail\.com|hotmail\.com)$/;
-  return emailRegex.test(value);
-}
+        function verDetalles(idPedido) {
+            pedidoSeleccionado = pedidosFiltrados.find(p => p.id === idPedido);
+            
+            if (!pedidoSeleccionado) {
+                alert('Pedido no encontrado');
+                return;
+            }
 
-// Función para filtrar caracteres no válidos en tiempo real (nombre)
-function filterNombreInput(event) {
-  const input = event.target;
-  const value = input.value;
-  
-  // Filtrar caracteres no válidos (mantener solo letras y espacios)
-  const filteredValue = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-  
-  if (value !== filteredValue) {
-    input.value = filteredValue;
-    
-    // Mostrar mensaje de advertencia
-    showValidationMessage(input, 'Solo se permiten letras y espacios');
-  }
-}
+            // Actualizar información general
+            document.getElementById('detalleNumeroPedido').textContent = pedidoSeleccionado.id;
+            document.getElementById('detalleFechaPedido').textContent = formatearFecha(pedidoSeleccionado.fechaPedido);
+            document.getElementById('detalleFechaEntrega').textContent = pedidoSeleccionado.fechaEntrega ? 
+                formatearFecha(pedidoSeleccionado.fechaEntrega) : 'Por confirmar';
+            
+            // Estado
+            const estadoElement = document.getElementById('detalleEstado');
+            estadoElement.textContent = pedidoSeleccionado.estado;
+            estadoElement.className = `status-badge status-${pedidoSeleccionado.estado.toLowerCase().replace(' ', '')}`;
+            
+            // Información de pago y envío
+            document.getElementById('detalleFormaPago').textContent = pedidoSeleccionado.formaPago;
+            document.getElementById('detalleEstadoPago').textContent = pedidoSeleccionado.estadoPago;
+            document.getElementById('detalleEnvio').textContent = pedidoSeleccionado.envio ? 'Sí' : 'No';
 
-// Función para filtrar caracteres no válidos en tiempo real (teléfono)
-function filterTelefonoInput(event) {
-  const input = event.target;
-  const value = input.value;
-  
-  // Filtrar caracteres no válidos (mantener solo números)
-  const filteredValue = value.replace(/[^0-9]/g, '');
-  
-  if (value !== filteredValue) {
-    input.value = filteredValue;
-    
-    // Mostrar mensaje de advertencia
-    showValidationMessage(input, 'Solo se permiten números');
-  }
-}
+            // Dirección de envío
+            const seccionDireccion = document.getElementById('seccionDireccion');
+            const detalleDireccion = document.getElementById('detalleDireccion');
+            if (pedidoSeleccionado.envio && pedidoSeleccionado.direccion) {
+                detalleDireccion.textContent = pedidoSeleccionado.direccion;
+                seccionDireccion.style.display = 'block';
+            } else {
+                seccionDireccion.style.display = 'none';
+            }
 
-// Función para validar email en tiempo real
-function validateEmailInput(event) {
-  const input = event.target;
-  const value = input.value;
-  
-  if (value && !validateEmail(value)) {
-    showValidationMessage(input, 'Solo se permiten emails de @gmail.com y @hotmail.com');
-  } else {
-    // Remover mensaje de error si el email es válido
-    $(input).siblings('.validation-message').remove();
-  }
-}
+            // Productos
+            const detalleProductos = document.getElementById('detalleProductos');
+            detalleProductos.innerHTML = '';
+            
+            // Cervezas
+            pedidoSeleccionado.cervezas.forEach(cerveza => {
+                const subtotal = cerveza.cantidad * cerveza.precioUnitario;
+                detalleProductos.innerHTML += `
+                    <div class="product-item">
+                        <div class="product-info">
+                            <div class="product-name">${cerveza.nombre}</div>
+                            <div class="product-meta">
+                                ${cerveza.cantidad} x $${cerveza.precioUnitario.toFixed(2)} | ${cerveza.litros}L
+                            </div>
+                        </div>
+                        <div class="product-total">$${subtotal.toFixed(2)}</div>
+                    </div>
+                `;
+            });
 
-// Función para mostrar mensajes de validación
-function showValidationMessage(input, message) {
-  // Remover mensaje anterior si existe
-  $(input).siblings('.validation-message').remove();
-  
-  // Agregar nuevo mensaje
-  const messageDiv = $(`<div class="validation-message" style="color: #e74c3c; font-size: 0.8em; margin-top: 2px;">${message}</div>`);
-  $(input).after(messageDiv);
-  
-  // Remover mensaje después de 3 segundos
-  setTimeout(() => {
-    messageDiv.remove();
-  }, 3000);
-}
+            // Accesorios
+            pedidoSeleccionado.accesorios.forEach(accesorio => {
+                const subtotal = accesorio.cantidad * accesorio.precioUnitario;
+                detalleProductos.innerHTML += `
+                    <div class="product-item">
+                        <div class="product-info">
+                            <div class="product-name">${accesorio.nombre}</div>
+                            <div class="product-meta">
+                                ${accesorio.cantidad} x $${accesorio.precioUnitario.toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="product-total">$${subtotal.toFixed(2)}</div>
+                    </div>
+                `;
+            });
 
-/* init */
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadAll();
-  
-  // Configurar validación del campo nombre
-  const nombreInput = document.getElementById('nombreCliente');
-  if (nombreInput) {
-    nombreInput.addEventListener('input', filterNombreInput);
-    nombreInput.addEventListener('blur', function() {
-      if (this.value && !validateNombre(this.value)) {
-        showValidationMessage(this, 'Solo se permiten letras y espacios');
-      }
-    });
-  }
-  
-  // Configurar validación del campo teléfono
-  const telefonoInput = document.getElementById('telefonoCliente');
-  if (telefonoInput) {
-    telefonoInput.addEventListener('input', filterTelefonoInput);
-    telefonoInput.addEventListener('blur', function() {
-      if (this.value && !validateTelefono(this.value)) {
-        showValidationMessage(this, 'Solo se permiten números');
-      }
-    });
-  }
-  
-  // Configurar validación del campo email
-  const emailInput = document.getElementById('emailCliente');
-  if (emailInput) {
-    emailInput.addEventListener('input', validateEmailInput);
-    emailInput.addEventListener('blur', validateEmailInput);
-  }
-  
-  // Verificar si estamos editando
-  const urlParams = new URLSearchParams(window.location.search);
-  const editId = urlParams.get('edit');
-  
-  if (editId) {
-    await loadPedidoClienteForEdit(editId);
-  } else {
-    // ⚡ Setear fecha de pedido al día actual por defecto
-    const hoy = new Date();
-    const yyyy = hoy.getFullYear();
-    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dd = String(hoy.getDate()).padStart(2, '0');
-    fechaPedidoInput.val(`${yyyy}-${mm}-${dd}`);
+            // Resumen
+            const subtotalCervezas = pedidoSeleccionado.cervezas.reduce((sum, c) => sum + (c.cantidad * c.precioUnitario), 0);
+            const subtotalAccesorios = pedidoSeleccionado.accesorios.reduce((sum, a) => sum + (a.cantidad * a.precioUnitario), 0);
+            
+            document.getElementById('resumenSubtotalCervezas').textContent = `$${subtotalCervezas.toFixed(2)}`;
+            document.getElementById('resumenSubtotalAccesorios').textContent = `$${subtotalAccesorios.toFixed(2)}`;
+            document.getElementById('resumenCostoEnvio').textContent = `$${pedidoSeleccionado.costoEnvio.toFixed(2)}`;
+            document.getElementById('resumenTotal').textContent = `$${pedidoSeleccionado.montoTotal.toFixed(2)}`;
 
-    // Inicializar estado como pendiente
-    estadoSelect.val('Pendiente');
-    estadoPagoCheck.prop('checked', false);
-    
-    // Inicializar display del total
-    updateTotalDisplay(0);
-  }
-});
-</script>
+            // Notas
+            const seccionNotas = document.getElementById('seccionNotas');
+            const detalleNotas = document.getElementById('detalleNotas');
+            if (pedidoSeleccionado.notas) {
+                detalleNotas.textContent = pedidoSeleccionado.notas;
+                seccionNotas.style.display = 'block';
+            } else {
+                seccionNotas.style.display = 'none';
+            }
 
+            // Mostrar modal
+            document.getElementById('modalDetalles').style.display = 'flex';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalDetalles').style.display = 'none';
+            pedidoSeleccionado = null;
+        }
+
+        function descargarTicket() {
+            if (!pedidoSeleccionado) return;
+            
+            // En una aplicación real, aquí se generaría un PDF
+            // Por ahora simulamos la descarga
+            alert(`Generando ticket para el pedido ${pedidoSeleccionado.id}...`);
+            
+            // Simulación de descarga
+            setTimeout(() => {
+                alert('Ticket descargado correctamente');
+            }, 1000);
+        }
+
+        function formatearFecha(fechaString) {
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(fechaString).toLocaleDateString('es-ES', opciones);
+        }
+    </script>
 </body>
 </html>
