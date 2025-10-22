@@ -44,6 +44,8 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
     public ResponseEntity<Object> save(Pedido pedido, BindingResult bindingResult) throws BindException {
         respuesta = new Respuesta();
         try {
+            pedido.setId(null); // ✅ Forzar creación de nuevo pedido
+
             Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
             // ✅ Cambiar estado de barriles a "Alquilado"
@@ -139,7 +141,6 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
         try {
             Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
-            // ✅ Actualizar estados de barriles y accesorios
             if (pedidoGuardado.getBarriles() != null && !pedidoGuardado.getBarriles().isEmpty()) {
                 barrilService.marcarComoAlquilados(
                     pedidoGuardado.getBarriles().stream().map(b -> b.getId()).collect(Collectors.toList())
@@ -199,14 +200,12 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
                     pedido.setEstado("Cancelado");
                     pedidoRepository.save(pedido);
 
-                    // 🔹 Devolver barriles a estado "Cargado"
                     if (pedido.getBarriles() != null && !pedido.getBarriles().isEmpty()) {
                         barrilService.marcarComoCargados(
                             pedido.getBarriles().stream().map(b -> b.getId()).collect(Collectors.toList())
                         );
                     }
 
-                    // 🔹 Devolver accesorios a estado "Disponible"
                     if (pedido.getAccesorios() != null && !pedido.getAccesorios().isEmpty()) {
                         accesorioService.marcarComoDisponibles(
                             pedido.getAccesorios().stream().map(a -> a.getId()).collect(Collectors.toList())
@@ -236,6 +235,5 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
             respuesta.setData(e.getMessage());
         }
         return respuesta;
-        }
-
+    }
 }

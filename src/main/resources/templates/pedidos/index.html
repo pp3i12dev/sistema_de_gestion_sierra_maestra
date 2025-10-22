@@ -405,8 +405,6 @@ async function fetchJSON(url, opts = {}) {
     }
 }
 
-
-
 // ========== SISTEMA DE RESERVAS COMPLETO ==========
 class SistemaReservas {
     constructor() {
@@ -903,7 +901,6 @@ const sistemaReservas = new SistemaReservas();
 </script>
 <script>
 // ========== SISTEMA DE ALERTAS DE STOCK ==========
-// ========== SISTEMA DE ALERTAS DE STOCK (Importado del Home) ==========
 function initAlertasStock() {
     const DEFAULT_THRESHOLDS = { cervezas: 100, barriles: 10, lotes: 5, maduradores: 2 };
     const STORAGE_KEY = 'lowstock_thresholds';
@@ -1205,6 +1202,7 @@ async function loadAll() {
     }
 }
 // ========== RENDER TABLA PEDIDOS ==========
+// ========== RENDER TABLA PEDIDOS ==========
 function renderPedidosTable(items) {
     const tbody = $('#pedidosTableBody');
     if (!tbody) return;
@@ -1247,28 +1245,32 @@ function renderPedidosTable(items) {
             }
         }
 
-        // Obtener nombre de la cerveza
+        // 🎯 CORRECCIÓN: Obtener TODAS las cervezas del pedido
         let cervezaNombre = '';
-        if (p.cervezas && Array.isArray(p.cervezas) && p.cervezas.length > 0) {
-            const c = p.cervezas[0];
-            if (typeof c === 'object') {
-                cervezaNombre = c.nombreCerveza || c.nombre || String(c.id || '');
-            } else {
-                const f = cervezasList.find(x => String(x.id) === String(c));
-                cervezaNombre = f ? (f.nombreCerveza || f.nombre) : ('ID:' + c);
-            }
+        if (p.cervezas && Array.isArray(p.cervezas)) {
+            const nombresCervezas = p.cervezas.map(c => {
+                if (typeof c === 'object') {
+                    return c.nombreCerveza || c.nombre || String(c.id || '');
+                } else {
+                    const f = cervezasList.find(x => String(x.id) === String(c));
+                    return f ? (f.nombreCerveza || f.nombre) : ('ID:' + c);
+                }
+            });
+            cervezaNombre = nombresCervezas.join(', ');
         }
 
-        // Obtener información del barril
+        // 🎯 CORRECCIÓN: Obtener TODOS los barriles del pedido
         let barrilNombre = '';
-        if (p.barriles && Array.isArray(p.barriles) && p.barriles.length > 0) {
-            const b = p.barriles[0];
-            if (typeof b === 'object') {
-                barrilNombre = `#${b.id} ${b.litros ? '- ' + b.litros + ' L' : ''}`;
-            } else {
-                const f = barrilesList.find(x => String(x.id) === String(b));
-                barrilNombre = f ? (`#${f.id} ${f.litros ? '- ' + f.litros + ' L' : ''}`) : ('ID:' + b);
-            }
+        if (p.barriles && Array.isArray(p.barriles)) {
+            const infoBarriles = p.barriles.map(b => {
+                if (typeof b === 'object') {
+                    return `#${b.id} ${b.litros ? '- ' + b.litros + ' L' : ''}`;
+                } else {
+                    const f = barrilesList.find(x => String(x.id) === String(b));
+                    return f ? (`#${f.id} ${f.litros ? '- ' + f.litros + ' L' : ''}`) : ('ID:' + b);
+                }
+            });
+            barrilNombre = infoBarriles.join(', ');
         }
 
         // Obtener accesorios
@@ -1281,7 +1283,16 @@ function renderPedidosTable(items) {
             }).join(', ');
         }
 
-        const cantidad = (p.cervezas && Array.isArray(p.cervezas) && p.cervezas[0] && p.cervezas[0].cantidad) ? p.cervezas[0].cantidad : (p.cantidad || '');
+        // 🎯 CORRECCIÓN: Calcular cantidad total de todos los productos
+        let cantidadTotal = 0;
+        if (p.cervezas && Array.isArray(p.cervezas)) {
+            p.cervezas.forEach(c => {
+                if (typeof c === 'object') {
+                    cantidadTotal += Number(c.cantidad || 1);
+                }
+            });
+        }
+
         const fechaP = formatDateFromMillis(p.fechaPedido);
         const fechaE = formatDateFromMillis(p.fechaEntrega);
         const totalTxt = p.totalGral != null ? ('$' + p.totalGral) : '';
@@ -1295,15 +1306,15 @@ function renderPedidosTable(items) {
             <td class="nowrap">${p.id || ''}</td>
             <td>${clienteNombre}</td>
             <td>${asociadoNombre}</td>
-            <td>${cervezaNombre}</td>
-            <td>${barrilNombre}</td>
-            <td>${accesoriosTxt}</td>
-            <td>${cantidad}</td>
+            <td title="${cervezaNombre}">${cervezaNombre.length > 30 ? cervezaNombre.substring(0, 30) + '...' : cervezaNombre}</td>
+            <td title="${barrilNombre}">${barrilNombre.length > 30 ? barrilNombre.substring(0, 30) + '...' : barrilNombre}</td>
+            <td title="${accesoriosTxt}">${accesoriosTxt.length > 30 ? accesoriosTxt.substring(0, 30) + '...' : accesoriosTxt}</td>
+            <td>${cantidadTotal}</td>
             <td>${fechaP}</td>
             <td>${fechaE}</td>
             <td>${p.estado || ''}</td>
             <td><span class="badge ${estadoPago === 'Pagado' ? 'bg-success' : 'bg-warning'}">${estadoPago}</span></td>
-            <td>${direccionEnvio}</td>
+            <td title="${direccionEnvio}">${direccionEnvio.length > 30 ? direccionEnvio.substring(0, 30) + '...' : direccionEnvio}</td>
             <td title="${notas}">${notas.length > 50 ? notas.substring(0, 50) + '...' : notas}</td>
             <td>${totalTxt}</td>
             <td class="nowrap">
@@ -1462,6 +1473,8 @@ function pedidosTableClickHandler(e) {
     const id = btn.dataset.id;
     if (!action || !id) return;
     
+    console.log(`🖱️ Botón clickeado: ${action} - ID: ${id}`);
+    
     if (action === 'edit') loadPedidoIntoForm(id);
     else if (action === 'cancel') cancelPedido(id);
     else if (action === 'delete') deletePedido(id);
@@ -1580,8 +1593,11 @@ function filtrarPedidos() {
 function attachListeners() {
     // ... otros event listeners ...
     
-    const pedidosTable = $('#pedidosTable'); 
-    if (pedidosTable) pedidosTable.addEventListener('click', pedidosTableClickHandler);
+    // CORRECCIÓN CRÍTICA: Event delegation para los botones de la tabla
+    const pedidosTableBody = $('#pedidosTableBody'); 
+    if (pedidosTableBody) {
+        pedidosTableBody.addEventListener('click', pedidosTableClickHandler);
+    }
     
     const btnFiltrar = $('#btnFiltrar'); 
     if (btnFiltrar) btnFiltrar.addEventListener('click', filtrarPedidos);
@@ -1959,195 +1975,157 @@ document.addEventListener("click", async (e) => {
 
 // ========== SUBMIT HANDLER CON CONFIRMACIÓN DE RESERVAS ==========
 async function submitFormHandler(e) {
-    e.preventDefault();
-    
-    try {
-        // Validaciones básicas
-        const fechaP = $('#fechaPedido').value;
-        const fechaE = $('#fechaEntrega').value;
+  e.preventDefault();
 
-        if (!fechaP) { 
-            mensaje('Fecha de pedido obligatoria','error'); 
-            return; 
-        }
-        
-        if (fechaE && new Date(fechaE) < new Date(fechaP)) { 
-            mensaje('La fecha de entrega debe ser posterior o igual a la fecha de pedido','error'); 
-            return; 
-        }
-        
-        const clienteId = $('#cliente').value;
-        const usuarioId = $('#asociado').value;
-        if (!clienteId || !usuarioId) { 
-            mensaje('Cliente y Usuario obligatorios','error'); 
-            return; 
-        }
+  try {
+    const fechaP = $('#fechaPedido').value;
+    const fechaE = $('#fechaEntrega').value;
 
-        const filasDetalle = $$('#detalleTable tbody tr');
-        if (filasDetalle.length === 0) {
-            mensaje('Debe agregar al menos un producto al pedido','error');
-            return;
-        }
-
-        mensaje('Confirmando reservas y guardando pedido...');
-
-        // Obtener todas las reservas activas del detalle
-        const todasLasReservas = [];
-        $$('#detalleTable tbody tr').forEach(tr => {
-            if (tr.dataset.tipo === 'cerveza') {
-                const reservas = JSON.parse(tr.dataset.reservas || '[]');
-                todasLasReservas.push(...reservas);
-            } else if (tr.dataset.tipo === 'accesorio') {
-                todasLasReservas.push(tr.dataset.reserva);
-            }
-        });
-
-        // Construir payload del pedido CORREGIDO
-        const accesoriosSeleccionados = [];
-        const cervezasPayload = [];
-        const barrilesPayload = [];
-
-        // Procesar filas de detalle para el payload CORREGIDO
-        $$('#detalleTable tbody tr').forEach(tr => {
-            const tipo = tr.dataset.tipo;
-            const id = tr.dataset.id;
-            
-            if (tipo === 'accesorio') {
-                // SOLO enviar ID del accesorio, no objeto completo
-                accesoriosSeleccionados.push({ id: Number(id) });
-            } else if (tipo === 'cerveza') {
-                const qty = Number(tr.querySelector('.qty').textContent || 1);
-                cervezasPayload.push({ 
-                    id: Number(id), 
-                    cantidad: qty 
-                });
-                
-                // AGREGAR BARRILES: obtener los IDs de barriles de las reservas
-                const reservasIds = JSON.parse(tr.dataset.reservas || '[]');
-                for (const reservaId of reservasIds) {
-                    const reserva = sistemaReservas.reservas.get(reservaId);
-                    if (reserva && reserva.tipo === 'barril') {
-                        barrilesPayload.push({ id: Number(reserva.recursoId) });
-                    }
-                }
-            }
-        });
-
-        const total = recalcTotal() || 0;
-        const envio = $('#envio').checked;
-        const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
-        const notaValor = $('#nota') ? $('#nota').value.trim() : '';
-
-        const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
-        const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
-
-        // Payload del pedido CORREGIDO - INCLUIR BARRILES
-        const payload = {
-            id: $('#pedidoId').value ? Number($('#pedidoId').value) : 0,
-            fechaPedido: fechaPedidoMillis,
-            fechaEntrega: fechaEntregaMillis,
-            direccionEntrega: direccion,
-            estado: $('#estado').value || 'Pendiente',
-            estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
-            envio: envio,
-            accesorios: accesoriosSeleccionados,  // ✅ Solo IDs
-            cervezas: cervezasPayload,            // ✅ IDs y cantidad
-            barriles: barrilesPayload,            // ✅ AGREGADO: IDs de barriles
-            usuario: { id: Number(usuarioId) },
-            cliente: { id: Number(clienteId) },
-            totalGral: total,
-            nota: notaValor
-        };
-
-        console.log('📦 Payload CORREGIDO del pedido:', payload);
-        
-        // 🔍 DEBUG - Estructura detallada del payload
-        console.log('🔍 DEBUG - Estructura del payload:');
-        console.log('- Accesorios:', accesoriosSeleccionados);
-        console.log('- Cervezas:', cervezasPayload);
-        console.log('- Barriles:', barrilesPayload);
-        console.log('- Total reservas activas:', todasLasReservas.length);
-        console.log('- IDs de reservas:', todasLasReservas);
-
-        const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
-        const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
-        const method = isNew ? 'POST' : 'PUT';
-
-        // Guardar pedido
-        const res = await fetchJSON(url, {
-            method, 
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }, 
-            body: JSON.stringify(payload)
-        });
-
-        const ok = res && (
-            res.codigo === '200' || 
-            res.codigo === '201' || 
-            res.status === 'success' ||
-            /ok/i.test(res.status) || 
-            res.estado === 'OK'
-        );
-
-        if (ok) {
-            console.log('✅ Pedido guardado exitosamente');
-            
-            // ✅ CONFIRMAR RESERVAS SOLO DESPUÉS DE GUARDAR EXITOSAMENTE
-            for (const reservaId of todasLasReservas) {
-                if (reservaId) {
-                    await sistemaReservas.confirmar(reservaId);
-                }
-            }
-            
-            // Limpiar formulario
-            resetForm();
-            
-            mostrarNotificacionGlobal('Pedido guardado correctamente', 'success');
-            await loadAll();
-            
-        } else {
-            // REVERTIR: Si falla el pedido, liberar las reservas
-            for (const reservaId of todasLasReservas) {
-                if (reservaId) {
-                    await sistemaReservas.liberar(reservaId);
-                }
-            }
-            
-            let errorMsg = 'No se pudo guardar el pedido';
-            if (res) {
-                if (res.descripcion) errorMsg = res.descripcion;
-                else if (res.message) errorMsg = res.message;
-                else if (res.error) errorMsg = res.error;
-            }
-            mostrarNotificacionGlobal(errorMsg, 'error');
-        }
-
-    } catch(err) {
-        console.error('Error al guardar pedido:', err);
-        
-        // Revertir todas las reservas en caso de error
-        const todasLasReservas = [];
-        $$('#detalleTable tbody tr').forEach(tr => {
-            if (tr.dataset.tipo === 'cerveza') {
-                const reservas = JSON.parse(tr.dataset.reservas || '[]');
-                todasLasReservas.push(...reservas);
-            } else if (tr.dataset.tipo === 'accesorio') {
-                todasLasReservas.push(tr.dataset.reserva);
-            }
-        });
-        
-        for (const reservaId of todasLasReservas) {
-            if (reservaId) {
-                await sistemaReservas.liberar(reservaId);
-            }
-        }
-        
-        mostrarNotificacionGlobal('Error al guardar: ' + (err.message || err), 'error');
+    if (!fechaP) {
+      mensaje('Fecha de pedido obligatoria', 'error');
+      return;
     }
-}
 
+    if (fechaE && new Date(fechaE) < new Date(fechaP)) {
+      mensaje('La fecha de entrega debe ser posterior o igual a la fecha de pedido', 'error');
+      return;
+    }
+
+    const clienteId = $('#cliente').value;
+    const usuarioId = $('#asociado').value;
+    if (!clienteId || !usuarioId) {
+      mensaje('Cliente y Usuario obligatorios', 'error');
+      return;
+    }
+
+    const filasDetalle = $$('#detalleTable tbody tr');
+    if (filasDetalle.length === 0) {
+      mensaje('Debe agregar al menos un producto al pedido', 'error');
+      return;
+    }
+
+    mensaje('Confirmando reservas y guardando pedido...');
+
+    const todasLasReservas = [];
+    const accesoriosSeleccionados = [];
+    const cervezasPayload = [];
+    const barrilesPayload = [];
+
+    filasDetalle.forEach(tr => {
+      const tipo = tr.dataset.tipo;
+      const id = Number(tr.dataset.id);
+
+      if (tipo === 'accesorio') {
+        accesoriosSeleccionados.push({ id });
+        const reservaId = tr.dataset.reserva;
+        if (reservaId) todasLasReservas.push(reservaId);
+      }
+
+      if (tipo === 'cerveza') {
+        const cantidad = Number(tr.querySelector('.qty')?.textContent || 1);
+        cervezasPayload.push({ id, cantidad });
+
+        const reservas = JSON.parse(tr.dataset.reservas || '[]');
+        reservas.forEach(reservaId => {
+          const reserva = sistemaReservas.reservas.get(reservaId);
+          if (reserva?.tipo === 'barril') {
+            barrilesPayload.push({ id: Number(reserva.recursoId) });
+            todasLasReservas.push(reservaId);
+          }
+        });
+      }
+    });
+
+    const total = recalcTotal() || 0;
+    const envio = $('#envio').checked;
+    const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
+    const notaValor = $('#nota')?.value.trim() || '';
+    const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
+    const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
+
+    const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
+
+    const payload = {
+      fechaPedido: fechaPedidoMillis,
+      fechaEntrega: fechaEntregaMillis,
+      direccionEntrega: direccion,
+      estado: $('#estado').value || 'Pendiente',
+      estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
+      envio,
+      accesorios: accesoriosSeleccionados,
+      cervezas: cervezasPayload,
+      barriles: barrilesPayload,
+      usuario: { id: Number(usuarioId) },
+      cliente: { id: Number(clienteId) },
+      totalGral: total,
+      nota: notaValor
+    };
+
+    if (!isNew) {
+      payload.id = Number($('#pedidoId').value); // ✅ Solo incluir ID si estás editando
+    }
+
+    const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
+    const method = isNew ? 'POST' : 'PUT';
+
+    const res = await fetchJSON(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const ok = res && (
+      res.codigo === '200' ||
+      res.codigo === '201' ||
+      res.status === 'success' ||
+      /ok/i.test(res.status) ||
+      res.estado === 'OK'
+    );
+
+    if (ok) {
+      for (const reservaId of todasLasReservas) {
+        if (reservaId) await sistemaReservas.confirmar(reservaId);
+      }
+
+      resetForm();
+      mostrarNotificacionGlobal('Pedido guardado correctamente', 'success');
+      await loadAll();
+    } else {
+      for (const reservaId of todasLasReservas) {
+        if (reservaId) await sistemaReservas.liberar(reservaId);
+      }
+
+      let errorMsg = 'No se pudo guardar el pedido';
+      if (res?.descripcion) errorMsg = res.descripcion;
+      else if (res?.message) errorMsg = res.message;
+      else if (res?.error) errorMsg = res.error;
+
+      mostrarNotificacionGlobal(errorMsg, 'error');
+    }
+
+  } catch (err) {
+    console.error('Error al guardar pedido:', err);
+
+    const todasLasReservas = [];
+    $$('#detalleTable tbody tr').forEach(tr => {
+      if (tr.dataset.tipo === 'cerveza') {
+        const reservas = JSON.parse(tr.dataset.reservas || '[]');
+        todasLasReservas.push(...reservas);
+      } else if (tr.dataset.tipo === 'accesorio') {
+        todasLasReservas.push(tr.dataset.reserva);
+      }
+    });
+
+    for (const reservaId of todasLasReservas) {
+      if (reservaId) await sistemaReservas.liberar(reservaId);
+    }
+
+    mostrarNotificacionGlobal('Error al guardar: ' + (err.message || err), 'error');
+  }
+}
 
 // ========== RESET FORM CON LIBERACIÓN DE RESERVAS ==========
 function resetForm() {
@@ -2208,11 +2186,6 @@ function setDefaultFecha() {
     $('#fechaPedido').value = `${yyyy}-${mm}-${dd}`;
 }
 
-// ========== FUNCIONES ADICIONALES (renderPedidosTable, etc.) ==========
-// [Aquí irían las funciones restantes: renderPedidosTable, loadPedidoIntoForm, 
-//  cancelPedido, deletePedido, filtrarPedidos, etc.]
-// Por brevedad las omito, pero deben mantenerse igual que en tu código original
-
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Iniciando aplicación...');
@@ -2259,7 +2232,45 @@ function attachListeners() {
         }
     });
 
-    // [Resto de event listeners...]
+    // CORRECCIÓN CRÍTICA: Event delegation para los botones de la tabla
+    const pedidosTableBody = $('#pedidosTableBody'); 
+    if (pedidosTableBody) {
+        pedidosTableBody.addEventListener('click', pedidosTableClickHandler);
+    }
+    
+    const btnFiltrar = $('#btnFiltrar'); 
+    if (btnFiltrar) btnFiltrar.addEventListener('click', filtrarPedidos);
+    
+    const showAllBtn = $('#showAllBtn'); 
+    if (showAllBtn) showAllBtn.addEventListener('click', ()=>{ 
+        renderPedidosTable(window._allPedidos || []); 
+        $('#filtroCliente').value=''; 
+        $('#filtroDni').value=''; 
+        $('#filtroEstado').value=''; 
+    });
+
+    const searchBtn = $('#searchBtn');
+    if (searchBtn) searchBtn.addEventListener('click', ()=>{
+        const field = $('#searchField').value;
+        const value = ($('#searchValue').value || '').trim();
+        let pedidos = window._allPedidos || [];
+        if (field && value) {
+            pedidos = filterPedidosSingleField(field, value, pedidos);
+        }
+        if (!pedidos.length) {
+            mensaje(`No se ha encontrado ningún pedido para ${field || 'criterio'} con valor "${value}"`,'error');
+        }
+        renderPedidosTable(pedidos);
+        $('#searchValue').value = ''; 
+        $('#searchField').value = '';
+    });
+
+    const filtroClienteInput = $('#filtroCliente'); 
+    if (filtroClienteInput) {
+        filtroClienteInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') filtrarPedidos();
+        });
+    }
 }
 </script>
 </body>

@@ -1,13 +1,6 @@
 package com.sca.model;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -21,7 +14,7 @@ import lombok.ToString;
 
 @Getter
 @Setter
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true) // ✅ Activamos comparación explícita
 @ToString
 @Entity
 @Table(name = "barril")
@@ -29,6 +22,7 @@ public class Barril {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include // ✅ Esto permite que el Set<Barril> compare por ID
     private Long id;
 
     @Column(name = "litros", nullable = false)
@@ -44,27 +38,21 @@ public class Barril {
     @Column(name = "notas")
     private String notas;
 
-    // ✅ NUEVO: Campo para la sesión de reserva
     @Column(name = "session_reserva")
     private String sessionReserva;
 
-    // ✅ NUEVO: Campo para el timestamp de reserva  
     @Column(name = "timestamp_reserva")
     private LocalDateTime timestampReserva;
 
-    // 🔹 Relación ManyToOne con Lote
     @ManyToOne
     @JoinColumn(name = "lote_id")
     @JsonBackReference
     private Lote lote;
 
-    // 🔹 Campo solo de lectura para obtener el ID del lote directamente
     @Column(name = "lote_id", insertable = false, updatable = false)
     private Long loteId;
 
-    // 🔹 Constructores (actualizados)
-    public Barril() {
-    }
+    public Barril() {}
 
     public Barril(Long id, Integer litros, String estado, String notas, Lote lote, String sessionReserva, LocalDateTime timestampReserva) {
         this.id = id;
