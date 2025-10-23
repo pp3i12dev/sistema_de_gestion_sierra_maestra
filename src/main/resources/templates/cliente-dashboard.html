@@ -392,6 +392,31 @@
         }
         
         /* Promos Section */
+        /* Estilos para el contenedor de la imagen en la tarjeta */
+        .promo-image-container {
+            /* Define la altura máxima que deseas para la imagen */
+            height: 150px; /* Ajusta este valor según el diseño deseado */
+            width: 100%;
+            /* Recorta la imagen si es más grande que el contenedor */
+            overflow: hidden;
+            /* Para que la imagen ocupe todo el ancho del contenedor */
+            margin-bottom: 10px; /* Espacio entre la imagen y el título/texto */
+            border-radius: 5px; /* Opcional: para redondear las esquinas de la imagen */
+        }
+
+        /* Estilos para la imagen dentro del contenedor */
+        .promo-image-container img {
+            /* Hace que la imagen ocupe el 100% del ancho del contenedor */
+            width: 100%;
+            /* Mantiene las proporciones y rellena el contenedor, recortando si es necesario */
+            object-fit: cover;
+            /* Asegura que la altura de la imagen se ajuste a la altura del contenedor */
+            height: 100%;
+            /* Opcional: para que las esquinas de la imagen sigan el borde del contenedor si se redondeó */
+            display: block; /* Elimina posibles espacios extra debajo de la imagen */
+        }
+
+     
         .promos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -946,28 +971,38 @@
         </section>
         
         <!-- Sección Promos -->
-        <section id="promos" class="content-section">
+      <section id="promos" class="content-section">
             <div class="section-container">
                 <h2 class="section-title">Promociones Especiales</h2>
                 <div class="promos-grid">
+                    
                     <div class="promo-card">
+                        <div class="promo-image-container">
+                            <img src="/images/img1.jpg" alt="Imagen de Happy Hour">
+                        </div>
                         <div class="promo-badge">¡Oferta!</div>
                         <h3>Happy Hour</h3>
-                        <p>De 5:00 PM a 7:00 PM</p>
+                        <p>De 19:00 PM a 21:00 PM</p>
                         <div class="promo-discount">20% OFF</div>
                     </div>
                     
                     <div class="promo-card">
+                        <div class="promo-image-container">
+                            <img src="/images/Img9.jpg" alt="Imagen de Pack Familiar">
+                        </div>
                         <div class="promo-badge">Nuevo</div>
-                        <h3>Pack Familiar</h3>
-                        <p>6 cervezas + 2 vasos especiales</p>
+                        <h3>Pack Duo</h3>
+                        <p>2 cervezas + 2 porciones Papas</p>
                         <div class="promo-discount">15% OFF</div>
                     </div>
                     
                     <div class="promo-card">
+                        <div class="promo-image-container">
+                            <img src="/images/img4.jpg" alt="Imagen de Edición Especial">
+                        </div>
                         <div class="promo-badge">Limitado</div>
                         <h3>Edición Especial</h3>
-                        <p>Cerveza de temporada con ingredientes únicos</p>
+                        <p>Cerveza de temporada con menú del día</p>
                         <div class="promo-discount">25% OFF</div>
                     </div>
                 </div>
