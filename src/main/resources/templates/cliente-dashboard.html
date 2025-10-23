@@ -983,6 +983,42 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+/* Contenedor para la tarjeta de dirección */
+.direccion-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Tarjeta de dirección alargada */
+.redes-card.direccion-full {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem 2rem;
+    text-align: left;
+}
+
+.direccion-content {
+    flex: 1;
+}
+
+.redes-card.direccion-full .redes-icon {
+    font-size: 3rem;
+    margin-bottom: 0;
+}
+
+.redes-card.direccion-full h3 {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .redes-card.direccion-full {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+}
 
 /* Responsive */
 @media (max-width: 768px) {
@@ -1420,14 +1456,27 @@
                     <p>Sierra Maestra Cerveza</p>
                 </a>
             </div>
-            
-            <!-- Mensaje adicional -->
-            <div class="redes-message">
-                <p>¡Seguinos para conocer las últimas promociones, eventos especiales y novedades de nuestras cervezas artesanales!</p>
-            </div>
+            <!-- Tarjeta de Dirección debajo -->
+                <div class="direccion-container">
+                    <a href="#" class="redes-card direccion direccion-full" onclick="window.location.href='http://localhost:8080/pedidos-clientes'; window.history.replaceState(null, null, 'http://localhost:8080/pedidos-clientes'); return false;">
+                        <div class="redes-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <div class="direccion-content">
+                            <h3>Dirección y Horarios</h3>
+                            <p>🕕 <strong>MARTES A DOMINGOS</strong> apartir de las 18hs</p>
+                            <p>📍 <strong>La Plata</strong></p>
+                            <p>Envios a domicilio 👇🏻</p>
+                            <span class="redes-followers">av 32 nro 2160, La Plata, Buenos Aires 1900</span>
+                        </div>
+                    </a>
+                </div> 
         </div>
     </div>
+
+    
 </section>
+
     </main>
 
     <!-- Bootstrap JS -->
