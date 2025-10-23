@@ -63,7 +63,34 @@
       padding: 10px;
       margin: 10px 0;
     }
-    @media (max-width:768px) { .card { font-size:14px } }
+    
+    /* Estilos para el header del usuario logueado */
+    .user-info {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      margin-left: auto;
+      margin-right: 1rem;
+      font-weight: bold;
+    }
+    
+    .navbar-user {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    @media (max-width:768px) { 
+      .card { font-size:14px; }
+      .navbar-user {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .user-info {
+        margin: 0.5rem 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -76,12 +103,21 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link" th:href="@{/pedidos}">Pedidos</a></li>
         <li class="nav-item"><a class="nav-link" th:href="@{/clientes}">Clientes</a></li>
         <li class="nav-item"><a class="nav-link" th:href="@{/cervezas}">Cervezas</a></li>
         <li class="nav-item"><a class="nav-link" th:href="@{/lotes}">Lotes</a></li>
       </ul>
+      
+      <!-- Información del usuario logueado -->
+      <div class="navbar-user">
+        <div id="userInfo" class="user-info" style="display: none;">
+          <span id="userName">Usuario</span>
+          <span id="userLegajo"></span>
+        </div>
+        <button class="btn btn-outline-light btn-sm" onclick="cerrarSesion()">Cerrar Sesión</button>
+      </div>
     </div>
   </div>
 </nav>
@@ -120,7 +156,10 @@
 
       <div class="col-md-6">
         <label class="form-label">Asociado (Usuario)</label>
-        <select id="asociado" class="form-select" required></select>
+        <select id="asociado" class="form-select" required disabled>
+          <option value="">Cargando...</option>
+        </select>
+        <small class="text-muted" id="asociadoInfo">El asociado se asigna automáticamente desde tu sesión</small>
       </div>
 
       <div class="col-md-4">
@@ -317,17 +356,99 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // ========== CONFIGURACIÓN Y VARIABLES GLOBALES ==========
-const API = '';
+const API = 'http://localhost:8080';
 let accesoriosList = [];
 let cervezasList = [];
 let barrilesList = [];
 let clientesList = [];
 let asociadosList = [];
 let lotesList = [];
+let usuarioLogueado = null;
 
 // Sistema de reservas activas en memoria
 let reservasActivas = new Map();
 const TIEMPO_RESERVA = 5 * 60 * 1000; // 5 minutos en milisegundos
+
+// ========== GESTIÓN DE SESIÓN - NUEVO ==========
+function verificarUsuarioLogueado() {
+    try {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+        console.log('🔍 Verificando usuario logueado:', usuario);
+        
+        if (usuario && usuario.legajo) {
+            console.log('✅ Usuario logueado detectado:', usuario);
+            return usuario;
+        } else {
+            console.log('❌ No hay usuario logueado, redirigiendo al login...');
+            // Redirigir al login después de un breve delay
+            setTimeout(() => {
+                window.location.href = `${window.location.origin}/inicio`;
+            }, 2000);
+            
+            // Mostrar mensaje al usuario
+            mensaje('Debe iniciar sesión para acceder a esta página. Redirigiendo...', 'error');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error al verificar usuario logueado:', error);
+        // Redirigir al login en caso de error
+        setTimeout(() => {
+            window.location.href = `${window.location.origin}/inicio`;
+        }, 2000);
+        return null;
+    }
+}
+
+function actualizarUIusuario(usuario) {
+    const nombreCompleto = `${usuario.nombre} ${usuario.apellido || ''}`.trim();
+    
+    // Actualizar en el header
+    const userNameElement = $('#userName');
+    if (userNameElement) {
+        userNameElement.textContent = nombreCompleto || 'Usuario';
+    }
+    
+    const userLegajoElement = $('#userLegajo');
+    if (userLegajoElement) {
+        userLegajoElement.textContent = usuario.legajo ? `(Legajo: ${usuario.legajo})` : '';
+    }
+    
+    // Mostrar el panel de usuario
+    const userInfoDiv = document.getElementById('userInfo');
+    if (userInfoDiv) {
+        userInfoDiv.style.display = 'block';
+    }
+    
+    // Actualizar el select de asociados
+    const asociadoSelect = $('#asociado');
+    if (asociadoSelect) {
+        // Buscar el asociado correspondiente al usuario logueado
+        const asociadoCorrespondiente = asociadosList.find(a => 
+            String(a.legajo) === String(usuario.legajo)
+        );
+        
+        if (asociadoCorrespondiente) {
+            asociadoSelect.innerHTML = `<option value="${asociadoCorrespondiente.id}" selected>${asociadoCorrespondiente.nombre} ${asociadoCorrespondiente.apellido || ''} (Legajo: ${asociadoCorrespondiente.legajo})</option>`;
+            asociadoSelect.disabled = true;
+            
+            const asociadoInfo = $('#asociadoInfo');
+            if (asociadoInfo) {
+                asociadoInfo.textContent = `Asociado asignado automáticamente: ${asociadoCorrespondiente.nombre}`;
+                asociadoInfo.className = 'text-success';
+            }
+        } else {
+            console.warn('⚠️ No se encontró asociado correspondiente al usuario logueado');
+            mensaje('No se encontró tu información de asociado en el sistema', 'error');
+        }
+    }
+    
+    console.log('👋 UI actualizada para usuario:', nombreCompleto);
+}
+
+function cerrarSesion() {
+    sessionStorage.removeItem('usuarioLogueado');
+    window.location.href = `${window.location.origin}/inicio`;
+}
 
 // ========== FUNCIONES BASE ==========
 function $(selector) {
@@ -1129,9 +1250,15 @@ function recalcTotal() {
     return totalGeneral;
 }
 
-// ========== CARGA INICIAL DE DATOS ==========
+// ========== CARGA INICIAL DE DATOS - MODIFICADA ==========
 async function loadAll() {
     try {
+        // Verificar usuario logueado primero
+        usuarioLogueado = verificarUsuarioLogueado();
+        if (!usuarioLogueado) {
+            return;
+        }
+
         mensaje('Cargando datos...');
         const endpoints = [
             `${API}/getAllPedido`,
@@ -1191,6 +1318,9 @@ async function loadAll() {
         renderPedidosTable(window._allPedidos);
         initAlertasStock();
         
+        // Actualizar UI con información del usuario
+        actualizarUIusuario(usuarioLogueado);
+        
         // Verificar reservas expiradas en BD al cargar
         await sistemaReservas.verificarReservasBD();
 
@@ -1201,7 +1331,6 @@ async function loadAll() {
         mensaje('Error cargando datos: ' + (err.message || err), 'error');
     }
 }
-// ========== RENDER TABLA PEDIDOS ==========
 // ========== RENDER TABLA PEDIDOS ==========
 function renderPedidosTable(items) {
     const tbody = $('#pedidosTableBody');
@@ -1356,8 +1485,12 @@ async function loadPedidoIntoForm(id) {
         $('#cliente').value = clienteId;
 
         const u = p.usuario || p.asociado || null;
-        if (u) $('#asociado').value = (typeof u === 'object') ? (u.id || '') : u;
-        else $('#asociado').value = '';
+        if (u) {
+            const asociadoId = (typeof u === 'object') ? (u.id || '') : u;
+            $('#asociado').value = asociadoId;
+        } else {
+            $('#asociado').value = '';
+        }
 
         $('#detalleTable tbody').innerHTML = '';
         
@@ -1634,7 +1767,7 @@ function attachListeners() {
     }
 }
 
-// ========== POPULATE SELECTS ==========
+// ========== POPULATE SELECTS - MODIFICADA ==========
 function populateSelects() {
     console.log("🔄 Poblando selects...");
 
@@ -1671,19 +1804,22 @@ function populateSelects() {
         }
     }
 
-    // Select de asociados
+    // Select de asociados - SOLO SI NO HAY USUARIO LOGUEADO
     const asoSel = $('#asociado');
     if (asoSel) {
-        asoSel.innerHTML = '<option value="">-- Elegir usuario --</option>';
-        if (asociadosList && asociadosList.length > 0) {
-            asociadosList.forEach(a => {
-                const name = ((a.nombre || '') + (a.apellido ? ' ' + a.apellido : '')).trim();
-                const opt = document.createElement('option');
-                opt.value = a.id;
-                opt.textContent = `${name || 'Asociado ' + a.id} ${a.legajo ? '(' + a.legajo + ')' : ''}`;
-                asoSel.appendChild(opt);
-            });
+        if (!usuarioLogueado) {
+            asoSel.innerHTML = '<option value="">-- Elegir usuario --</option>';
+            if (asociadosList && asociadosList.length > 0) {
+                asociadosList.forEach(a => {
+                    const name = ((a.nombre || '') + (a.apellido ? ' ' + a.apellido : '')).trim();
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = `${name || 'Asociado ' + a.id} ${a.legajo ? '(' + a.legajo + ')' : ''}`;
+                    asoSel.appendChild(opt);
+                });
+            }
         }
+        // Si hay usuario logueado, se maneja en actualizarUIusuario
     }
 
     actualizarSelectBarriles();
@@ -1973,7 +2109,7 @@ document.addEventListener("click", async (e) => {
     }
 });
 
-// ========== SUBMIT HANDLER CON CONFIRMACIÓN DE RESERVAS ==========
+// ========== SUBMIT HANDLER CON CONFIRMACIÓN DE RESERVAS - MODIFICADO ==========
 async function submitFormHandler(e) {
   e.preventDefault();
 
@@ -2186,17 +2322,30 @@ function setDefaultFecha() {
     $('#fechaPedido').value = `${yyyy}-${mm}-${dd}`;
 }
 
-// ========== INICIALIZACIÓN ==========
+// ========== INICIALIZACIÓN - MODIFICADA ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Iniciando aplicación...');
+    console.log('🚀 Iniciando aplicación de pedidos para asociados...');
     
-    setDefaultFecha();
-    attachListeners();
-    
-    // Cargar datos
-    await loadAll();
-    
-    console.log('✅ Aplicación iniciada correctamente');
+    // Debug inicial del sessionStorage
+    console.log('📋 SessionStorage completo:', sessionStorage);
+    console.log('👤 Usuario en sessionStorage:', sessionStorage.getItem('usuarioLogueado'));
+
+    // Verificar inmediatamente si hay usuario logueado
+    const usuarioInicial = verificarUsuarioLogueado();
+    if (usuarioInicial) {
+        console.log('🎉 Usuario listo para usar:', usuarioInicial);
+        
+        setDefaultFecha();
+        attachListeners();
+        
+        // Cargar datos
+        await loadAll();
+        
+        console.log('✅ Aplicación de pedidos para asociados iniciada correctamente');
+    } else {
+        console.log('⚠️ No hay usuario logueado, redirigiendo...');
+        mensaje('Redirigiendo a la página de login...', 'error');
+    }
 });
 
 // ========== CONFIGURACIÓN DE EVENTOS ==========
