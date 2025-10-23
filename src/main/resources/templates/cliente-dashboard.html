@@ -334,7 +334,7 @@
             text-decoration: none;
         }
         
-        /* Cervezas Section */
+        /* Cervezas Section */  
         .cervezas-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -343,22 +343,31 @@
         }
         
         .cerveza-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
             border-radius: 15px;
             padding: 2rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
+        
         }
         
         .cerveza-card:hover {
             transform: translateY(-10px);
         }
         
-        .cerveza-icon {
-            font-size: 4rem;
+        .cerveza-image {
+            width: 150px; /* Tamaño de la imagen */
+            height: 150px;
+            object-fit: cover;
+            border-radius: 50%; /* Circular */
+            border: 5px solid var(--color-principal); /* Borde dorado */
             margin-bottom: 1rem;
             display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .cerveza-card h3 {
@@ -907,33 +916,27 @@
             </div>
         </div>
                 
-        <!-- Sección Nuestras Cervezas -->
-        <section id="cervezas" class="content-section">
+            <!-- Sección Nuestras Cervezas -->
+<section id="cervezas" class="content-section">
             <div class="section-container">
                 <h2 class="section-title">Nuestras Cervezas</h2>
                 <div class="cervezas-grid">
                     <div class="cerveza-card">
-                        <div class="cerveza-icon">
-                            🍺
-                        </div>
+                        <img src="/images/img6.jpg" alt="Sierra Maestra IPA" class="cerveza-image">
                         <h3>Sierra Maestra IPA</h3>
                         <p>Cerveza artesanal con un sabor intenso y amargo característico de las IPAs.</p>
                         <div class="cerveza-price">$3.50</div>
                     </div>
                     
                     <div class="cerveza-card">
-                        <div class="cerveza-icon">
-                            🍺
-                        </div>
+                        <img src="/images/img13.jpg" alt="Sierra Maestra Lager" class="cerveza-image">
                         <h3>Sierra Maestra Lager</h3>
                         <p>Una cerveza ligera y refrescante, perfecta para cualquier ocasión.</p>
                         <div class="cerveza-price">$3.00</div>
                     </div>
                     
                     <div class="cerveza-card">
-                        <div class="cerveza-icon">
-                            🍺
-                        </div>
+                        <img src="/images/img20.jpg" alt="Sierra Maestra Stout" class="cerveza-image">
                         <h3>Sierra Maestra Stout</h3>
                         <p>Cerveza oscura y robusta con notas de café y chocolate.</p>
                         <div class="cerveza-price">$4.00</div>
