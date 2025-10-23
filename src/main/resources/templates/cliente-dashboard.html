@@ -472,80 +472,229 @@
             display: inline-block;
         }
         
-        /* Quiénes somos Section */
-        .about-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 3rem;
-            align-items: center;
-        }
-        
-        .about-text {
-            color: rgb(141, 78, 6);
+  
+        /* Estilos para la sección Quiénes Somos actualizada */
+/* Estilos para la sección Quiénes Somos - Con borders en todos los títulos */
+.about-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem; /* Reducido el gap principal */
+    align-items: start;
+}
 
-        }
-        
-        .about-text h3 {
-            color: rgb(141, 78, 6);
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-            margin-top: 2rem;
-        }
-        
-        .about-text h3:first-child {
-            margin-top: 0;
-        }
-        
-        .about-text p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-        }
-        
-        .about-text ul {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .about-text li {
-            padding: 0.5rem 0;
-            padding-left: 2rem;
-            position: relative;
-        }
-        
-        .about-text li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: rgb(141, 78, 6);
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        
-        .about-image {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .about-placeholder {
-            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #8B4513;
-            font-weight: bold;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-        
-        .about-placeholder i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
+.about-text {
+    color: rgb(141, 78, 6);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; /* Espacio entre los contenedores con border */
+}
+
+.about-text .mission-content {
+    background: linear-gradient(135deg, rgba(218, 165, 32, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 2px solid #DAA520;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-text .mission-content:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.about-text .mission-content h3 {
+    color: rgb(141, 78, 6);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.about-text .mission-content p {
+    color: rgb(141, 78, 6);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.about-text .mission-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.about-text .mission-content li {
+    padding: 0.5rem 0;
+    padding-left: 2rem;
+    position: relative;
+    color: rgb(141, 78, 6);
+    font-size: 1.1rem;
+}
+
+.about-text .mission-content li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: rgb(141, 78, 6);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Imagen inline en el texto */
+.about-image-inline {
+    margin: 0; /* Eliminado el margin ya que ahora usamos gap */
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.about-image-inline:hover {
+    transform: translateY(-5px);
+}
+
+.about-image-inline img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Columna de Misión */
+.about-mission {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.mission-content {
+    background: linear-gradient(135deg, rgba(218, 165, 32, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 2px solid #DAA520;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mission-content:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.mission-content h3 {
+    color: rgb(141, 78, 6);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.mission-content p {
+    color: rgb(141, 78, 6);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+/* Galería de Misión */
+.mission-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.mission-main-img {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.mission-main-img:hover {
+    transform: scale(1.02);
+}
+
+.mission-main-img img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.mission-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.mission-img {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.mission-img:hover {
+    transform: translateY(-5px);
+}
+
+.mission-img img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+/* Imagen extra debajo de la misión */
+.mission-extra {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.mission-extra:hover {
+    transform: translateY(-5px);
+}
+
+.mission-extra img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .about-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .about-text {
+        gap: 1.5rem;
+    }
+    
+    .about-text .mission-content,
+    .mission-content {
+        padding: 1.5rem;
+    }
+    
+    .mission-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mission-main-img img {
+        height: 150px;
+    }
+    
+    .mission-img img {
+        height: 100px;
+    }
+    
+    .about-image-inline img {
+        height: 180px;
+    }
+    
+    .mission-extra img {
+        height: 120px;
+    }
+}
         
         /* Smooth scrolling */
         html {
@@ -696,6 +845,168 @@
         .close-modal:hover {
             background: rgba(139, 69, 19, 0.1);
         }
+
+
+        /* Estilos para la sección Redes Sociales */
+.redes-content {
+    text-align: center;
+}
+
+.redes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+}
+
+.redes-card {
+    background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+    border-radius: 20px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    text-decoration: none;
+    color: #8B4513;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 3px solid transparent;
+}
+
+.redes-card:hover {
+    transform: translateY(-10px);
+    text-decoration: none;
+    color: #8B4513;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: #8B4513;
+}
+
+.redes-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.redes-card:hover::before {
+    transform: translateX(100%);
+}
+
+.redes-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    transition: transform 0.3s ease;
+}
+
+.redes-card:hover .redes-icon {
+    transform: scale(1.2);
+}
+
+.redes-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.redes-card p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.9;
+}
+
+.redes-followers {
+    display: inline-block;
+    background: rgba(139, 69, 19, 0.2);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* Colores específicos para cada red social */
+.redes-card.instagram:hover {
+    background: linear-gradient(135deg, #E1306C 0%, #F77737 50%, #FFD700 100%);
+    color: white;
+}
+
+.redes-card.whatsapp:hover {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 50%, #FFD700 100%);
+    color: white;
+}
+
+.redes-card.facebook:hover {
+    background: linear-gradient(135deg, #1877F2 0%, #0D5B9D 50%, #FFD700 100%);
+    color: white;
+}
+
+.redes-message {
+    background: linear-gradient(135deg, rgba(218, 165, 32, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
+    border: 2px solid #DAA520;
+    border-radius: 15px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.redes-message p {
+    color: rgb(141, 78, 6);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Efectos de animación para los íconos */
+.redes-card.instagram .redes-icon {
+    background: linear-gradient(45deg, #E1306C, #F77737);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.redes-card.whatsapp .redes-icon {
+    background: linear-gradient(45deg, #25D366, #128C7E);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.redes-card.facebook .redes-icon {
+    background: linear-gradient(45deg, #1877F2, #0D5B9D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .redes-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .redes-card {
+        padding: 2rem 1rem;
+    }
+    
+    .redes-icon {
+        font-size: 3rem;
+    }
+    
+    .redes-message {
+        padding: 1.5rem;
+    }
+    
+    .redes-message p {
+        font-size: 1rem;
+    }
+}
         
         /* Success/Error Messages */
         .success-message {
@@ -832,12 +1143,13 @@
             </div>
             <div class="logo-text">Sierra Maestra</div>
         </a>
-        <p class="subtitle">Somos la cerveceria más Rebelde</p>
+        <p class="subtitle">Somos la cervecería más Rebelde</p>
         
         <nav class="nav-menu">
             <a href="#cervezas" class="nav-item">Nuestras Cervezas</a>
             <a href="#promos" class="nav-item">Promos</a>
             <a href="#quienes-somos" class="nav-item">¿Quiénes somos?</a>
+            <a href="#redes-sociales" class="nav-item">Redes Sociales</a>
             <a th:href="@{/inicio}" class="nav-item active" id="btn-iniciar-sesion">Iniciar sesión</a>
         </nav>
     </header>
@@ -1009,36 +1321,113 @@
             </div>
         </section>
         
+
         <!-- Sección ¿Quiénes somos? -->
-        <section id="quienes-somos" class="content-section">
-            <div class="section-container">
-                <h2 class="section-title">¿Quiénes somos?</h2>
-                <div class="about-content">
-                    <div class="about-text">
-                        <h3>Nuestra Historia</h3>
-                        <p>Somos una cervecería artesanal fundada en las faldas de la Sierra Maestra, inspirados por la rica tradición y la pasión por crear cervezas excepcionales.</p>
-                        
-                        <h3>Nuestra Misión</h3>
-                        <p>Crear cervezas únicas que capturen el espíritu rebelde y la tradición de nuestra tierra, utilizando ingredientes locales y técnicas artesanales.</p>
-                        
-                        <h3>Nuestros Valores</h3>
-                        <ul>
-                            <li>Calidad artesanal en cada cerveza</li>
-                            <li>Tradición y innovación</li>
-                            <li>Compromiso con la comunidad local</li>
-                            <li>Pasión por la excelencia</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="about-image">
-                        <div class="about-placeholder">
-                            <i class="bi bi-building"></i>
-                            <p>Nuestra Cervecería</p>
-                        </div>      
-                    </div>
+   <!-- Sección ¿Quiénes somos? -->
+<!-- Sección ¿Quiénes somos? -->
+<section id="quienes-somos" class="content-section">
+    <div class="section-container">
+        <h2 class="section-title">¿Quiénes somos?</h2>
+        <div class="about-content">
+            
+            <!-- Columna izquierda: Historia y Valores -->
+            <div class="about-text">
+                <div class="mission-content"> <!-- NUEVO: Contenedor con border -->
+                    <h3>Nuestra Historia</h3>
+                    <p>Somos una cervecería artesanal fundada en las faldas de la Sierra Maestra, inspirados por la rica tradición y la pasión por crear cervezas excepcionales.</p>
+                </div>
+                
+                <!-- Imagen integrada en historia -->
+                <div class="about-image-inline">
+                    <img src="/images/img12.jpg" alt="Fundación de nuestra cervecería" class="img-fluid">
+                </div>
+                
+                <div class="mission-content"> <!-- NUEVO: Contenedor con border -->
+                    <h3>Nuestros Valores</h3>
+                    <ul>
+                        <li>Calidad artesanal en cada cerveza</li>
+                        <li>Tradición y innovación</li>
+                        <li>Compromiso con la comunidad local</li>
+                        <li>Pasión por la excelencia</li>
+                    </ul>
                 </div>
             </div>
-        </section>
+            
+            <!-- Columna derecha: Misión con imágenes -->
+            <div class="about-mission">
+                <div class="mission-content">
+                    <h3>Nuestra Misión</h3>
+                    <p>Crear cervezas únicas que capturen el espíritu rebelde y la tradición de nuestra tierra, utilizando ingredientes locales y técnicas artesanales.</p>
+                    
+                    <!-- Galería de imágenes para la misión -->
+                    <div class="mission-gallery">
+                        <div class="mission-main-img">
+                            <img src="/images/img13.jpg" alt="Proceso de elaboración artesanal" class="img-fluid">
+                        </div>
+                        <div class="mission-grid">
+                            <div class="mission-img">
+                                <img src="/images/img14.jpg" alt="Ingredientes naturales" class="img-fluid">
+                            </div>
+                            <div class="mission-img">
+                                <img src="/images/img15.jpg" alt="Nuestro equipo de trabajo" class="img-fluid">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Imagen adicional debajo -->
+                <div class="mission-extra">
+                    <img src="/images/img18.jpg" alt="Instalaciones de la cervecería" class="img-fluid">
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+                
+
+</section>
+        <!-- Sección Redes Sociales -->
+<section id="redes-sociales" class="content-section">
+    <div class="section-container">
+        <h2 class="section-title">Seguinos en Nuestras Redes</h2>
+        <div class="redes-content">
+            <div class="redes-grid">
+                <!-- Instagram -->
+                <a href="https://www.instagram.com/sierramaestraok/" target="_blank" class="redes-card instagram">
+                    <div class="redes-icon">
+                        <i class="bi bi-instagram"></i>
+                    </div>
+                    <h3>Instagram</h3>
+                    <p>@sierramaestraok</p>
+                </a>
+                
+                <!-- WhatsApp -->
+                <a href="https://wa.me/5492213649311" target="_blank" class="redes-card whatsapp">
+                    <div class="redes-icon">
+                        <i class="bi bi-whatsapp"></i>
+                    </div>
+                    <h3>WhatsApp</h3>
+                    <p>Pedidos y consultas</p>
+                </a>
+                
+                <!-- Facebook -->
+                <a href="https://www.facebook.com/sierramaestrarebelde?locale=es_LA" target="_blank" class="redes-card facebook">
+                    <div class="redes-icon">
+                        <i class="bi bi-facebook"></i>
+                    </div>
+                    <h3>Facebook</h3>
+                    <p>Sierra Maestra Cerveza</p>
+                </a>
+            </div>
+            
+            <!-- Mensaje adicional -->
+            <div class="redes-message">
+                <p>¡Seguinos para conocer las últimas promociones, eventos especiales y novedades de nuestras cervezas artesanales!</p>
+            </div>
+        </div>
+    </div>
+</section>
     </main>
 
     <!-- Bootstrap JS -->
