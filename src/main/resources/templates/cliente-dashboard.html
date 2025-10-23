@@ -19,9 +19,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
             min-height: 100vh;
+            overflow-x: hidden;
         }
         
-        /* Header */
+        /* Header - MODIFICADO: Aumentado z-index */
         .header {
             background: linear-gradient(135deg, rgb(99, 57, 18), rgb(2, 1, 0) 100%);
             padding: 1rem 2rem;
@@ -29,30 +30,14 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border-bottom: 3px solid #DAA520;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 100;
+            z-index: 1000; /* Aumentado para que esté por delante */
         }
-                /* Hero Section */
-        .hero {
-            height: 30vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin-top: 80px;
-            background: radial-gradient(ellipse at center, rgba(182, 185, 16, 0.1) 0%, transparent 70%);
-        }
+        
 
-        .hero-content {
-            text-align: center;
-            z-index: 10;
-            animation: fadeInUp 2s ease;
-            position: relative;
-        }
         
         .logo {
             display: flex;
@@ -126,11 +111,11 @@
             box-shadow: 0 5px 15px rgba(218, 165, 32, 0.4);
         }
         
-        /* Main Content */
+        /* Main Content - MODIFICADO: Eliminado padding-top */
         .main-content {
             background: transparent;
             min-height: calc(100vh - 80px);
-            padding-top: 90px;
+            padding-top: 0; /* Eliminado completamente */
             position: relative;
             overflow: hidden;
         }
@@ -147,7 +132,8 @@
             z-index: 1;
             pointer-events: none;
         }
-            .subtitle {
+        
+        .subtitle {
             font-family: 'Outfit', sans-serif;
             font-size: 1.3rem;
             font-weight: 400;
@@ -161,7 +147,8 @@
             text-transform: uppercase;
             animation: ripple 3s ease-in-out infinite, waveGlow 4s ease-in-out infinite alternate  ;
         }
-                @keyframes waveGlow {
+        
+        @keyframes waveGlow {
             0% { 
                 text-shadow: 0 0 30px rgba(64, 212, 6, 0.8),
                            0 0 60px rgba(36, 238, 18, 0.6);
@@ -182,6 +169,7 @@
             0%, 100% { opacity: 0.8; transform: translateY(0px); }
             50% { opacity: 1; transform: translateY(-5px); }
         }
+        
         @keyframes rise {
             0% {
                 bottom: -100px;
@@ -229,14 +217,14 @@
         .bubble:nth-child(29) { width: 11px; height: 11px; left: 48%; animation-duration: 7.5s; animation-delay: 1.7s; --drift: 12px; }
         .bubble:nth-child(30) { width: 7px; height: 7px; left: 53%; animation-duration: 9.5s; animation-delay: 2.2s; --drift: -7px; }
         
-        /* Content Sections */
+        /* Content Sections - MODIFICADO: Ajustado padding-top */
         .content-section {
             padding: 1rem;
             min-height: 100vh;
             display: flex;
             align-items: flex-start;
             justify-content: center;
-            padding-top: 6rem;
+            padding-top: 8rem; /* Aumentado para compensar header fijo */
             position: relative;
             z-index: 2;
         }
@@ -269,31 +257,49 @@
                 radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
         }
         
-        .hero-content {
+        /* Botones de acción - NUEVO: Posicionados sobre el carrusel */
+
+       .action-buttons-container {
+            position: absolute;
+            bottom: 100px; /* Los botones se mantienen en su posición */
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            z-index: 50;
+            padding: 0 2rem;
+        }
+    
+        /* Logo sobre el carrusel */
+        .carousel-logo-container {
+            position: absolute;
+            bottom: 140px; /* Posicionado 5px arriba de los botones */
+            left: 0;
+            right: 0;
+            z-index: 50;
             text-align: center;
-            color: rgb(141, 78, 6);
-            z-index: 2;
-            padding: 1rem 2rem;
-        } 
-        
-        .hero-title {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
         }
-        
-        .hero-subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+
+        .carousel-logo {
+            width: 20rem; /* Tamaño del logo - puedes ajustar */
+            height: 20rem; /* Tamaño del logo - puedes ajustar */
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            border: 3px solid #DAA520;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(218, 165, 32, 0.5);
         }
-        
-        .beer-icon {
-            font-size: 4rem;
-            color: #DAA520;
-            margin-bottom: 2rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+        .carousel-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
         }
         
         .action-buttons {
@@ -317,6 +323,7 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
         .btn-action:hover {
@@ -679,6 +686,62 @@
             display: none;
         }
         
+        /* Estilos para el carrusel full width - MODIFICADO COMPLETAMENTE */
+        .full-width-carousel-container {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            height: 100vh; /* Ocupa toda la pantalla */
+        }
+        
+        .full-width-carousel {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .carousel-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .carousel-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: 1; /* Carrusel detrás del header */
+        }
+        
+        .carousel-item.active {
+            opacity: 1;
+        }
+        
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .carousel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3); /* Overlay más suave */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .nav-menu {
@@ -689,10 +752,39 @@
             .header {
                 flex-direction: column;
                 gap: 1rem;
+                padding: 0.5rem 1rem;
             }
             
             .about-content {
                 grid-template-columns: 1fr;
+            }
+            
+            .full-width-carousel-container {
+                height: 70vh; /* Ajustamos para móviles */
+            }
+            
+            .content-section {
+                padding-top: 10rem; /* Más espacio para móviles */
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+                letter-spacing: 5px;
+            }
+            
+            .action-buttons-container {
+                bottom: 50px;
+                gap: 1rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-action {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
             }
         }
     </style>
@@ -705,18 +797,14 @@
                 <img src="/images/logo.jpg" alt="Sierra Maestra Logo">   
             </div>
             <div class="logo-text">Sierra Maestra</div>
-
         </a>
-                            <p class="subtitle">Para todos la luz, para todos todo</p>
-
+        <p class="subtitle">Somos la cerveceria más Rebelde</p>
         
         <nav class="nav-menu">
             <a href="#cervezas" class="nav-item">Nuestras Cervezas</a>
             <a href="#promos" class="nav-item">Promos</a>
             <a href="#quienes-somos" class="nav-item">¿Quiénes somos?</a>
-        
-            <a th:href="@{/inicio}" class=" nav-item active" id="btn-iniciar-sesion">Iniciar sesión</a>
-
+            <a th:href="@{/inicio}" class="nav-item active" id="btn-iniciar-sesion">Iniciar sesión</a>
         </nav>
     </header>
     
@@ -753,41 +841,72 @@
         <div class="bubble"></div>
         <div class="bubble"></div>
         <div class="bubble"></div>
-        
 
-        <!-- Sección Principal (Inicio) -->
-        <section id="home" class="hero">
-            <div class="hero-content">
-                    <img src="/images/logo.jpg" alt="Logo" style="height:  20rem; border-radius: 55%; object-fit: cover; vertical-align:middle; margin-right:8px;">
-            </div>
-          
-    </section>
-
-
-
-
-        <section class="content-section">
-            <div class="section-container">
-                <div class="hero-content">
-                    <i class="bi bi-mountains beer-icon"></i>
-                    <h1 class="hero-title" id="hero-title">¡Bienvenido Cliente!</h1>
-                    
-                    <p class="hero-subtitle" id="hero-subtitle">Descubre nuestras cervezas artesanales de la Sierra Maestra</p>
-                    
-                    <div class="action-buttons">
-                        <button class="btn btn-action" onclick="location.href='#cervezas'">
-                            <i class="bi bi-shop me-2"></i>Ver Productos
-                        </button>
-                        <button class="btn btn-action" onclick="window.location.href='http://localhost:8080/pedidos-clientes'; window.history.replaceState(null, null, 'http://localhost:8080/pedidos-clientes');">
-                            <i class="bi bi-cart-plus me-2"></i>Hacer Pedido
-                        </button>
+        <!-- Carrusel de Imágenes Full Width - AHORA PRIMERO -->
+        <div class="full-width-carousel-container">
+            <div class="full-width-carousel">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img src="/images/img2.jpg" alt="Imagen 2">
+                        <div class="carousel-overlay">
+                            <!-- Sin contenido de texto, solo el overlay para oscurecer -->
+                        </div>
+                        <!-- Logo sobre el carrusel -->
+                        <div class="carousel-logo-container">
+                            <div class="carousel-logo">
+                                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/images/img3.jpg" alt="Imagen 3">
+                        <div class="carousel-overlay">
+                            <!-- Sin contenido de texto, solo el overlay para oscurecer -->
+                        </div>
+                            <div class="carousel-logo-container">
+                            <div class="carousel-logo">
+                                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/images/img16.jpg" alt="Imagen 16">
+                        <div class="carousel-overlay">
+                            <!-- Sin contenido de texto, solo el overlay para oscurecer -->
+                        </div>
+                                                <div class="carousel-logo-container">
+                            <div class="carousel-logo">
+                                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="/images/img17.jpg" alt="Imagen 17">
+                        <div class="carousel-overlay">
+                            <!-- Sin contenido de texto, solo el overlay para oscurecer -->
+                        </div>
+                                                <div class="carousel-logo-container">
+                            <div class="carousel-logo">
+                                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                                
-
             </div>
-        </section>
-        
+            
+            <!-- Botones de acción posicionados sobre el carrusel -->
+            <div class="action-buttons-container">
+                <div class="action-buttons">
+                    <button class="btn btn-action" onclick="location.href='#cervezas'">
+                        <i class="bi bi-shop me-2"></i>Ver Productos
+                    </button>
+                    <button class="btn btn-action" onclick="window.location.href='http://localhost:8080/pedidos-clientes'; window.history.replaceState(null, null, 'http://localhost:8080/pedidos-clientes');">
+                        <i class="bi bi-cart-plus me-2"></i>Hacer Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+                
         <!-- Sección Nuestras Cervezas -->
         <section id="cervezas" class="content-section">
             <div class="section-container">
@@ -883,29 +1002,62 @@
             </div>
         </section>
     </main>
-    
 
-
-    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
     <script>
-       
+    // JavaScript para el carrusel automático
+    document.addEventListener('DOMContentLoaded', function() {
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        let currentIndex = 0;
+        let autoSlideInterval;
+        
+        // Función para mostrar slide específico
+        function showSlide(index) {
+            // Remover clase active de todos los slides
+            carouselItems.forEach(item => item.classList.remove('active'));
             
-            // Animación de entrada para los elementos
-            const elements = document.querySelectorAll('.nav-item, .hero-content');
-            elements.forEach((element, index) => {
-                element.style.opacity = '0';
-                element.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    element.style.transition = 'all 0.6s ease';
-                    element.style.opacity = '1';
-                    element.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-    
-    </script>
+            // Asegurarse de que el índice esté dentro de los límites
+            if (index >= carouselItems.length) {
+                currentIndex = 0;
+            } else if (index < 0) {
+                currentIndex = carouselItems.length - 1;
+            } else {
+                currentIndex = index;
+            }
+            
+            // Agregar clase active al slide actual
+            carouselItems[currentIndex].classList.add('active');
+        }
+        
+        // Función para siguiente slide
+        function nextSlide() {
+            showSlide(currentIndex + 1);
+        }
+        
+        // Función para iniciar auto slide
+        function startAutoSlide() {
+            autoSlideInterval = setInterval(nextSlide, 4000); // Cambia cada 4 segundos
+        }
+        
+        // Iniciar auto slide
+        startAutoSlide();
+        
+        // Animación de entrada para los elementos
+        const elements = document.querySelectorAll('.nav-item, .btn-action');
+        elements.forEach((element, index) => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                element.style.transition = 'all 0.6s ease';
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
 </body>
 </html>
+
+
