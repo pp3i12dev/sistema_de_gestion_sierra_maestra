@@ -62,7 +62,6 @@
     <div class="row">
       <div class="col-md-6 mb-2">
         <label>Teléfono</label>
-        <!-- Pattern usando [0-9] para evitar problemas de escape en HTML -->
         <input class="form-control"
                th:field="*{telefono}"
                pattern="^\([0-9]{2,4}\)\s[0-9]{3,4}-[0-9]{3,4}$"
@@ -71,7 +70,19 @@
                required />
       </div>
 
-      <div class="col-md-3 mb-2">
+      <div class="col-md-6 mb-2">
+        <label>Contraseña</label>
+        <input type="password"
+               class="form-control"
+               th:field="*{contrasenia}"
+               minlength="6"
+               placeholder="Mínimo 6 caracteres"
+               required />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-2">
         <label>Activo</label>
         <select class="form-select" th:field="*{activo}">
           <option th:value="1" th:text="'Sí'"></option>
@@ -79,7 +90,7 @@
         </select>
       </div>
 
-      <div class="col-md-3 mb-2">
+      <div class="col-md-6 mb-2">
         <label>Firma</label>
         <select class="form-select" name="id_firma" th:field="*{id_firma}">
           <option th:each="f : ${firmas}" th:value="${f.id}" th:text="${f.nombre}"></option>
@@ -138,9 +149,6 @@
   </script>
 </div>
 
-
-  </div>
-
   <div th:fragment="view">
     <div class="card p-3">
       <h6>Detalle Asociado</h6>
@@ -152,6 +160,7 @@
       <div><strong>Email:</strong> <span th:text="${asociado.email}">-</span></div>
       <div><strong>Teléfono:</strong> <span th:text="${asociado.telefono}">-</span></div>
       <div><strong>Activo:</strong> <span th:text="${asociado.activo == 1 ? 'Sí' : 'No'}">-</span></div>
+      <div><strong>Contraseña:</strong> <span>••••••</span></div>
       <div><strong>Categorías:</strong>
         <ul>
           <li th:each="c : ${asociado.categorias}" th:text="${c.nombre}"></li>
