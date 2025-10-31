@@ -969,6 +969,493 @@ function mostrarNotificacionGlobal(mensaje, tipo = 'info') {
 // ========== INSTANCIA GLOBAL DEL SISTEMA DE RESERVAS ==========
 const sistemaReservas = new SistemaReservas();
 
+// ========== FUNCIONES DE LIBERACIÓN INDIVIDUAL (COMO CANCELAR) ==========
+// ========== FUNCIÓN CORREGIDA PARA LIBERAR BARRIL INDIVIDUAL ==========
+async function liberarBarrilIndividual(barrilId) {
+    try {
+        console.log(`🔄 Liberando barril individual ${barrilId}...`);
+        
+        const barrilResponse = await fetch(`${API}/getByIdBarril/${barrilId}`);
+        const barrilData = await barrilResponse.json();
+        const barrilActual = barrilData?.data;
+        
+        if (!barrilActual) {
+            throw new Error(`Barril ${barrilId} no encontrado`);
+        }
+
+        // ✅ CORRECCIÓN: MANTENER EL LOTE_ID AL LIBERAR EL BARRIL
+        let lotePayload = null;
+        if (barrilActual.lote) {
+            lotePayload = { id: barrilActual.lote.id };
+        } else if (barrilActual.loteId) {
+            lotePayload = { id: barrilActual.loteId };
+        }
+
+        console.log(`📋 Barril ${barrilId} - Lote a mantener:`, lotePayload);
+
+        const payloadBarril = {
+            id: barrilActual.id,
+            estado: "Cargado",
+            litros: barrilActual.litros || 0,
+            notas: barrilActual.notas || "",
+            lote: lotePayload, // ✅ MANTENER EL LOTE ORIGINAL
+            sessionReserva: null,
+            timestampReserva: null
+        };
+
+        const resBarril = await fetch(`${API}/updateBarril`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadBarril)
+        });
+
+        const resultBarril = await resBarril.json();
+        const ok = resultBarril && (
+            resultBarril.codigo === "200" ||
+            resultBarril.status === "success" ||
+            /ok/i.test(resultBarril.status)
+        );
+
+        if (ok) {
+            const barrilEnLista = barrilesList.find(b => b.id == barrilId);
+            if (barrilEnLista) {
+                barrilEnLista.estado = 'Cargado';
+                barrilEnLista.sessionReserva = null;
+                barrilEnLista.timestampReserva = null;
+                // También actualizar el lote en la lista local
+                if (lotePayload) {
+                    barrilEnLista.lote = lotePayload;
+                    barrilEnLista.loteId = lotePayload.id;
+                }
+            }
+            console.log(`✅ Barril ${barrilId} liberado (Cargado) - Lote mantenido: ${lotePayload ? lotePayload.id : 'N/A'}`);
+            return true;
+        } else {
+            throw new Error(`Error en respuesta: ${JSON.stringify(resultBarril)}`);
+        }
+        
+    } catch (error) {
+        console.error(`❌ Error liberando barril ${barrilId}:`, error);
+        throw error;
+    }
+}
+
+async function liberarAccesorioIndividual(accesorioId) {
+    try {
+        console.log(`🔄 Liberando accesorio individual ${accesorioId}...`);
+        
+        const accesorioResponse = await fetch(`${API}/getByIdAccesorio/${accesorioId}`);
+        const accesorioData = await accesorioResponse.json();
+        const accesorioActual = accesorioData?.data;
+        
+        if (!accesorioActual) {
+            throw new Error(`Accesorio ${accesorioId} no encontrado`);
+        }
+
+        const payloadAccesorio = {
+            id: accesorioActual.id,
+            nombre: accesorioActual.nombre || `Accesorio ${accesorioId}`,
+            estado: "Disponible",
+            notas: accesorioActual.notas || "",
+            sessionReserva: null,
+            timestampReserva: null
+        };
+
+        const resAccesorio = await fetch(`${API}/updateAccesorio`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payloadAccesorio)
+        });
+
+        const resultAccesorio = await resAccesorio.json();
+        const ok = resultAccesorio && (
+            resultAccesorio.codigo === "200" ||
+            resultAccesorio.status === "success" ||
+            /ok/i.test(resultAccesorio.status)
+        );
+
+        if (ok) {
+            const accesorioEnLista = accesoriosList.find(a => a.id == accesorioId);
+            if (accesorioEnLista) {
+                accesorioEnLista.estado = 'Disponible';
+                accesorioEnLista.sessionReserva = null;
+                accesorioEnLista.timestampReserva = null;
+            }
+            console.log(`✅ Accesorio ${accesorioId} liberado (Disponible)`);
+            return true;
+        } else {
+            throw new Error(`Error en respuesta: ${JSON.stringify(resultAccesorio)}`);
+        }
+        
+    } catch (error) {
+        console.error(`❌ Error liberando accesorio ${accesorioId}:`, error);
+        throw error;
+    }
+}
+
+// ========== MANEJO MEJORADO DE BOTONES "QUITAR" CON LIBERACIÓN CORRECTA ==========
+document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("btn-remove")) {
+        const fila = e.target.closest("tr");
+        if (!fila) return;
+
+        const tipo = fila.dataset.tipo;
+        const id = fila.dataset.id;
+        const pedidoId = $('#pedidoId').value;
+
+        try {
+            if (tipo === "cerveza") {
+                const reservasIds = JSON.parse(fila.dataset.reservas || '[]');
+                
+                if (pedidoId && !isNaN(pedidoId)) {
+                    console.log(`🔄 Editando pedido ${pedidoId} - Liberando barril ${id} permanentemente`);
+                    await liberarBarrilIndividual(Number(id));
+                    mensaje("Barril removido y liberado (estado: Cargado)", "success");
+                } else {
+                    for (const reservaId of reservasIds) {
+                        await sistemaReservas.liberar(reservaId);
+                    }
+                    mensaje("Barril(es) removidos y reservas liberadas", "success");
+                }
+                
+            } else if (tipo === "accesorio") {
+                const reservaId = fila.dataset.reserva;
+                
+                if (pedidoId && !isNaN(pedidoId)) {
+                    console.log(`🔄 Editando pedido ${pedidoId} - Liberando accesorio ${id} permanentemente`);
+                    await liberarAccesorioIndividual(Number(id));
+                    mensaje("Accesorio removido y liberado (estado: Disponible)", "success");
+                } else {
+                    if (reservaId) {
+                        await sistemaReservas.liberar(reservaId);
+                    }
+                    mensaje("Accesorio removido y reserva liberada", "success");
+                }
+            }
+
+            fila.remove();
+            recalcTotal();
+            
+        } catch (error) {
+            console.error(`❌ Error removiendo ${tipo}:`, error);
+            mensaje(`Error removiendo ${tipo}: ${error.message}`, "error");
+        }
+    }
+});
+
+
+
+// ========== ELIMINAR FUNCIONES DUPLICADAS - MANTENER SOLO ESTAS ==========
+
+// ========== FUNCIÓN CORREGIDA PARA IDENTIFICAR PRODUCTOS REMOVIDOS ==========
+function identificarProductosRemovidos(pedidoOriginal, filasActuales) {
+    console.log('🔍 Identificando productos removidos...');
+    
+    const removidos = { 
+        barriles: [], 
+        accesorios: [] 
+    };
+
+    // IDENTIFICAR BARRILES REMOVIDOS - COMPATIBLE CON AMBOS SISTEMAS
+    const barrilesActualesIds = new Set();
+    
+    filasActuales.forEach(tr => {
+        // ✅ COMPATIBILIDAD: Detecta tanto 'barril' como 'cerveza' para edición vs nuevo
+        if (tr.dataset.tipo === 'barril' || tr.dataset.tipo === 'cerveza') {
+            const barrilId = Number(tr.dataset.id);
+            if (barrilId && !isNaN(barrilId)) {
+                barrilesActualesIds.add(barrilId);
+                console.log(`✅ ${tr.dataset.tipo} presente en formulario: ${barrilId}`);
+            }
+        }
+    });
+
+    console.log('📊 Barriles actuales en formulario:', Array.from(barrilesActualesIds));
+
+    // Procesar barriles originales del pedido
+    if (pedidoOriginal.barriles && Array.isArray(pedidoOriginal.barriles)) {
+        pedidoOriginal.barriles.forEach(barril => {
+            const barrilId = typeof barril === 'object' ? Number(barril.id) : Number(barril);
+            
+            if (!barrilesActualesIds.has(barrilId)) {
+                console.log(`❌ Barril REMOVIDO identificado: ${barrilId}`);
+                removidos.barriles.push({ id: barrilId });
+            } else {
+                console.log(`✅ Barril MANTENIDO: ${barrilId}`);
+            }
+        });
+    }
+
+    // IDENTIFICAR ACCESORIOS REMOVIDOS
+    const accesoriosActualesIds = new Set();
+    
+    filasActuales.forEach(tr => {
+        if (tr.dataset.tipo === 'accesorio') {
+            const accesorioId = Number(tr.dataset.id);
+            if (accesorioId && !isNaN(accesorioId)) {
+                accesoriosActualesIds.add(accesorioId);
+            }
+        }
+    });
+
+    // Procesar accesorios originales del pedido
+    if (pedidoOriginal.accesorios && Array.isArray(pedidoOriginal.accesorios)) {
+        pedidoOriginal.accesorios.forEach(accesorio => {
+            const accId = typeof accesorio === 'object' ? Number(accesorio.id) : Number(accesorio);
+            
+            if (!accesoriosActualesIds.has(accId)) {
+                console.log(`❌ Accesorio REMOVIDO identificado: ${accId}`);
+                removidos.accesorios.push({ id: accId });
+            }
+        });
+    }
+
+    console.log('🎯 PRODUCTOS REMOVIDOS IDENTIFICADOS:', removidos);
+    return removidos;
+}
+
+// ========== FUNCIÓN ÚNICA PARA LIBERAR BARRILES REMOVIDOS ==========
+// ========== FUNCIÓN CORREGIDA PARA LIBERAR BARRILES REMOVIDOS ==========
+async function liberarBarrilesRemovidos(barriles) {
+  try {
+    console.log('🔄 Liberando barriles removidos...');
+
+    let barrilesLiberados = 0;
+    let errores = [];
+
+    for (const barril of barriles) {
+      try {
+        const barrilId = barril.id || barril;
+        console.log(`🔄 Procesando barril ${barrilId}...`);
+
+        // Obtener datos actuales del barril
+        const response = await fetch(`${API}/getByIdBarril/${barrilId}`);
+        const barrilData = await response.json();
+        const barrilActual = barrilData?.data;
+
+        if (!barrilActual) {
+          console.warn(`⚠️ Barril ${barrilId} no encontrado`);
+          continue;
+        }
+
+        // ✅ SOLO LIBERAR SI ESTÁ ALQUILADO
+        if (barrilActual.estado !== "Alquilado") {
+          console.log(`ℹ️ Barril ${barrilId} ya está en estado "${barrilActual.estado}", no necesita liberación`);
+          continue;
+        }
+
+        // ✅ CORRECCIÓN: MANTENER EL LOTE_ID AL LIBERAR EL BARRIL
+        let lotePayload = null;
+        if (barrilActual.lote) {
+          // Si viene el objeto lote completo
+          lotePayload = { id: barrilActual.lote.id };
+        } else if (barrilActual.loteId) {
+          // Si viene solo el ID del lote
+          lotePayload = { id: barrilActual.loteId };
+        }
+
+        console.log(`📋 Barril ${barrilId} - Lote a mantener:`, lotePayload);
+
+        // Cambiar estado de "Alquilado" a "Cargado" MANTENIENDO EL LOTE
+        const payloadBarril = {
+          id: barrilActual.id,
+          estado: "Cargado",
+          litros: barrilActual.litros,
+          notas: barrilActual.notas || "",
+          lote: lotePayload, // ✅ MANTENER EL LOTE ORIGINAL
+          sessionReserva: null,
+          timestampReserva: null
+        };
+
+        console.log('📤 Actualizando barril:', payloadBarril);
+
+        const resBarril = await fetch(`${API}/updateBarril`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payloadBarril)
+        });
+
+        const resultBarril = await resBarril.json();
+
+        const ok = resultBarril && (
+          resultBarril.codigo === "200" ||
+          resultBarril.status === "success" ||
+          /ok/i.test(resultBarril.status)
+        );
+
+        if (ok) {
+          barrilesLiberados++;
+          console.log(`✅ Barril ${barrilId} liberado (Alquilado → Cargado) - Lote mantenido: ${lotePayload ? lotePayload.id : 'N/A'}`);
+
+          // Actualizar en lista local
+          const barrilEnLista = barrilesList.find(b => b.id == barrilId);
+          if (barrilEnLista) {
+            barrilEnLista.estado = 'Cargado';
+            barrilEnLista.sessionReserva = null;
+            barrilEnLista.timestampReserva = null;
+            // También actualizar el lote en la lista local
+            if (lotePayload) {
+              barrilEnLista.lote = lotePayload;
+              barrilEnLista.loteId = lotePayload.id;
+            }
+          }
+        } else {
+          const errorMsg = `Error en respuesta del barril ${barrilId}: ${JSON.stringify(resultBarril)}`;
+          console.error(`❌ ${errorMsg}`);
+          errores.push(errorMsg);
+        }
+      } catch (error) {
+        const errorMsg = `Error liberando barril ${barril.id || barril}: ${error.message}`;
+        console.error(`❌ ${errorMsg}`);
+        errores.push(errorMsg);
+      }
+    }
+
+    console.log(`✅ Liberación completada: ${barrilesLiberados} barriles liberados`);
+
+    if (barrilesLiberados > 0) {
+      mostrarNotificacionGlobal(
+        `🔄 ${barrilesLiberados} barriles liberados (Alquilado → Cargado) manteniendo sus lotes`,
+        'success'
+      );
+    }
+
+    return barrilesLiberados;
+
+  } catch (error) {
+    console.error('❌ Error en liberarBarrilesRemovidos:', error);
+    throw error;
+  }
+}
+
+// ========== FUNCIÓN ÚNICA PARA LIBERAR ACCESORIOS REMOVIDOS ==========
+async function liberarAccesoriosRemovidos(accesorios) {
+  try {
+    console.log('🔄 Liberando accesorios removidos...');
+
+    let accesoriosLiberados = 0;
+    let errores = [];
+
+    for (const accesorio of accesorios) {
+      try {
+        const accesorioId = accesorio.id || accesorio;
+        console.log(`🔄 Liberando accesorio ${accesorioId}...`);
+
+        // Obtener datos actuales del accesorio
+        const response = await fetch(`${API}/getByIdAccesorio/${accesorioId}`);
+        const accesorioData = await response.json();
+        const accesorioActual = accesorioData?.data;
+
+        if (!accesorioActual) {
+          console.warn(`⚠️ Accesorio ${accesorioId} no encontrado`);
+          continue;
+        }
+
+        const payloadAccesorio = {
+          id: accesorioActual.id,
+          nombre: accesorioActual.nombre || `Accesorio ${accesorioId}`,
+          estado: "Disponible",
+          notas: accesorioActual.notas || "",
+          sessionReserva: null,
+          timestampReserva: null
+        };
+
+        console.log('📤 Actualizando accesorio:', payloadAccesorio);
+
+        const resAccesorio = await fetch(`${API}/updateAccesorio`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payloadAccesorio)
+        });
+
+        const resultAccesorio = await resAccesorio.json();
+
+        const ok = resultAccesorio && (
+          resultAccesorio.codigo === "200" ||
+          resultAccesorio.status === "success" ||
+          /ok/i.test(resultAccesorio.status)
+        );
+
+        if (ok) {
+          accesoriosLiberados++;
+          console.log(`✅ Accesorio ${accesorioId} liberado (Disponible)`);
+
+          // Actualizar en lista local
+          const accesorioEnLista = accesoriosList.find(a => a.id == accesorioId);
+          if (accesorioEnLista) {
+            accesorioEnLista.estado = 'Disponible';
+            accesorioEnLista.sessionReserva = null;
+            accesorioEnLista.timestampReserva = null;
+          }
+        } else {
+          const errorMsg = `Error en respuesta del accesorio ${accesorioId}: ${JSON.stringify(resultAccesorio)}`;
+          console.error(`❌ ${errorMsg}`);
+          errores.push(errorMsg);
+        }
+      } catch (error) {
+        const errorMsg = `Error liberando accesorio ${accesorio.id || accesorio}: ${error.message}`;
+        console.error(`❌ ${errorMsg}`);
+        errores.push(errorMsg);
+      }
+    }
+
+    console.log(`✅ Liberación completada: ${accesoriosLiberados} accesorios liberados`);
+
+    if (accesoriosLiberados > 0) {
+      mostrarNotificacionGlobal(
+        `🔄 ${accesoriosLiberados} accesorios liberados (Disponible)`,
+        'success'
+      );
+    }
+
+    return accesoriosLiberados;
+
+  } catch (error) {
+    console.error('❌ Error en liberarAccesoriosRemovidos:', error);
+    throw error;
+  }
+}
+
+// ========== FUNCIÓN ÚNICA PARA LIBERAR PRODUCTOS REMOVIDOS ==========
+async function liberarProductosRemovidos(productosRemovidos) {
+  try {
+    console.log('🔄 INICIANDO LIBERACIÓN DE PRODUCTOS REMOVIDOS');
+    console.log('📦 Productos a liberar:', productosRemovidos);
+
+    const resultados = {
+      barriles: 0,
+      accesorios: 0,
+      errores: []
+    };
+
+    // Liberar barriles
+    if (productosRemovidos.barriles && productosRemovidos.barriles.length > 0) {
+      resultados.barriles = await liberarBarrilesRemovidos(productosRemovidos.barriles);
+    }
+
+    // Liberar accesorios
+    if (productosRemovidos.accesorios && productosRemovidos.accesorios.length > 0) {
+      resultados.accesorios = await liberarAccesoriosRemovidos(productosRemovidos.accesorios);
+    }
+
+    console.log(`✅ LIBERACIÓN COMPLETADA:`, resultados);
+
+    if (resultados.barriles > 0 || resultados.accesorios > 0) {
+      mostrarNotificacionGlobal(
+        `🔄 ${resultados.barriles} barriles liberados (Cargado) y ${resultados.accesorios} accesorios liberados (Disponible)`,
+        'success'
+      );
+    }
+
+    return resultados;
+
+  } catch (error) {
+    console.error('❌ ERROR CRÍTICO EN liberarProductosRemovidos:', error);
+    mostrarNotificacionGlobal('❌ Error crítico liberando productos: ' + error.message, 'error');
+    throw error;
+  }
+}
+
 // ========== SISTEMA DE ALERTAS DE STOCK ==========
 function initAlertasStock() {
     const DEFAULT_THRESHOLDS = { cervezas: 100, barriles: 10, lotes: 5, maduradores: 2 };
@@ -1224,7 +1711,10 @@ async function loadAll() {
 
         const [pedRes, cerRes, lotRes, accRes, barRes, cliRes, asoRes] = results;
 
-        window._allPedidos = (pedRes && pedRes.data) ? pedRes.data : (Array.isArray(pedRes) ? pedRes : []);
+        // Obtener todos los pedidos primero
+        const todosLosPedidos = (pedRes && pedRes.data) ? pedRes.data : (Array.isArray(pedRes) ? pedRes : []);
+        
+        // Cargar las listas primero
         cervezasList = (cerRes && cerRes.data) ? cerRes.data : (Array.isArray(cerRes) ? cerRes : []);
         lotesList = (lotRes && lotRes.data) ? lotRes.data : (Array.isArray(lotRes) ? lotRes : []);
         
@@ -1239,12 +1729,19 @@ async function loadAll() {
         asociadosList = (asoRes && asoRes.data) ? asoRes.data : (Array.isArray(asoRes) ? asoRes : []);
 
         console.log("=== DATOS CARGADOS ===");
+        console.log("Todos los pedidos:", todosLosPedidos.length);
+        console.log("Asociados cargados:", asociadosList.length);
+        console.log("Usuario logueado:", usuarioLogueado);
+
+        // ✅ FILTRAR PEDIDOS POR ASOCIADO LOGUEADO (DESPUÉS DE CARGAR TODAS LAS LISTAS)
+        window._allPedidos = filtrarPedidosPorAsociado(todosLosPedidos, usuarioLogueado);
+
+        console.log("Pedidos del usuario:", window._allPedidos.length);
         console.log("Cervezas:", cervezasList.length);
         console.log("Barriles:", barrilesList.length);
         console.log("Accesorios DISPONIBLES:", accesoriosList.length);
         console.log("Lotes:", lotesList.length);
         console.log("Clientes:", clientesList.length);
-        console.log("Asociados:", asociadosList.length);
 
         populateSelects();
         renderAccesorios();
@@ -1255,7 +1752,7 @@ async function loadAll() {
         
         await sistemaReservas.verificarReservasBD();
 
-        mensaje(`Datos cargados correctamente: ${cervezasList.length} cervezas, ${barrilesList.length} barriles, ${accesoriosList.length} accesorios disponibles`, 'success');
+        mensaje(`Datos cargados correctamente: ${window._allPedidos.length} pedidos, ${cervezasList.length} cervezas, ${barrilesList.length} barriles`, 'success');
         
     } catch (err) {
         console.error('Error en loadAll:', err);
@@ -1382,12 +1879,7 @@ function renderPedidosTable(items) {
     });
 }
 
-// ========== FUNCIONES PARA EDITAR/CANCELAR/ELIMINAR PEDIDOS ==========
 // ========== FUNCIÓN CORREGIDA PARA CARGAR PEDIDO EN FORMULARIO ==========
-// ========== FUNCIÓN CORREGIDA PARA CARGAR PEDIDO EN FORMULARIO ==========
-// ========== FUNCIÓN CORREGIDA PARA CARGAR PEDIDO EN FORMULARIO ==========
-// ========== FUNCIÓN SIMPLIFICADA PARA CARGAR PEDIDO EN FORMULARIO ==========
-// ========== FUNCIÓN MEJORADA PARA CARGAR PEDIDO EN FORMULARIO ==========
 async function loadPedidoIntoForm(id) {
     try {
         mensaje('Cargando pedido...');
@@ -1406,6 +1898,14 @@ async function loadPedidoIntoForm(id) {
         $('#pedidoId').value = p.id || '';
         $('#fechaPedido').value = isoDateInputFromMillis(p.fechaPedido);
         $('#fechaEntrega').value = isoDateInputFromMillis(p.fechaEntrega);
+
+        // ✅ VALIDACIÓN DE FECHAS AL CARGAR
+        const fechaP = $('#fechaPedido').value;
+        const fechaE = $('#fechaEntrega').value;
+        const validacion = validarFechasPedido(fechaP, fechaE);
+        if (!validacion.valido) {
+            mensaje(validacion.error, 'error');
+        }
 
         if (p.envio || p.direccionEntrega) {
             $('#envio').checked = Boolean(p.envio);
@@ -1514,8 +2014,6 @@ async function loadPedidoIntoForm(id) {
     }
 }
 
-// ========== FUNCIÓN SIMPLIFICADA PARA IDENTIFICAR PRODUCTOS REMOVIDOS ==========
-// ========== FUNCIÓN MEJORADA PARA IDENTIFICAR PRODUCTOS REMOVIDOS ==========
 // ========== FUNCIÓN CORREGIDA PARA IDENTIFICAR PRODUCTOS REMOVIDOS ==========
 function identificarProductosRemovidos(pedidoOriginal, filasActuales) {
     console.log('🔍 Identificando productos removidos...');
@@ -1525,393 +2023,55 @@ function identificarProductosRemovidos(pedidoOriginal, filasActuales) {
         accesorios: [] 
     };
 
-    // Extraer ids de barriles y accesorios del pedido original
-    const originalBarrilesIds = new Set();
-    if (pedidoOriginal.barriles && Array.isArray(pedidoOriginal.barriles)) {
-        pedidoOriginal.barriles.forEach(b => {
-            const id = b.id || b;
-            originalBarrilesIds.add(Number(id));
-        });
-    }
-
-    const originalAccesoriosIds = new Set();
-    if (pedidoOriginal.accesorios && Array.isArray(pedidoOriginal.accesorios)) {
-        pedidoOriginal.accesorios.forEach(a => {
-            const id = a.id || a;
-            originalAccesoriosIds.add(Number(id));
-        });
-    }
-
-    // Extraer ids de las filas actuales
-    const actualBarrilesIds = new Set();
-    const actualAccesoriosIds = new Set();
-    filasActuales.forEach(tr => {
-        const tipo = tr.dataset.tipo;
-        const id = Number(tr.dataset.id);
-        if (tipo === 'barril') {
-            actualBarrilesIds.add(id);
-        } else if (tipo === 'accesorio') {
-            actualAccesoriosIds.add(id);
-        }
-    });
-
-    // Encontrar barriles removidos: están en original pero no en actual
-    originalBarrilesIds.forEach(id => {
-        if (!actualBarrilesIds.has(id)) {
-            removidos.barriles.push({ id });
-        }
-    });
-
-    // Encontrar accesorios removidos: están en original pero no en actual
-    originalAccesoriosIds.forEach(id => {
-        if (!actualAccesoriosIds.has(id)) {
-            removidos.accesorios.push({ id });
-        }
-    });
-
-    console.log('🎯 Productos removidos identificados:', removidos);
-    return removidos;
-}
-
-
-// ========== FUNCIÓN PARA LIBERAR BARRILES REMOVIDOS (USANDO LA MISMA LÓGICA QUE CANCELAR) ==========
-async function liberarBarrilesRemovidos(barriles) {
-    try {
-        console.log('🔄 Liberando barriles removidos...');
-        
-        let barrilesLiberados = 0;
-
-        for (const barril of barriles) {
-            try {
-                const barrilId = barril.id;
-                console.log(`🔄 Liberando barril ${barrilId}...`);
-                
-                // Obtener datos actuales del barril
-                const response = await fetch(`${API}/getByIdBarril/${barrilId}`);
-                const barrilData = await response.json();
-                const barrilActual = barrilData.data;
-                
-                if (!barrilActual) {
-                    console.warn(`⚠️ Barril ${barrilId} no encontrado`);
-                    continue;
-                }
-
-                // Preparar payload para actualizar - USANDO LA MISMA LÓGICA QUE CANCELAR
-                const payloadBarril = {
-                    id: barrilActual.id,
-                    estado: "Cargado",
-                    litros: barrilActual.litros,
-                    notas: barrilActual.notas || "",
-                    lote: barrilActual.lote ? { id: barrilActual.lote.id } : null,
-                    loteId: barrilActual.loteId,
-                    sessionReserva: null,
-                    timestampReserva: null
-                };
-
-                console.log('📤 Actualizando barril:', payloadBarril);
-
-                // Actualizar barril
-                const resBarril = await fetch(`${API}/updateBarril`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payloadBarril)
-                });
-
-                const resultBarril = await resBarril.json();
-                
-                if (resultBarril && (resultBarril.codigo === "200" || resultBarril.status === "success")) {
-                    barrilesLiberados++;
-                    console.log(`✅ Barril ${barrilId} liberado (Cargado)`);
-                    
-                    // Actualizar en lista local
-                    const barrilEnLista = barrilesList.find(b => b.id == barrilId);
-                    if (barrilEnLista) {
-                        barrilEnLista.estado = 'Cargado';
-                        barrilEnLista.sessionReserva = null;
-                        barrilEnLista.timestampReserva = null;
-                    }
-                } else {
-                    console.error(`❌ Error en respuesta del barril ${barrilId}:`, resultBarril);
-                }
-            } catch (error) {
-                console.error(`❌ Error liberando barril ${barril.id}:`, error);
-            }
-        }
-
-        console.log(`✅ Liberación completada: ${barrilesLiberados} barriles liberados`);
-        
-        if (barrilesLiberados > 0) {
-            mostrarNotificacionGlobal(
-                `🔄 ${barrilesLiberados} barriles liberados (Cargado)`, 
-                'success'
-            );
-        }
-        
-        return barrilesLiberados;
-        
-    } catch (error) {
-        console.error('❌ Error en liberarBarrilesRemovidos:', error);
-        mostrarNotificacionGlobal('❌ Error liberando barriles: ' + error.message, 'error');
-        throw error;
-    }
-}
-
-// ========== FUNCIÓN CORREGIDA PARA GUARDAR PEDIDO EDITADO ==========
-async function submitFormHandler(e) {
-    e.preventDefault();
-
-    try {
-        const fechaP = $('#fechaPedido').value;
-        const fechaE = $('#fechaEntrega').value;
-
-        if (!fechaP) {
-            mensaje('❌ Fecha de pedido obligatoria', 'error');
-            return;
-        }
-
-        const clienteId = $('#cliente').value;
-        const usuarioId = $('#asociado').value;
-        if (!clienteId || !usuarioId) {
-            mensaje('❌ Cliente y Usuario obligatorios', 'error');
-            return;
-        }
-
-        const filasDetalle = $$('#detalleTable tbody tr');
-        if (filasDetalle.length === 0) {
-            mensaje('❌ Debe agregar al menos un producto al pedido', 'error');
-            return;
-        }
-
-        mensaje('🔄 Guardando pedido...');
-
-        const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
-        const pedidoId = $('#pedidoId').value ? Number($('#pedidoId').value) : null;
-        const estadoSeleccionado = $('#estado').value;
-        const esCancelado = estadoSeleccionado === 'Cancelado';
-
-        console.log('🔍 Estado seleccionado:', estadoSeleccionado, 'Es cancelado:', esCancelado);
-
-        // **CANCELACIÓN DESDE FORMULARIO - USANDO LA FUNCIÓN QUE SÍ FUNCIONA**
-        if (esCancelado && !isNew) {
-            console.log('🔄 Cancelación desde formulario - usando función probada');
-            
-            const pedidoResponse = await fetch(`${API}/getByIdPedido/${pedidoId}`);
-            const pedidoData = await pedidoResponse.json();
-            const pedido = pedidoData.data;
-            
-            if (!pedido) {
-                mensaje('❌ No se pudo obtener el pedido para cancelar', 'error');
-                return;
-            }
-
-            console.log('📦 Pedido a cancelar:', pedido);
-
-            // Liberar todos los recursos del pedido - USANDO LA FUNCIÓN QUE SÍ FUNCIONA
-            await liberarRecursosCancelacion(
-                pedido.barriles || [],
-                pedido.accesorios || []
-            );
-
-            // Actualizar estado del pedido a Cancelado
-            const payload = {
-                id: Number(pedidoId),
-                estado: 'Cancelado',
-                fechaPedido: pedido.fechaPedido,
-                fechaEntrega: pedido.fechaEntrega,
-                direccionEntrega: pedido.direccionEntrega,
-                estadoPago: pedido.estadoPago,
-                envio: pedido.envio,
-                accesorios: [],
-                cervezas: pedido.cervezas || [],
-                barriles: [],
-                usuario: pedido.usuario,
-                cliente: pedido.cliente,
-                totalGral: pedido.totalGral,
-                nota: pedido.nota
-            };
-
-            const res = await fetch(`${API}/updatePedido`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            const ok = result && (result.codigo === '200' || /ok/i.test(result.status));
-            
-            if (ok) {
-                mensaje('✅ Pedido cancelado y recursos liberados correctamente.');
-                resetForm();
-                await loadAll();
-            } else {
-                mensaje('❌ No se pudo cancelar: ' + (result.descripcion || result.message || ''), 'error');
-            }
-            
-            return;
-
-        } else {
-            // **EDICIÓN NORMAL O NUEVO PEDIDO**
-            console.log('📝 Flujo normal - guardando pedido');
-
-            // 1. IDENTIFICAR BARRILES REMOVIDOS (solo para edición)
-            let barrilesRemovidos = [];
-            if (!isNew && window.pedidoOriginalEdit) {
-                console.log('🔍 Identificando barriles removidos en edición...');
-                const productosRemovidos = identificarProductosRemovidos(window.pedidoOriginalEdit, filasDetalle);
-                barrilesRemovidos = productosRemovidos.barriles;
-                
-                // 2. LIBERAR BARRILES REMOVIDOS ANTES de actualizar el pedido
-                if (barrilesRemovidos.length > 0) {
-                    console.log('🔄 Liberando barriles removidos antes de guardar...');
-                    await liberarBarrilesRemovidos(barrilesRemovidos);
-                } else {
-                    console.log('ℹ️ No se identificaron barriles removidos');
-                }
-            }
-
-            // 3. PREPARAR DATOS PARA GUARDAR
-            const accesoriosSeleccionados = [];
-            const barrilesPayload = [];
-
-            // Recolectar datos actuales del formulario
-            filasDetalle.forEach(tr => {
-                const tipo = tr.dataset.tipo;
-
-                if (tipo === 'accesorio') {
-                    const id = Number(tr.dataset.id);
-                    accesoriosSeleccionados.push({ id });
-                }
-
-                if (tipo === 'barril') {
-                    const barrilId = Number(tr.dataset.barrilId);
-                    barrilesPayload.push({ id: barrilId });
-                }
-            });
-
-            // 4. OBTENER CERVEZAS DEL PEDIDO ORIGINAL (para preservarlas)
-            let cervezasPayload = [];
-            if (!isNew && window.pedidoOriginalEdit && window.pedidoOriginalEdit.cervezas) {
-                cervezasPayload = [...window.pedidoOriginalEdit.cervezas];
-                console.log('🍺 Preservando cervezas originales:', cervezasPayload);
-            }
-
-            const total = recalcTotal() || 0;
-            const envio = $('#envio').checked;
-            const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
-            const notaValor = $('#nota')?.value.trim() || '';
-            const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
-            const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
-
-            const payload = {
-                fechaPedido: fechaPedidoMillis,
-                fechaEntrega: fechaEntregaMillis,
-                direccionEntrega: direccion,
-                estado: estadoSeleccionado,
-                estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
-                envio,
-                accesorios: accesoriosSeleccionados,
-                cervezas: cervezasPayload, // Preservar las cervezas originales
-                barriles: barrilesPayload, // Solo los barriles que quedaron
-                usuario: { id: Number(usuarioId) },
-                cliente: { id: Number(clienteId) },
-                totalGral: total,
-                nota: notaValor
-            };
-
-            if (!isNew) {
-                payload.id = pedidoId;
-            }
-
-            const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
-            const method = isNew ? 'POST' : 'PUT';
-
-            console.log('📤 Enviando payload:', payload);
-
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            const ok = result && (
-                result.codigo === '200' ||
-                result.codigo === '201' ||
-                result.status === 'success' ||
-                /ok/i.test(result.status) ||
-                result.estado === 'OK'
-            );
-
-            if (ok) {
-                mensaje('✅ Pedido guardado correctamente');
-                resetForm();
-                await loadAll();
-            } else {
-                let errorMsg = '❌ No se pudo guardar el pedido';
-                if (result?.descripcion) errorMsg = result.descripcion;
-                else if (result?.message) errorMsg = result.message;
-                else if (result?.error) errorMsg = result.error;
-
-                mensaje(errorMsg, 'error');
-            }
-        }
-
-    } catch (err) {
-        console.error('❌ Error al guardar pedido:', err);
-        mensaje('❌ Error al guardar: ' + (err.message || err), 'error');
-    }
-}
-
-// ========== FUNCIÓN CORREGIDA PARA IDENTIFICAR PRODUCTOS REMOVIDOS ==========
-function identificarProductosRemovidos(pedidoOriginal, filasActuales) {
-    console.log('🔍 INICIANDO IDENTIFICACIÓN DE PRODUCTOS REMOVIDOS');
-    
-    const removidos = { 
-        barriles: [], 
-        accesorios: [] 
-    };
-
-    // IDENTIFICAR BARRILES REMOVIDOS
+    // IDENTIFICAR BARRILES REMOVIDOS - CORREGIDO
     const barrilesActualesIds = new Set();
     
     filasActuales.forEach(tr => {
-        if (tr.dataset.tipo === 'cerveza-barril' && tr.dataset.barrilId) {
-            barrilesActualesIds.add(Number(tr.dataset.barrilId));
+        if (tr.dataset.tipo === 'barril') {
+            const barrilId = Number(tr.dataset.id);
+            if (barrilId && !isNaN(barrilId)) {
+                barrilesActualesIds.add(barrilId);
+                console.log(`✅ Barril presente en formulario: ${barrilId}`);
+            }
         }
     });
 
     console.log('📊 Barriles actuales en formulario:', Array.from(barrilesActualesIds));
-    console.log('📦 Barriles originales en pedido:', pedidoOriginal.barriles);
 
+    // Procesar barriles originales del pedido
     if (pedidoOriginal.barriles && Array.isArray(pedidoOriginal.barriles)) {
         pedidoOriginal.barriles.forEach(barril => {
-            if (!barrilesActualesIds.has(barril.id)) {
-                console.log(`❌ BARRIL REMOVIDO IDENTIFICADO: ${barril.id}`);
-                removidos.barriles.push(barril);
+            const barrilId = typeof barril === 'object' ? Number(barril.id) : Number(barril);
+            
+            if (!barrilesActualesIds.has(barrilId)) {
+                console.log(`❌ Barril REMOVIDO identificado: ${barrilId}`);
+                removidos.barriles.push({ id: barrilId });
+            } else {
+                console.log(`✅ Barril MANTENIDO: ${barrilId}`);
             }
         });
     }
 
     // IDENTIFICAR ACCESORIOS REMOVIDOS
     const accesoriosActualesIds = new Set();
+    
     filasActuales.forEach(tr => {
         if (tr.dataset.tipo === 'accesorio') {
-            accesoriosActualesIds.add(Number(tr.dataset.id));
+            const accesorioId = Number(tr.dataset.id);
+            if (accesorioId && !isNaN(accesorioId)) {
+                accesoriosActualesIds.add(accesorioId);
+            }
         }
     });
 
+    // Procesar accesorios originales del pedido
     if (pedidoOriginal.accesorios && Array.isArray(pedidoOriginal.accesorios)) {
         pedidoOriginal.accesorios.forEach(accesorio => {
-            const accId = accesorio.id || accesorio;
+            const accId = typeof accesorio === 'object' ? Number(accesorio.id) : Number(accesorio);
+            
             if (!accesoriosActualesIds.has(accId)) {
-                console.log(`❌ ACCESORIO REMOVIDO IDENTIFICADO: ${accId}`);
-                removidos.accesorios.push(accesorio);
+                console.log(`❌ Accesorio REMOVIDO identificado: ${accId}`);
+                removidos.accesorios.push({ id: accId });
             }
         });
     }
@@ -1920,788 +2080,8 @@ function identificarProductosRemovidos(pedidoOriginal, filasActuales) {
     return removidos;
 }
 
-// ========== FUNCIÓN CORREGIDA PARA LIBERAR PRODUCTOS REMOVIDOS ==========
-// ========== FUNCIÓN UNIFICADA PARA LIBERAR PRODUCTOS REMOVIDOS ==========
-// ========== FUNCIÓN SIMPLIFICADA PARA LIBERAR PRODUCTOS REMOVIDOS ==========
-async function liberarProductosRemovidos(productosRemovidos) {
-    try {
-        console.log('🔄 Liberando productos removidos...');
-        
-        let resultados = {
-            barriles: 0,
-            accesorios: 0
-        };
-
-        // Liberar barriles (cambiar estado a "Cargado")
-        for (const barril of productosRemovidos.barriles) {
-            try {
-                const barrilId = barril.id;
-                console.log(`🔄 Liberando barril ${barrilId} -> Cargado`);
-                
-                const payload = {
-                    id: barrilId,
-                    estado: "Cargado",
-                    sessionReserva: null,
-                    timestampReserva: null
-                };
-
-                const res = await fetch(`${API}/updateBarril`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    resultados.barriles++;
-                    console.log(`✅ Barril ${barrilId} liberado (Cargado)`);
-                    
-                    // Actualizar en lista local
-                    const barrilEnLista = barrilesList.find(b => b.id == barrilId);
-                    if (barrilEnLista) {
-                        barrilEnLista.estado = 'Cargado';
-                        barrilEnLista.sessionReserva = null;
-                        barrilEnLista.timestampReserva = null;
-                    }
-                }
-            } catch (error) {
-                console.error(`❌ Error liberando barril ${barril.id}:`, error);
-            }
-        }
-
-        // Liberar accesorios (cambiar estado a "Disponible")
-        for (const accesorio of productosRemovidos.accesorios) {
-            try {
-                const accesorioId = accesorio.id;
-                console.log(`🔄 Liberando accesorio ${accesorioId} -> Disponible`);
-                
-                const payload = {
-                    id: accesorioId,
-                    estado: "Disponible",
-                    sessionReserva: null,
-                    timestampReserva: null
-                };
-
-                const res = await fetch(`${API}/updateAccesorio`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    resultados.accesorios++;
-                    console.log(`✅ Accesorio ${accesorioId} liberado (Disponible)`);
-                    
-                    // Actualizar en lista local
-                    const accesorioEnLista = accesoriosList.find(a => a.id == accesorioId);
-                    if (accesorioEnLista) {
-                        accesorioEnLista.estado = 'Disponible';
-                        accesorioEnLista.sessionReserva = null;
-                        accesorioEnLista.timestampReserva = null;
-                    }
-                }
-            } catch (error) {
-                console.error(`❌ Error liberando accesorio ${accesorio.id}:`, error);
-            }
-        }
-
-        console.log(`✅ Liberación completada: ${resultados.barriles} barriles y ${resultados.accesorios} accesorios liberados`);
-        return resultados;
-        
-    } catch (error) {
-        console.error('❌ Error en liberarProductosRemovidos:', error);
-        throw error;
-    }
-}
-
-// ========== FUNCIÓN CORREGIDA PARA GUARDAR PEDIDO EDITADO ==========
-// ========== FUNCIÓN COMPLETA SUBMIT FORM HANDLER ==========
-async function submitFormHandler(e) {
-    e.preventDefault();
-
-    try {
-        const fechaP = $('#fechaPedido').value;
-        const fechaE = $('#fechaEntrega').value;
-
-        if (!fechaP) {
-            mensaje('❌ Fecha de pedido obligatoria', 'error');
-            return;
-        }
-
-        const clienteId = $('#cliente').value;
-        const usuarioId = $('#asociado').value;
-        if (!clienteId || !usuarioId) {
-            mensaje('❌ Cliente y Usuario obligatorios', 'error');
-            return;
-        }
-
-        const filasDetalle = $$('#detalleTable tbody tr');
-        if (filasDetalle.length === 0) {
-            mensaje('❌ Debe agregar al menos un producto al pedido', 'error');
-            return;
-        }
-
-        mensaje('🔄 Guardando pedido...');
-
-        const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
-        const pedidoId = $('#pedidoId').value ? Number($('#pedidoId').value) : null;
-        const estadoSeleccionado = $('#estado').value;
-        const esCancelado = estadoSeleccionado === 'Cancelado';
-
-        console.log('🔍 Estado seleccionado:', estadoSeleccionado, 'Es cancelado:', esCancelado);
-
-        // **CANCELACIÓN DESDE FORMULARIO**
-        if (esCancelado && !isNew) {
-            console.log('🔄 Cancelación desde formulario');
-            
-            const pedidoResponse = await fetch(`${API}/getByIdPedido/${pedidoId}`);
-            const pedidoData = await pedidoResponse.json();
-            const pedido = pedidoData.data;
-            
-            if (!pedido) {
-                mensaje('❌ No se pudo obtener el pedido para cancelar', 'error');
-                return;
-            }
-
-            console.log('📦 Pedido a cancelar:', pedido);
-
-            // Liberar todos los recursos del pedido
-            await liberarRecursosCancelacion(
-                pedido.barriles || [],
-                pedido.accesorios || []
-            );
-
-            // Actualizar estado del pedido a Cancelado
-            const payload = {
-                id: Number(pedidoId),
-                estado: 'Cancelado',
-                fechaPedido: pedido.fechaPedido,
-                fechaEntrega: pedido.fechaEntrega,
-                direccionEntrega: pedido.direccionEntrega,
-                estadoPago: pedido.estadoPago,
-                envio: pedido.envio,
-                accesorios: [],
-                cervezas: pedido.cervezas || [],
-                barriles: [],
-                usuario: pedido.usuario,
-                cliente: pedido.cliente,
-                totalGral: pedido.totalGral,
-                nota: pedido.nota
-            };
-
-            const res = await fetch(`${API}/updatePedido`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            const ok = result && (result.codigo === '200' || /ok/i.test(result.status));
-            
-            if (ok) {
-                mensaje('✅ Pedido cancelado y recursos liberados correctamente.');
-                resetForm();
-                await loadAll();
-            } else {
-                mensaje('❌ No se pudo cancelar: ' + (result.descripcion || result.message || ''), 'error');
-            }
-            
-            return;
-
-        } else {
-            // **EDICIÓN NORMAL O NUEVO PEDIDO**
-            console.log('📝 Flujo normal - guardando pedido');
-
-            // 1. PARA EDICIÓN: IDENTIFICAR Y LIBERAR PRODUCTOS REMOVIDOS
-            if (!isNew && window.pedidoOriginalEdit) {
-                console.log('🔍 Identificando productos removidos en edición...');
-                const productosRemovidos = identificarProductosRemovidos(window.pedidoOriginalEdit, filasDetalle);
-                
-                if (productosRemovidos.barriles.length > 0 || productosRemovidos.accesorios.length > 0) {
-                    console.log('🔄 Liberando productos removidos antes de guardar...');
-                    await liberarProductosRemovidos(productosRemovidos);
-                    
-                    // MOSTRAR FEEDBACK AL USUARIO
-                    const mensajeLiberacion = 
-                        (productosRemovidos.barriles.length > 0 ? `${productosRemovidos.barriles.length} barril(es) liberado(s) (Cargado). ` : '') +
-                        (productosRemovidos.accesorios.length > 0 ? `${productosRemovidos.accesorios.length} accesorio(s) liberado(s) (Disponible).` : '');
-                    
-                    if (mensajeLiberacion) {
-                        mostrarNotificacionGlobal('🔄 ' + mensajeLiberacion, 'success');
-                    }
-                } else {
-                    console.log('ℹ️ No se identificaron productos removidos');
-                }
-            }
-
-            // 2. PREPARAR DATOS PARA GUARDAR
-            const accesoriosSeleccionados = [];
-            const cervezasPayload = [];
-            const barrilesPayload = [];
-
-            // Recolectar datos actuales del formulario
-            filasDetalle.forEach(tr => {
-                const tipo = tr.dataset.tipo;
-
-                if (tipo === 'accesorio') {
-                    const id = Number(tr.dataset.id);
-                    accesoriosSeleccionados.push({ id });
-                }
-
-                if (tipo === 'barril') {
-                    const barrilId = Number(tr.dataset.id);
-                    barrilesPayload.push({ id: barrilId });
-                    
-                    // Buscar la cerveza asociada a este barril
-                    const cervezaAsociada = cervezasList.find(cerveza => {
-                        const lotesCerveza = lotesList.filter(lote => 
-                            lote.cerveza && String(lote.cerveza.id) === String(cerveza.id)
-                        );
-                        const barrilesCerveza = barrilesList.filter(barril => 
-                            lotesCerveza.some(lote => lote.id === barril.loteId)
-                        );
-                        return barrilesCerveza.some(b => b.id === barrilId);
-                    });
-                    
-                    if (cervezaAsociada && !cervezasPayload.find(c => c.id === cervezaAsociada.id)) {
-                        cervezasPayload.push({ 
-                            id: cervezaAsociada.id, 
-                            cantidad: 1,
-                            litrosPorBarril: tr.dataset.litros ? Number(tr.dataset.litros) : 0
-                        });
-                    }
-                }
-            });
-
-            const total = recalcTotal() || 0;
-            const envio = $('#envio').checked;
-            const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
-            const notaValor = $('#nota')?.value.trim() || '';
-            const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
-            const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
-
-            const payload = {
-                fechaPedido: fechaPedidoMillis,
-                fechaEntrega: fechaEntregaMillis,
-                direccionEntrega: direccion,
-                estado: estadoSeleccionado,
-                estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
-                envio,
-                accesorios: accesoriosSeleccionados,
-                cervezas: cervezasPayload,
-                barriles: barrilesPayload,
-                usuario: { id: Number(usuarioId) },
-                cliente: { id: Number(clienteId) },
-                totalGral: total,
-                nota: notaValor
-            };
-
-            if (!isNew) {
-                payload.id = pedidoId;
-            }
-
-            const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
-            const method = isNew ? 'POST' : 'PUT';
-
-            console.log('📤 Enviando payload:', payload);
-
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            const ok = result && (
-                result.codigo === '200' ||
-                result.codigo === '201' ||
-                result.status === 'success' ||
-                /ok/i.test(result.status) ||
-                result.estado === 'OK'
-            );
-
-            if (ok) {
-                mensaje('✅ Pedido guardado correctamente');
-                resetForm();
-                await loadAll();
-            } else {
-                let errorMsg = '❌ No se pudo guardar el pedido';
-                if (result?.descripcion) errorMsg = result.descripcion;
-                else if (result?.message) errorMsg = result.message;
-                else if (result?.error) errorMsg = result.error;
-
-                mensaje(errorMsg, 'error');
-            }
-        }
-
-    } catch (err) {
-        console.error('❌ Error al guardar pedido:', err);
-        mensaje('❌ Error al guardar: ' + (err.message || err), 'error');
-    }
-}
-// ========== FUNCIÓN MEJORADA PARA IDENTIFICAR PRODUCTOS REMOVIDOS ==========
-function identificarProductosRemovidos(pedidoOriginal, filasActuales) {
-    console.log('🔍 Identificando productos removidos...');
-    
-    const removidos = { 
-        barriles: [], 
-        accesorios: [] 
-    };
-
-    // IDENTIFICAR BARRILES REMOVIDOS
-    const barrilesActualesIds = new Set();
-    filasActuales.forEach(tr => {
-        if (tr.dataset.tipo === 'barril') {
-            barrilesActualesIds.add(Number(tr.dataset.id));
-        }
-    });
-
-    console.log('📊 Barriles actuales en formulario:', Array.from(barrilesActualesIds));
-    console.log('📦 Barriles originales en pedido:', pedidoOriginal.barriles);
-
-    if (pedidoOriginal.barriles && Array.isArray(pedidoOriginal.barriles)) {
-        pedidoOriginal.barriles.forEach(barril => {
-            if (!barrilesActualesIds.has(barril.id)) {
-                console.log(`❌ Barril removido: ${barril.id}`);
-                removidos.barriles.push(barril);
-            }
-        });
-    }
-
-    // IDENTIFICAR ACCESORIOS REMOVIDOS
-    const accesoriosActualesIds = new Set();
-    filasActuales.forEach(tr => {
-        if (tr.dataset.tipo === 'accesorio') {
-            accesoriosActualesIds.add(Number(tr.dataset.id));
-        }
-    });
-
-    if (pedidoOriginal.accesorios && Array.isArray(pedidoOriginal.accesorios)) {
-        pedidoOriginal.accesorios.forEach(accesorio => {
-            const accId = accesorio.id || accesorio;
-            if (!accesoriosActualesIds.has(accId)) {
-                console.log(`❌ Accesorio removido: ${accId}`);
-                removidos.accesorios.push(accesorio);
-            }
-        });
-    }
-
-    console.log('🎯 Productos removidos identificados:', removidos);
-    return removidos;
-}
-
-// ========== FUNCIÓN MEJORADA PARA LIBERAR PRODUCTOS REMOVIDOS ==========
-// ========== FUNCIÓN MEJORADA CON MÁS LOGGING ==========
-async function liberarProductosRemovidos(productosRemovidos) {
-    try {
-        console.log('🔄 INICIANDO LIBERACIÓN DE PRODUCTOS REMOVIDOS');
-        console.log('📦 Productos a liberar:', productosRemovidos);
-        
-        let resultados = {
-            barriles: 0,
-            accesorios: 0,
-            errores: []
-        };
-
-        // Liberar barriles (cambiar estado a "Cargado")
-        for (const barril of productosRemovidos.barriles) {
-            try {
-                const barrilId = barril.id;
-                console.log(`🔄 Procesando barril ${barrilId}...`);
-                
-                // Obtener datos actuales del barril primero
-                let barrilActual = null;
-                try {
-                    const response = await fetch(`${API}/getBarril/${barrilId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        barrilActual = data.data || data;
-                        console.log(`📊 Barril actual:`, barrilActual);
-                    }
-                } catch (error) {
-                    console.warn(`⚠️ No se pudo obtener datos del barril ${barrilId}:`, error);
-                }
-
-                // Preparar payload con todos los campos necesarios
-                const payload = {
-                    id: barrilId,
-                    estado: "Cargado",
-                    sessionReserva: null,
-                    timestampReserva: null
-                };
-
-                // Si tenemos datos actuales, incluir campos requeridos
-                if (barrilActual) {
-                    payload.litros = barrilActual.litros || 0;
-                    payload.notas = barrilActual.notas || "";
-                    
-                    if (barrilActual.lote || barrilActual.loteId) {
-                        payload.lote = { id: barrilActual.loteId || (barrilActual.lote ? barrilActual.lote.id : null) };
-                    }
-                }
-
-                console.log(`📤 Enviando UPDATE para barril ${barrilId}:`, payload);
-
-                const res = await fetch(`${API}/updateBarril`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                console.log(`📥 Respuesta para barril ${barrilId}:`, res.status, res.statusText);
-
-                if (res.ok) {
-                    const result = await res.json();
-                    console.log(`✅ Barril ${barrilId} - Respuesta del servidor:`, result);
-                    
-                    if (result && (result.codigo === "200" || result.status === "success")) {
-                        resultados.barriles++;
-                        console.log(`✅ Barril ${barrilId} liberado exitosamente (Cargado)`);
-                        
-                        // Actualizar en lista local
-                        const barrilEnLista = barrilesList.find(b => b.id == barrilId);
-                        if (barrilEnLista) {
-                            barrilEnLista.estado = 'Cargado';
-                            barrilEnLista.sessionReserva = null;
-                            barrilEnLista.timestampReserva = null;
-                        }
-                    } else {
-                        const errorMsg = `Error en respuesta del servidor para barril ${barrilId}: ${JSON.stringify(result)}`;
-                        console.error(`❌ ${errorMsg}`);
-                        resultados.errores.push(errorMsg);
-                    }
-                } else {
-                    const errorText = await res.text();
-                    const errorMsg = `Error HTTP ${res.status} para barril ${barrilId}: ${errorText}`;
-                    console.error(`❌ ${errorMsg}`);
-                    resultados.errores.push(errorMsg);
-                }
-            } catch (error) {
-                const errorMsg = `Error liberando barril ${barril.id}: ${error.message}`;
-                console.error(`❌ ${errorMsg}`);
-                resultados.errores.push(errorMsg);
-            }
-        }
-
-        // Liberar accesorios (cambiar estado a "Disponible")
-        for (const accesorio of productosRemovidos.accesorios) {
-            try {
-                const accesorioId = accesorio.id;
-                console.log(`🔄 Procesando accesorio ${accesorioId}...`);
-                
-                // Obtener datos actuales del accesorio primero
-                let accesorioActual = null;
-                try {
-                    const response = await fetch(`${API}/getAccesorio/${accesorioId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        accesorioActual = data.data || data;
-                        console.log(`📊 Accesorio actual:`, accesorioActual);
-                    }
-                } catch (error) {
-                    console.warn(`⚠️ No se pudo obtener datos del accesorio ${accesorioId}:`, error);
-                }
-
-                // Preparar payload con todos los campos necesarios
-                const payload = {
-                    id: accesorioId,
-                    estado: "Disponible",
-                    sessionReserva: null,
-                    timestampReserva: null
-                };
-
-                // Si tenemos datos actuales, incluir campos requeridos
-                if (accesorioActual) {
-                    payload.nombre = accesorioActual.nombre || "Accesorio";
-                    payload.notas = accesorioActual.notas || "";
-                }
-
-                console.log(`📤 Enviando UPDATE para accesorio ${accesorioId}:`, payload);
-
-                const res = await fetch(`${API}/updateAccesorio`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-
-                console.log(`📥 Respuesta para accesorio ${accesorioId}:`, res.status, res.statusText);
-
-                if (res.ok) {
-                    const result = await res.json();
-                    console.log(`✅ Accesorio ${accesorioId} - Respuesta del servidor:`, result);
-                    
-                    if (result && (result.codigo === "200" || result.status === "success")) {
-                        resultados.accesorios++;
-                        console.log(`✅ Accesorio ${accesorioId} liberado exitosamente (Disponible)`);
-                        
-                        // Actualizar en lista local
-                        const accesorioEnLista = accesoriosList.find(a => a.id == accesorioId);
-                        if (accesorioEnLista) {
-                            accesorioEnLista.estado = 'Disponible';
-                            accesorioEnLista.sessionReserva = null;
-                            accesorioEnLista.timestampReserva = null;
-                        }
-                    } else {
-                        const errorMsg = `Error en respuesta del servidor para accesorio ${accesorioId}: ${JSON.stringify(result)}`;
-                        console.error(`❌ ${errorMsg}`);
-                        resultados.errores.push(errorMsg);
-                    }
-                } else {
-                    const errorText = await res.text();
-                    const errorMsg = `Error HTTP ${res.status} para accesorio ${accesorioId}: ${errorText}`;
-                    console.error(`❌ ${errorMsg}`);
-                    resultados.errores.push(errorMsg);
-                }
-            } catch (error) {
-                const errorMsg = `Error liberando accesorio ${accesorio.id}: ${error.message}`;
-                console.error(`❌ ${errorMsg}`);
-                resultados.errores.push(errorMsg);
-            }
-        }
-
-        console.log(`✅ LIBERACIÓN COMPLETADA:`, resultados);
-        
-        // Mostrar resumen al usuario
-        if (resultados.errores.length > 0) {
-            mostrarNotificacionGlobal(`Hubo ${resultados.errores.length} errores al liberar productos. Revisa la consola.`, 'error');
-        }
-        
-        if (resultados.barriles > 0 || resultados.accesorios > 0) {
-            mostrarNotificacionGlobal(
-                `🔄 ${resultados.barriles} barriles liberados (Cargado) y ${resultados.accesorios} accesorios liberados (Disponible)`, 
-                'success'
-            );
-        }
-        
-        return resultados;
-        
-    } catch (error) {
-        console.error('❌ ERROR CRÍTICO EN liberarProductosRemovidos:', error);
-        mostrarNotificacionGlobal('❌ Error crítico liberando productos: ' + error.message, 'error');
-        throw error;
-    }
-}
-
-// ========== FUNCIÓN CORREGIDA PARA GUARDAR PEDIDO EDITADO ==========
-async function submitFormHandler(e) {
-    e.preventDefault();
-
-    try {
-        const fechaP = $('#fechaPedido').value;
-        const fechaE = $('#fechaEntrega').value;
-
-        if (!fechaP) {
-            mensaje('❌ Fecha de pedido obligatoria', 'error');
-            return;
-        }
-
-        const clienteId = $('#cliente').value;
-        const usuarioId = $('#asociado').value;
-        if (!clienteId || !usuarioId) {
-            mensaje('❌ Cliente y Usuario obligatorios', 'error');
-            return;
-        }
-
-        const filasDetalle = $$('#detalleTable tbody tr');
-        if (filasDetalle.length === 0) {
-            mensaje('❌ Debe agregar al menos un producto al pedido', 'error');
-            return;
-        }
-
-        mensaje('🔄 Guardando pedido...');
-
-        const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
-        const pedidoId = $('#pedidoId').value ? Number($('#pedidoId').value) : null;
-        const estadoSeleccionado = $('#estado').value;
-        const esCancelado = estadoSeleccionado === 'Cancelado';
-
-        console.log('🔍 Estado seleccionado:', estadoSeleccionado, 'Es cancelado:', esCancelado);
-
-        // **CANCELACIÓN DESDE FORMULARIO**
-        if (esCancelado && !isNew) {
-            console.log('🔄 Cancelación desde formulario');
-            
-            const pedidoResponse = await fetch(`${API}/getByIdPedido/${pedidoId}`);
-            const pedidoData = await pedidoResponse.json();
-            const pedido = pedidoData.data;
-            
-            if (!pedido) {
-                mensaje('❌ No se pudo obtener el pedido para cancelar', 'error');
-                return;
-            }
-
-            console.log('📦 Pedido a cancelar:', pedido);
-
-            // Liberar todos los recursos del pedido
-            await liberarRecursosCancelacion(
-                pedido.barriles || [],
-                pedido.accesorios || []
-            );
-
-            // Actualizar estado del pedido a Cancelado
-            const payload = {
-                id: Number(pedidoId),
-                estado: 'Cancelado',
-                fechaPedido: pedido.fechaPedido,
-                fechaEntrega: pedido.fechaEntrega,
-                direccionEntrega: pedido.direccionEntrega,
-                estadoPago: pedido.estadoPago,
-                envio: pedido.envio,
-                accesorios: [],
-                cervezas: pedido.cervezas || [],
-                barriles: [],
-                usuario: pedido.usuario,
-                cliente: pedido.cliente,
-                totalGral: pedido.totalGral,
-                nota: pedido.nota
-            };
-
-            const res = await fetch(`${API}/updatePedido`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            const ok = result && (result.codigo === '200' || /ok/i.test(result.status));
-            
-            if (ok) {
-                mensaje('✅ Pedido cancelado y recursos liberados correctamente.');
-                resetForm();
-                await loadAll();
-            } else {
-                mensaje('❌ No se pudo cancelar: ' + (result.descripcion || result.message || ''), 'error');
-            }
-            
-            return;
-
-        } else {
-            // **EDICIÓN NORMAL O NUEVO PEDIDO**
-            console.log('📝 Flujo normal - guardando pedido');
-
-            // 1. PARA EDICIÓN: IDENTIFICAR Y LIBERAR PRODUCTOS REMOVIDOS
-            if (!isNew && window.pedidoOriginalEdit) {
-                console.log('🔍 Identificando productos removidos en edición...');
-                const productosRemovidos = identificarProductosRemovidos(window.pedidoOriginalEdit, filasDetalle);
-                
-                if (productosRemovidos.barriles.length > 0 || productosRemovidos.accesorios.length > 0) {
-                    console.log('🔄 Liberando productos removidos antes de guardar...');
-                    await liberarProductosRemovidos(productosRemovidos);
-                }
-            }
-
-            // 2. PREPARAR DATOS PARA GUARDAR
-            const accesoriosSeleccionados = [];
-            const cervezasPayload = [];
-            const barrilesPayload = [];
-
-            // Recolectar datos actuales del formulario
-            filasDetalle.forEach(tr => {
-                const tipo = tr.dataset.tipo;
-
-                if (tipo === 'accesorio') {
-                    const id = Number(tr.dataset.id);
-                    accesoriosSeleccionados.push({ id });
-                }
-
-                if (tipo === 'barril') {
-                    const barrilId = Number(tr.dataset.id);
-                    const cervezaId = Number(tr.dataset.cervezaId);
-                    const litros = Number(tr.dataset.litros) || 0;
-                    
-                    if (cervezaId) {
-                        cervezasPayload.push({ 
-                            id: cervezaId, 
-                            cantidad: 1,
-                            litrosPorBarril: litros
-                        });
-                    }
-
-                    barrilesPayload.push({ id: barrilId });
-                }
-            });
-
-            const total = recalcTotal() || 0;
-            const envio = $('#envio').checked;
-            const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
-            const notaValor = $('#nota')?.value.trim() || '';
-            const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
-            const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
-
-            const payload = {
-                fechaPedido: fechaPedidoMillis,
-                fechaEntrega: fechaEntregaMillis,
-                direccionEntrega: direccion,
-                estado: estadoSeleccionado,
-                estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
-                envio,
-                accesorios: accesoriosSeleccionados,
-                cervezas: cervezasPayload,
-                barriles: barrilesPayload,
-                usuario: { id: Number(usuarioId) },
-                cliente: { id: Number(clienteId) },
-                totalGral: total,
-                nota: notaValor
-            };
-
-            if (!isNew) {
-                payload.id = pedidoId;
-            }
-
-            const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
-            const method = isNew ? 'POST' : 'PUT';
-
-            console.log('📤 Enviando payload:', payload);
-
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            const ok = result && (
-                result.codigo === '200' ||
-                result.codigo === '201' ||
-                result.status === 'success' ||
-                /ok/i.test(result.status) ||
-                result.estado === 'OK'
-            );
-
-            if (ok) {
-                mensaje('✅ Pedido guardado correctamente');
-                resetForm();
-                await loadAll();
-            } else {
-                let errorMsg = '❌ No se pudo guardar el pedido';
-                if (result?.descripcion) errorMsg = result.descripcion;
-                else if (result?.message) errorMsg = result.message;
-                else if (result?.error) errorMsg = result.error;
-
-                mensaje(errorMsg, 'error');
-            }
-        }
-
-    } catch (err) {
-        console.error('❌ Error al guardar pedido:', err);
-        mensaje('❌ Error al guardar: ' + (err.message || err), 'error');
-    }
-}
-
-// ========== FUNCIÓN MEJORADA PARA LIBERAR RECURSOS EN CANCELACIÓN ==========
-// ========== FUNCIÓN MEJORADA PARA LIBERAR RECURSOS EN CANCELACIÓN ==========
-// ========== FUNCIÓN MEJORADA PARA LIBERAR RECURSOS EN CANCELACIÓN ==========
+// ========== FUNCIÓN CORREGIDA PARA LIBERAR RECURSOS EN CANCELACIÓN ==========
+// ========== FUNCIÓN CORREGIDA PARA LIBERAR RECURSOS EN CANCELACIÓN ==========
 async function liberarRecursosCancelacion(barriles, accesorios) {
   try {
     console.log('🔄 Iniciando liberación de recursos por cancelación...');
@@ -2711,50 +2091,73 @@ async function liberarRecursosCancelacion(barriles, accesorios) {
     let barrilesLiberados = 0;
     let accesoriosLiberados = 0;
 
-    // Liberar barriles (estado: Cargado)
-    if (barriles && barriles.length > 0) {
+    // 🔁 Liberar barriles (estado: Cargado) MANTENIENDO LOTES
+    if (Array.isArray(barriles) && barriles.length > 0) {
       for (const barril of barriles) {
         try {
-          const barrilId = barril.id || barril;
+          const barrilId = typeof barril === 'object' ? barril.id : barril;
           console.log(`🔄 Liberando barril ${barrilId}...`);
           
-          // Buscar el barril en la lista local primero
-          const barrilEnLista = barrilesList.find(b => b.id == barrilId);
-          if (!barrilEnLista) {
-            console.warn(`⚠️ Barril ${barrilId} no encontrado en lista local`);
+          // Obtener datos actuales del barril desde el backend
+          const barrilResponse = await fetch(`${API}/getByIdBarril/${barrilId}`);
+          const barrilData = await barrilResponse.json();
+          const barrilActual = barrilData?.data;
+          
+          if (!barrilActual) {
+            console.warn(`⚠️ Barril ${barrilId} no encontrado`);
             continue;
           }
 
-          // Preparar payload para actualizar solo el estado
+          // ✅ CORRECCIÓN: MANTENER EL LOTE_ID AL LIBERAR EL BARRIL
+          let lotePayload = null;
+          if (barrilActual.lote) {
+            lotePayload = { id: barrilActual.lote.id };
+          } else if (barrilActual.loteId) {
+            lotePayload = { id: barrilActual.loteId };
+          }
+
+          console.log(`📋 Barril ${barrilId} - Lote a mantener:`, lotePayload);
+
           const payloadBarril = {
-            id: barrilEnLista.id,
+            id: barrilActual.id,
             estado: "Cargado",
-            litros: barrilEnLista.litros,
-            notas: barrilEnLista.notas || "",
-            lote: { id: barrilEnLista.loteId },
+            litros: barrilActual.litros || 0,
+            notas: barrilActual.notas || "",
+            lote: lotePayload, // ✅ MANTENER EL LOTE ORIGINAL
             sessionReserva: null,
             timestampReserva: null
           };
 
-          console.log('📤 Actualizando barril:', payloadBarril);
-
-          // Actualizar barril
-          const resBarril = await fetchJSON(`${API}/updateBarril`, {
+          const resBarril = await fetch(`${API}/updateBarril`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadBarril)
           });
 
-          if (resBarril && (resBarril.codigo === "200" || resBarril.status === "success")) {
+          const resultBarril = await resBarril.json();
+          const ok = resultBarril && (
+            resultBarril.codigo === "200" ||
+            resultBarril.status === "success" ||
+            /ok/i.test(resultBarril.status)
+          );
+
+          if (ok) {
             barrilesLiberados++;
-            console.log(`✅ Barril ${barrilId} liberado (Cargado)`);
-            
-            // Actualizar en la lista local
-            barrilEnLista.estado = 'Cargado';
-            barrilEnLista.sessionReserva = null;
-            barrilEnLista.timestampReserva = null;
+            // Actualizar en lista local
+            const barrilEnLista = barrilesList.find(b => b.id == barrilId);
+            if (barrilEnLista) {
+              barrilEnLista.estado = 'Cargado';
+              barrilEnLista.sessionReserva = null;
+              barrilEnLista.timestampReserva = null;
+              // También actualizar el lote en la lista local
+              if (lotePayload) {
+                barrilEnLista.lote = lotePayload;
+                barrilEnLista.loteId = lotePayload.id;
+              }
+            }
+            console.log(`✅ Barril ${barrilId} liberado - Lote mantenido: ${lotePayload ? lotePayload.id : 'N/A'}`);
           } else {
-            console.error(`❌ Error en respuesta del barril ${barrilId}:`, resBarril);
+            console.error(`❌ Error en respuesta del barril ${barrilId}:`, resultBarril);
           }
         } catch (error) {
           console.error(`❌ Error liberando barril ${barril.id || barril}:`, error);
@@ -2762,49 +2165,57 @@ async function liberarRecursosCancelacion(barriles, accesorios) {
       }
     }
 
-    // Liberar accesorios (estado: Disponible)
-    if (accesorios && accesorios.length > 0) {
+    // 🔁 Liberar accesorios (estado: Disponible)
+    if (Array.isArray(accesorios) && accesorios.length > 0) {
       for (const accesorio of accesorios) {
         try {
-          const accesorioId = accesorio.id || accesorio;
+          const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
           console.log(`🔄 Liberando accesorio ${accesorioId}...`);
           
-          // Buscar el accesorio en la lista local primero
-          const accesorioEnLista = accesoriosList.find(a => a.id == accesorioId);
-          if (!accesorioEnLista) {
-            console.warn(`⚠️ Accesorio ${accesorioId} no encontrado en lista local`);
+          // Obtener datos actuales del accesorio desde el backend
+          const accesorioResponse = await fetch(`${API}/getByIdAccesorio/${accesorioId}`);
+          const accesorioData = await accesorioResponse.json();
+          const accesorioActual = accesorioData?.data;
+          
+          if (!accesorioActual) {
+            console.warn(`⚠️ Accesorio ${accesorioId} no encontrado`);
             continue;
           }
 
-          // Preparar payload para actualizar solo el estado
           const payloadAccesorio = {
-            id: accesorioEnLista.id,
-            nombre: accesorioEnLista.nombre,
+            id: accesorioActual.id,
+            nombre: accesorioActual.nombre || `Accesorio ${accesorioId}`,
             estado: "Disponible",
-            notas: accesorioEnLista.notas || "",
+            notas: accesorioActual.notas || "",
             sessionReserva: null,
             timestampReserva: null
           };
 
-          console.log('📤 Actualizando accesorio:', payloadAccesorio);
-
-          // Actualizar accesorio
-          const resAccesorio = await fetchJSON(`${API}/updateAccesorio`, {
+          const resAccesorio = await fetch(`${API}/updateAccesorio`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadAccesorio)
           });
 
-          if (resAccesorio && (resAccesorio.codigo === "200" || resAccesorio.status === "success")) {
+          const resultAccesorio = await resAccesorio.json();
+          const ok = resultAccesorio && (
+            resultAccesorio.codigo === "200" ||
+            resultAccesorio.status === "success" ||
+            /ok/i.test(resultAccesorio.status)
+          );
+
+          if (ok) {
             accesoriosLiberados++;
-            console.log(`✅ Accesorio ${accesorioId} liberado (Disponible)`);
-            
-            // Actualizar en la lista local
-            accesorioEnLista.estado = 'Disponible';
-            accesorioEnLista.sessionReserva = null;
-            accesorioEnLista.timestampReserva = null;
+            // Actualizar en lista local
+            const accesorioEnLista = accesoriosList.find(a => a.id == accesorioId);
+            if (accesorioEnLista) {
+              accesorioEnLista.estado = 'Disponible';
+              accesorioEnLista.sessionReserva = null;
+              accesorioEnLista.timestampReserva = null;
+            }
+            console.log(`✅ Accesorio ${accesorioId} liberado`);
           } else {
-            console.error(`❌ Error en respuesta del accesorio ${accesorioId}:`, resAccesorio);
+            console.error(`❌ Error en respuesta del accesorio ${accesorioId}:`, resultAccesorio);
           }
         } catch (error) {
           console.error(`❌ Error liberando accesorio ${accesorio.id || accesorio}:`, error);
@@ -2816,7 +2227,7 @@ async function liberarRecursosCancelacion(barriles, accesorios) {
     
     if (barrilesLiberados > 0 || accesoriosLiberados > 0) {
       mostrarNotificacionGlobal(
-        `Pedido cancelado - ${barrilesLiberados} barriles liberados (Cargado) y ${accesoriosLiberados} accesorios liberados (Disponible)`, 
+        `Pedido cancelado - ${barrilesLiberados} barriles liberados (Cargado) manteniendo lotes y ${accesoriosLiberados} accesorios liberados (Disponible)`, 
         'success'
       );
     } else {
@@ -2923,242 +2334,336 @@ async function deletePedido(id) {
     }
 }
 
-// ========== SUBMIT HANDLER - CORREGIDO PARA CANCELACIÓN ==========
-// ========== SUBMIT HANDLER - CORREGIDO PARA CANCELACIÓN DESDE FORMULARIO ==========
-// ========== SUBMIT HANDLER - COPIADO DEL BOTÓN CANCELAR ==========
+// ========== FUNCIÓN COMPLETAMENTE CORREGIDA PARA GUARDAR PEDIDO ==========
 async function submitFormHandler(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const fechaP = $('#fechaPedido').value;
-    const fechaE = $('#fechaEntrega').value;
+    try {
+        const fechaP = $('#fechaPedido').value;
+        const fechaE = $('#fechaEntrega').value;
 
-    if (!fechaP) {
-      mensaje('Fecha de pedido obligatoria', 'error');
-      return;
-    }
-
-    const clienteId = $('#cliente').value;
-    const usuarioId = $('#asociado').value;
-    if (!clienteId || !usuarioId) {
-      mensaje('Cliente y Usuario obligatorios', 'error');
-      return;
-    }
-
-    const filasDetalle = $$('#detalleTable tbody tr');
-    if (filasDetalle.length === 0) {
-      mensaje('Debe agregar al menos un producto al pedido', 'error');
-      return;
-    }
-
-    mensaje('Guardando pedido...');
-
-    const accesoriosSeleccionados = [];
-    const cervezasPayload = [];
-    const barrilesPayload = [];
-
-    const estadoSeleccionado = $('#estado').value;
-    const esCancelado = estadoSeleccionado === 'Cancelado';
-    const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
-    const pedidoId = $('#pedidoId').value ? Number($('#pedidoId').value) : null;
-
-    console.log('🔍 Estado seleccionado:', estadoSeleccionado, 'Es cancelado:', esCancelado);
-
-    // **CORRECCIÓN CRÍTICA: Si es cancelación, hacer exactamente lo mismo que el botón Cancelar**
-    if (esCancelado && !isNew) {
-      console.log('🔄 Cancelación desde formulario - ejecutando mismo flujo que botón Cancelar');
-      
-      // 1. Primero obtener el pedido completo para saber qué recursos liberar (IGUAL QUE BOTÓN CANCELAR)
-      const pedido = await fetchJSON(`${API}/getByIdPedido/${pedidoId}`);
-      if (!pedido || !pedido.data) {
-        mensaje('No se pudo obtener el pedido para cancelar', 'error');
-        return;
-      }
-
-      console.log('📦 Pedido a cancelar:', pedido.data);
-
-      // 2. Liberar los recursos ANTES de actualizar el pedido (IGUAL QUE BOTÓN CANCELAR)
-      await liberarRecursosCancelacion(
-        pedido.data.barriles || [],
-        pedido.data.accesorios || []
-      );
-
-      // 3. Ahora actualizar el estado del pedido a Cancelado (IGUAL QUE BOTÓN CANCELAR)
-      const res = await fetchJSON(`${API}/updatePedido`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          id: Number(pedidoId),
-          estado: 'Cancelado',
-          // Mantener todos los demás campos igual
-          fechaPedido: pedido.data.fechaPedido,
-          fechaEntrega: pedido.data.fechaEntrega,
-          direccionEntrega: pedido.data.direccionEntrega,
-          estadoPago: pedido.data.estadoPago,
-          envio: pedido.data.envio,
-          accesorios: [], // Vaciar accesorios
-          cervezas: pedido.data.cervezas || [],
-          barriles: [], // Vaciar barriles
-          usuario: pedido.data.usuario,
-          cliente: pedido.data.cliente,
-          totalGral: pedido.data.totalGral,
-          nota: pedido.data.nota
-        })
-      });
-
-      const ok = res && (res.codigo === '200' || /ok/i.test(res.status));
-      
-      if (ok) {
-        mensaje('Pedido cancelado y recursos liberados correctamente.');
-        resetForm();
-        await loadAll();
-      } else {
-        mensaje('No se pudo cancelar: ' + (res.descripcion || res.message || ''), 'error');
-      }
-      
-      return; // IMPORTANTE: Salir de la función aquí
-
-    } else {
-      // FLUJO NORMAL (no es cancelación)
-      console.log('📝 Flujo normal - guardando pedido');
-
-      // Recolectar productos del detalle actual
-      filasDetalle.forEach(tr => {
-        const tipo = tr.dataset.tipo;
-        const id = Number(tr.dataset.id);
-
-        if (tipo === 'accesorio') {
-          accesoriosSeleccionados.push({ id });
+        // ✅ VALIDACIÓN DE FECHAS CORREGIDA
+        const validacionFechas = validarFechasPedido(fechaP, fechaE);
+        if (!validacionFechas.valido) {
+            mensaje(validacionFechas.error, 'error');
+            return;
         }
 
-        if (tipo === 'cerveza') {
-          const cantidad = Number(tr.querySelector('.qty')?.textContent || 1);
-          const litros = Number(tr.dataset.litros) || 0;
-          cervezasPayload.push({ 
-            id, 
-            cantidad,
-            litrosPorBarril: litros
-          });
+        const clienteId = $('#cliente').value;
+        const usuarioId = $('#asociado').value;
+        if (!clienteId || !usuarioId) {
+            mensaje('❌ Cliente y Usuario obligatorios', 'error');
+            return;
         }
-      });
 
-      const total = recalcTotal() || 0;
-      const envio = $('#envio').checked;
-      const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
-      const notaValor = $('#nota')?.value.trim() || '';
-      const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
-      const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
+        const filasDetalle = $$('#detalleTable tbody tr');
 
-      let barrilesFinal = [];
-      
-      if (isNew) {
-        // Para pedidos nuevos, recolectar barriles de las reservas
-        filasDetalle.forEach(tr => {
-          if (tr.dataset.tipo === 'cerveza') {
-            const reservas = JSON.parse(tr.dataset.reservas || '[]');
-            reservas.forEach(reservaId => {
-              const reserva = sistemaReservas.reservas.get(reservaId);
-              if (reserva?.tipo === 'barril') {
-                barrilesFinal.push({ id: Number(reserva.recursoId) });
-              }
-            });
-          }
-        });
-      } else {
-        // Para ediciones normales, preservar barriles existentes
-        try {
-          const pedidoActual = await fetchJSON(`${API}/getByIdPedido/${pedidoId}`);
-          if (pedidoActual && pedidoActual.data && pedidoActual.data.barriles) {
-            barrilesFinal = pedidoActual.data.barriles.map(b => ({
-              id: b.id || b
-            }));
-            console.log('🔄 Preservando barriles existentes:', barrilesFinal);
-          }
-        } catch (error) {
-          console.warn('No se pudieron obtener barriles existentes:', error);
+        // ✅ VALIDACIÓN MEJORADA - DEBE TENER BARRILES SI HAY ACCESORIOS (PARA EDICIÓN TAMBIÉN)
+        const validacionProductos = validarProductosPedido();
+        if (!validacionProductos.valido) {
+            mensaje(validacionProductos.error, 'error');
+            return;
         }
-      }
 
-      const payload = {
-        fechaPedido: fechaPedidoMillis,
-        fechaEntrega: fechaEntregaMillis,
-        direccionEntrega: direccion,
-        estado: estadoSeleccionado,
-        estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
-        envio,
-        accesorios: accesoriosSeleccionados,
-        cervezas: cervezasPayload,
-        barriles: barrilesFinal,
-        usuario: { id: Number(usuarioId) },
-        cliente: { id: Number(clienteId) },
-        totalGral: total,
-        nota: notaValor
-      };
+        mensaje('🔄 Guardando pedido...');
 
-      if (!isNew) {
-        payload.id = pedidoId;
-      }
+        const isNew = !$('#pedidoId').value || Number($('#pedidoId').value) === 0;
+        const pedidoId = $('#pedidoId').value ? Number($('#pedidoId').value) : null;
+        const estadoSeleccionado = $('#estado').value;
+        const esCancelado = estadoSeleccionado === 'Cancelado';
 
-      const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
-      const method = isNew ? 'POST' : 'PUT';
+        console.log('🔍 Estado seleccionado:', estadoSeleccionado, 'Es cancelado:', esCancelado);
 
-      console.log('📤 Enviando payload:', payload);
-
-      const res = await fetchJSON(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const ok = res && (
-        res.codigo === '200' ||
-        res.codigo === '201' ||
-        res.status === 'success' ||
-        /ok/i.test(res.status) ||
-        res.estado === 'OK'
-      );
-
-      if (ok) {
-        // Confirmar reservas para nuevos pedidos
-        if (isNew) {
-          const todasLasReservas = [];
-          filasDetalle.forEach(tr => {
-            if (tr.dataset.tipo === 'cerveza') {
-              const reservas = JSON.parse(tr.dataset.reservas || '[]');
-              todasLasReservas.push(...reservas);
-            } else if (tr.dataset.tipo === 'accesorio') {
-              todasLasReservas.push(tr.dataset.reserva);
+        // **CANCELACIÓN DESDE FORMULARIO**
+        if (esCancelado && !isNew) {
+            console.log('🔄 Cancelación desde formulario');
+            
+            const pedidoResponse = await fetch(`${API}/getByIdPedido/${pedidoId}`);
+            const pedidoData = await pedidoResponse.json();
+            const pedido = pedidoData.data;
+            
+            if (!pedido) {
+                mensaje('❌ No se pudo obtener el pedido para cancelar', 'error');
+                return;
             }
-          });
 
-          for (const reservaId of todasLasReservas) {
-            if (reservaId) await sistemaReservas.confirmar(reservaId);
-          }
+            console.log('📦 Pedido a cancelar:', pedido);
+
+            await liberarRecursosCancelacion(
+                pedido.barriles || [],
+                pedido.accesorios || []
+            );
+
+            const payload = {
+                id: Number(pedidoId),
+                estado: 'Cancelado',
+                fechaPedido: pedido.fechaPedido,
+                fechaEntrega: pedido.fechaEntrega,
+                direccionEntrega: pedido.direccionEntrega,
+                estadoPago: pedido.estadoPago,
+                envio: pedido.envio,
+                accesorios: [],
+                cervezas: pedido.cervezas || [],
+                barriles: [],
+                usuario: pedido.usuario,
+                cliente: pedido.cliente,
+                totalGral: pedido.totalGral,
+                nota: pedido.nota
+            };
+
+            const res = await fetch(`${API}/updatePedido`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            const ok = result && (result.codigo === '200' || /ok/i.test(result.status));
+            
+            if (ok) {
+                mensaje('✅ Pedido cancelado y recursos liberados correctamente.');
+                resetForm();
+                await loadAll();
+            } else {
+                mensaje('❌ No se pudo cancelar: ' + (result.descripcion || result.message || ''), 'error');
+            }
+            
+            return;
+
+        } else {
+            // **EDICIÓN NORMAL O NUEVO PEDIDO**
+            console.log('📝 Flujo normal - guardando pedido');
+
+            // 1. PARA EDICIÓN: IDENTIFICAR Y LIBERAR PRODUCTOS REMOVIDOS
+            if (!isNew && window.pedidoOriginalEdit) {
+                console.log('🔍 Identificando productos removidos en edición...');
+                const productosRemovidos = identificarProductosRemovidos(window.pedidoOriginalEdit, filasDetalle);
+                
+                if (productosRemovidos.barriles.length > 0 || productosRemovidos.accesorios.length > 0) {
+                    console.log('🔄 Liberando productos removidos antes de guardar...');
+                    await liberarProductosRemovidos(productosRemovidos);
+                }
+            }
+
+            // 2. PREPARAR DATOS PARA GUARDAR - ENFOQUE CORREGIDO EN BARRILES
+            const accesoriosSeleccionados = [];
+            const barrilesPayload = [];
+            const cervezasPayload = []; // ✅ AGREGAR PARA NUEVOS PEDIDOS
+
+            // ✅ CORRECCIÓN: RECOLECTAR BARRILES Y CERVEZAS PARA NUEVOS PEDIDOS
+            filasDetalle.forEach(tr => {
+                const tipo = tr.dataset.tipo;
+
+                if (tipo === 'accesorio') {
+                    const id = Number(tr.dataset.id);
+                    accesoriosSeleccionados.push({ id });
+                    console.log(`✅ Agregando accesorio al payload: ${id}`);
+                }
+
+                // ✅ IMPORTANTE: Para edición, los barriles tienen tipo 'barril'
+                if (tipo === 'barril') {
+                    const barrilId = Number(tr.dataset.id);
+                    console.log(`✅ Agregando barril al payload: ${barrilId}`);
+                    barrilesPayload.push({ id: barrilId });
+                }
+
+                // ✅ Para nuevos pedidos (tipo 'cerveza') - OBTENER BARRILES Y CERVEZAS
+                if (tipo === 'cerveza') {
+                    const cervezaId = Number(tr.dataset.id);
+                    const litros = Number(tr.dataset.litros);
+                    const cantidad = Number(tr.querySelector('.qty').textContent);
+                    
+                    console.log(`✅ Agregando cerveza al payload: ${cervezaId}, litros: ${litros}, cantidad: ${cantidad}`);
+                    
+                    // Agregar cerveza al payload
+                    cervezasPayload.push({ 
+                        id: cervezaId,
+                        litros: litros,
+                        cantidad: cantidad
+                    });
+
+                    // Obtener barriles de las reservas
+                    const reservasIds = JSON.parse(tr.dataset.reservas || '[]');
+                    reservasIds.forEach(reservaId => {
+                        const reserva = sistemaReservas.reservas.get(reservaId);
+                        if (reserva && reserva.tipo === 'barril') {
+                            const barrilId = Number(reserva.recursoId);
+                            console.log(`✅ Agregando barril desde reserva: ${barrilId}`);
+                            barrilesPayload.push({ id: barrilId });
+                        }
+                    });
+                }
+            });
+
+            const total = recalcTotal() || 0;
+            const envio = $('#envio').checked;
+            const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
+            const notaValor = $('#nota')?.value.trim() || '';
+            const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
+            const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
+
+            // ✅ CORRECCIÓN: PAYLOAD DIFERENTE PARA NUEVOS PEDIDOS VS EDICIÓN
+            let payload;
+            
+            if (isNew) {
+                // ✅ PARA NUEVOS PEDIDOS: ENVIAR CERVEZAS Y BARRILES
+                payload = {
+                    fechaPedido: fechaPedidoMillis,
+                    fechaEntrega: fechaEntregaMillis,
+                    direccionEntrega: direccion,
+                    estado: estadoSeleccionado,
+                    estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
+                    envio,
+                    accesorios: accesoriosSeleccionados,
+                    cervezas: cervezasPayload, // ✅ CERVEZAS CON LITROS Y CANTIDAD
+                    barriles: barrilesPayload, // ✅ BARRILES RESERVADOS
+                    usuario: { id: Number(usuarioId) },
+                    cliente: { id: Number(clienteId) },
+                    totalGral: total,
+                    nota: notaValor
+                };
+            } else {
+                // ✅ PARA EDICIÓN: SOLO BARRILES (LAS CERVEZAS VIENEN DEL LOTE)
+                payload = {
+                    id: pedidoId,
+                    fechaPedido: fechaPedidoMillis,
+                    fechaEntrega: fechaEntregaMillis,
+                    direccionEntrega: direccion,
+                    estado: estadoSeleccionado,
+                    estadoPago: $('#estadoPago').checked ? 'Pagado' : 'Pendiente',
+                    envio,
+                    accesorios: accesoriosSeleccionados,
+                    cervezas: [], // Array vacío porque la cerveza viene del lote del barril
+                    barriles: barrilesPayload, // ✅ Solo barriles con sus lotes
+                    usuario: { id: Number(usuarioId) },
+                    cliente: { id: Number(clienteId) },
+                    totalGral: total,
+                    nota: notaValor
+                };
+            }
+
+            const url = isNew ? `${API}/addPedido` : `${API}/updatePedido`;
+            const method = isNew ? 'POST' : 'PUT';
+
+            console.log('📤 Enviando payload:', payload);
+            console.log(`📊 Cervezas en payload: ${cervezasPayload.length}`);
+            console.log(`📊 Barriles en payload: ${barrilesPayload.length}`);
+            console.log(`📊 Accesorios en payload: ${accesoriosSeleccionados.length}`);
+
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            const ok = result && (
+                result.codigo === '200' ||
+                result.codigo === '201' ||
+                result.status === 'success' ||
+                /ok/i.test(result.status) ||
+                result.estado === 'OK'
+            );
+
+            if (ok) {
+                // ✅ CONFIRMAR LAS RESERVAS PARA HACERLAS PERMANENTES
+                if (isNew) {
+                    filasDetalle.forEach(tr => {
+                        if (tr.dataset.tipo === 'cerveza') {
+                            const reservasIds = JSON.parse(tr.dataset.reservas || '[]');
+                            reservasIds.forEach(reservaId => {
+                                sistemaReservas.confirmar(reservaId);
+                            });
+                        } else if (tr.dataset.tipo === 'accesorio') {
+                            const reservaId = tr.dataset.reserva;
+                            if (reservaId) {
+                                sistemaReservas.confirmar(reservaId);
+                            }
+                        }
+                    });
+                }
+
+                mensaje('✅ Pedido guardado correctamente');
+                resetForm();
+                await loadAll();
+            } else {
+                let errorMsg = '❌ No se pudo guardar el pedido';
+                if (result?.descripcion) errorMsg = result.descripcion;
+                else if (result?.message) errorMsg = result.message;
+                else if (result?.error) errorMsg = result.error;
+
+                mensaje(errorMsg, 'error');
+                
+                // ❌ SI FALLA EL GUARDADO, LIBERAR LAS RESERVAS
+                if (isNew) {
+                    filasDetalle.forEach(tr => {
+                        if (tr.dataset.tipo === 'cerveza') {
+                            const reservasIds = JSON.parse(tr.dataset.reservas || '[]');
+                            reservasIds.forEach(reservaId => {
+                                sistemaReservas.liberar(reservaId);
+                            });
+                        } else if (tr.dataset.tipo === 'accesorio') {
+                            const reservaId = tr.dataset.reserva;
+                            if (reservaId) {
+                                sistemaReservas.liberar(reservaId);
+                            }
+                        }
+                    });
+                }
+            }
         }
 
-        resetForm();
-        mostrarNotificacionGlobal('Pedido guardado correctamente', 'success');
-        await loadAll();
-      } else {
-        let errorMsg = 'No se pudo guardar el pedido';
-        if (res?.descripcion) errorMsg = res.descripcion;
-        else if (res?.message) errorMsg = res.message;
-        else if (res?.error) errorMsg = res.error;
-
-        mostrarNotificacionGlobal(errorMsg, 'error');
-      }
+    } catch (err) {
+        console.error('❌ Error al guardar pedido:', err);
+        mensaje('❌ Error al guardar: ' + (err.message || err), 'error');
     }
-
-  } catch (err) {
-    console.error('Error al guardar pedido:', err);
-    mostrarNotificacionGlobal('Error al guardar: ' + (err.message || err), 'error');
-  }
+}
+// ========== FUNCIÓN DE DIAGNÓSTICO MEJORADA ==========
+function diagnosticarPayload(filasDetalle, isNew) {
+    console.log('🔍 DIAGNÓSTICO COMPLETO DEL PAYLOAD');
+    console.log('📝 Estado:', isNew ? 'NUEVO PEDIDO' : 'EDITANDO PEDIDO');
+    
+    const barrilesPayload = [];
+    const cervezasPayload = [];
+    const accesoriosPayload = [];
+    
+    filasDetalle.forEach(tr => {
+        const tipo = tr.dataset.tipo;
+        console.log(`📦 Fila - Tipo: ${tipo}, ID: ${tr.dataset.id}, Litros: ${tr.dataset.litros}`);
+        
+        if (tipo === 'barril') {
+            const barrilId = Number(tr.dataset.id);
+            barrilesPayload.push({ id: barrilId });
+            
+            const barrilCompleto = barrilesList.find(b => b.id == barrilId);
+            if (barrilCompleto) {
+                console.log(`   🍺 Barril ${barrilId} - Estado: ${barrilCompleto.estado}, Lote: ${barrilCompleto.loteId}`);
+            }
+        }
+        
+        if (tipo === 'cerveza') {
+            const cervezaId = Number(tr.dataset.id);
+            cervezasPayload.push({ id: cervezaId });
+        }
+        
+        if (tipo === 'accesorio') {
+            const accesorioId = Number(tr.dataset.id);
+            accesoriosPayload.push({ id: accesorioId });
+        }
+    });
+    
+    console.log('🎯 RESUMEN DEL PAYLOAD:');
+    console.log(`   🍻 Cervezas: ${cervezasPayload.length}`);
+    console.log(`   🛢️  Barriles: ${barrilesPayload.length}`);
+    console.log(`   🎯 Accesorios: ${accesoriosPayload.length}`);
+    
+    return { barrilesPayload, cervezasPayload, accesoriosPayload };
 }
 
 // ========== MANEJO DE CLICKS EN LA TABLA ==========
@@ -3180,7 +2685,11 @@ function pedidosTableClickHandler(e) {
 function filterPedidosSingleField(field, value, pedidos) {
     if (!value) return pedidos;
     value = String(value).toLowerCase();
-    if (!Array.isArray(pedidos)) return [];
+    
+    // ✅ USAR SOLO LOS PEDIDOS FILTRADOS POR ASOCIADO
+    if (!Array.isArray(pedidos)) {
+        pedidos = window._allPedidos || [];
+    }
     
     return pedidos.filter(p => {
         let compareVal = '';
@@ -3284,7 +2793,99 @@ function filtrarPedidos() {
 
     renderPedidosTable(pedidos);
 }
+// ========== FILTRAR PEDIDOS POR ASOCIADO LOGUEADO ==========
+// ========== FILTRAR PEDIDOS POR ASOCIADO LOGUEADO ==========
+function filtrarPedidosPorAsociado(pedidos, usuarioLogueado) {
+    if (!pedidos || !Array.isArray(pedidos)) {
+        console.log('❌ No hay pedidos para filtrar');
+        return [];
+    }
 
+    console.log('🔍 Filtrando pedidos para el asociado:', usuarioLogueado);
+    console.log('📊 Total de pedidos a filtrar:', pedidos.length);
+    
+    const pedidosFiltrados = pedidos.filter(pedido => {
+        try {
+            // Obtener el ID del asociado del pedido de diferentes maneras
+            let idAsociadoPedido = null;
+            
+            // Método 1: Desde el campo usuario
+            if (pedido.usuario) {
+                if (typeof pedido.usuario === 'object') {
+                    idAsociadoPedido = pedido.usuario.id;
+                } else {
+                    idAsociadoPedido = pedido.usuario;
+                }
+            }
+            // Método 2: Desde el campo asociado
+            else if (pedido.asociado) {
+                if (typeof pedido.asociado === 'object') {
+                    idAsociadoPedido = pedido.asociado.id;
+                } else {
+                    idAsociadoPedido = pedido.asociado;
+                }
+            }
+
+            console.log(`📝 Pedido ${pedido.id} - ID Asociado: ${idAsociadoPedido}`);
+
+            // Si no hay ID de asociado, mostrar el pedido (por seguridad)
+            if (!idAsociadoPedido) {
+                console.log(`⚠️ Pedido ${pedido.id} sin asociado, mostrando por seguridad`);
+                return true;
+            }
+
+            // Método 1: Comparar directamente por ID
+            const coincidePorId = usuarioLogueado.id && String(idAsociadoPedido) === String(usuarioLogueado.id);
+            
+            // Método 2: Buscar en la lista de asociados por legajo
+            let coincidePorLegajo = false;
+            if (usuarioLogueado.legajo) {
+                const asociadoEnLista = asociadosList.find(a => 
+                    String(a.id) === String(idAsociadoPedido)
+                );
+                coincidePorLegajo = asociadoEnLista && String(asociadoEnLista.legajo) === String(usuarioLogueado.legajo);
+            }
+
+            // Método 3: Comparar por nombre (como fallback)
+            let coincidePorNombre = false;
+            if (usuarioLogueado.nombre && usuarioLogueado.apellido) {
+                const asociadoEnLista = asociadosList.find(a => 
+                    String(a.id) === String(idAsociadoPedido)
+                );
+                if (asociadoEnLista) {
+                    coincidePorNombre = 
+                        asociadoEnLista.nombre === usuarioLogueado.nombre && 
+                        asociadoEnLista.apellido === usuarioLogueado.apellido;
+                }
+            }
+
+            const coincide = coincidePorId || coincidePorLegajo || coincidePorNombre;
+            
+            if (coincide) {
+                console.log(`✅ Pedido ${pedido.id} COINCIDE con el usuario logueado`);
+            } else {
+                console.log(`❌ Pedido ${pedido.id} NO coincide con el usuario logueado`);
+            }
+            
+            return coincide;
+
+        } catch (error) {
+            console.error(`❌ Error procesando pedido ${pedido.id}:`, error);
+            // Por seguridad, mostrar el pedido si hay error
+            return true;
+        }
+    });
+
+    console.log(`✅ Pedidos filtrados: ${pedidosFiltrados.length} de ${pedidos.length}`);
+    
+    // Si no hay pedidos filtrados, mostrar todos temporalmente para debug
+    if (pedidosFiltrados.length === 0 && pedidos.length > 0) {
+        console.warn('⚠️ No se encontraron pedidos para el asociado, mostrando todos para debug');
+        return pedidos;
+    }
+    
+    return pedidosFiltrados;
+}
 // ========== SISTEMA DE ACCESORIOS ==========
 function renderAccesorios() {
     const cont = document.getElementById('accesoriosContainer');
@@ -3297,9 +2898,11 @@ function renderAccesorios() {
     addBtn.className = 'btn btn-sm btn-primary mb-2';
 
     addBtn.addEventListener('click', () => {
-        const tieneBarriles = $$('#detalleTable tbody tr[data-tipo="cerveza"]').length > 0;
+        const tieneBarriles = Array.from($$('#detalleTable tbody tr')).some(tr => 
+            tr.dataset.tipo === 'cerveza' || tr.dataset.tipo === 'barril'
+        );
         if (!tieneBarriles) {
-            mensaje('Primero debe agregar al menos un barril de cerveza antes de agregar accesorios', 'error');
+            mensaje('❌ Primero debe agregar al menos un barril antes de agregar accesorios', 'error');
             return;
         }
         addAccesorioRow(cont);
@@ -3490,6 +3093,16 @@ async function agregarDetalle(tipo, id, cantidad = 1) {
             mensaje(`Producto agregado correctamente`, 'success');
 
         } else if (tipo === 'Accesorio') {
+            // ✅ VALIDAR QUE HAYA AL MENOS UN BARRIL ANTES DE AGREGAR ACCESORIO (PARA EDICIÓN TAMBIÉN)
+            const tieneBarriles = Array.from($$('#detalleTable tbody tr')).some(tr => 
+                tr.dataset.tipo === 'cerveza' || tr.dataset.tipo === 'barril'
+            );
+            
+            if (!tieneBarriles) {
+                mensaje('❌ Primero debe agregar al menos un barril antes de agregar accesorios', 'error');
+                return;
+            }
+            
             const acc = accesoriosList.find(a => String(a.id) === String(id));
             if (!acc) {
                 mensaje('Accesorio no encontrado', 'error');
@@ -3526,40 +3139,6 @@ async function agregarDetalle(tipo, id, cantidad = 1) {
         mensaje('Error agregando producto: ' + error.message, 'error');
     }
 }
-
-// ========== MANEJO DE BOTONES "QUITAR" CON LIBERACIÓN DE RESERVAS ==========
-document.addEventListener("click", async (e) => {
-    if (e.target.classList.contains("btn-remove")) {
-        const fila = e.target.closest("tr");
-        if (!fila) return;
-
-        const tipo = fila.dataset.tipo;
-        const id = fila.dataset.id;
-
-        try {
-            if (tipo === "cerveza") {
-                const reservasIds = JSON.parse(fila.dataset.reservas || '[]');
-                for (const reservaId of reservasIds) {
-                    await sistemaReservas.liberar(reservaId);
-                }
-                mensaje("Barril(es) removidos y liberados", "success");
-            } else if (tipo === "accesorio") {
-                const reservaId = fila.dataset.reserva;
-                if (reservaId) {
-                    await sistemaReservas.liberar(reservaId);
-                }
-                mensaje("Accesorio removido y liberado", "success");
-            }
-
-            fila.remove();
-            recalcTotal();
-            
-        } catch (error) {
-            console.error(`❌ Error removiendo ${tipo}:`, error);
-            mensaje(`Error removiendo ${tipo}: ${error.message}`, "error");
-        }
-    }
-});
 
 // ========== POPULATE SELECTS ==========
 function populateSelects() {
@@ -3672,6 +3251,7 @@ function setDefaultFecha() {
 }
 
 // ========== CONFIGURACIÓN DE EVENTOS ==========
+// ========== CONFIGURACIÓN DE EVENTOS ==========
 function attachListeners() {
     const form = $('#pedidoForm'); 
     if (form) form.addEventListener('submit', submitFormHandler);
@@ -3742,6 +3322,128 @@ function attachListeners() {
             if (e.key === 'Enter') filtrarPedidos();
         });
     }
+    
+    // ✅ AGREGAR VALIDACIÓN EN TIEMPO REAL DE FECHAS
+    configurarValidacionFechasTiempoReal();
+}
+// ========== FUNCIÓN UNIFICADA PARA LIBERAR PRODUCTOS REMOVIDOS ==========
+async function liberarProductosRemovidos(productosRemovidos) {
+  try {
+    console.log('🔄 INICIANDO LIBERACIÓN DE PRODUCTOS REMOVIDOS');
+    console.log('📦 Productos a liberar:', productosRemovidos);
+
+    const resultados = {
+      barriles: 0,
+      accesorios: 0,
+      errores: []
+    };
+
+    // Liberar barriles
+    if (productosRemovidos.barriles && productosRemovidos.barriles.length > 0) {
+      resultados.barriles = await liberarBarrilesRemovidos(productosRemovidos.barriles);
+    }
+
+    // Liberar accesorios
+    if (productosRemovidos.accesorios && productosRemovidos.accesorios.length > 0) {
+      resultados.accesorios = await liberarAccesoriosRemovidos(productosRemovidos.accesorios);
+    }
+
+    console.log(`✅ LIBERACIÓN COMPLETADA:`, resultados);
+
+    if (resultados.barriles > 0 || resultados.accesorios > 0) {
+      mostrarNotificacionGlobal(
+        `🔄 ${resultados.barriles} barriles liberados (Cargado) y ${resultados.accesorios} accesorios liberados (Disponible)`,
+        'success'
+      );
+    }
+
+    return resultados;
+
+  } catch (error) {
+    console.error('❌ ERROR CRÍTICO EN liberarProductosRemovidos:', error);
+    mostrarNotificacionGlobal('❌ Error crítico liberando productos: ' + error.message, 'error');
+    throw error;
+  }
+}
+// ========== VALIDACIÓN DE FECHAS ==========
+function validarFechasPedido(fechaPedido, fechaEntrega) {
+    if (!fechaPedido) {
+        return { valido: false, error: '❌ La fecha de pedido es obligatoria' };
+    }
+    
+    if (fechaEntrega && fechaEntrega < fechaPedido) {
+        return { 
+            valido: false, 
+            error: '❌ La fecha de entrega no puede ser anterior a la fecha del pedido' 
+        };
+    }
+    
+    return { valido: true, error: '' };
+}
+
+// ========== VALIDACIÓN EN TIEMPO REAL DE FECHAS ==========
+function configurarValidacionFechasTiempoReal() {
+    const fechaPedidoInput = $('#fechaPedido');
+    const fechaEntregaInput = $('#fechaEntrega');
+    
+    if (fechaPedidoInput && fechaEntregaInput) {
+        fechaEntregaInput.addEventListener('change', function() {
+            const fechaP = fechaPedidoInput.value;
+            const fechaE = this.value;
+            
+            if (fechaP && fechaE) {
+                const validacion = validarFechasPedido(fechaP, fechaE);
+                if (!validacion.valido) {
+                    mensaje(validacion.error, 'error');
+                    this.focus();
+                } else {
+                    mensaje('', '');
+                }
+            }
+        });
+        
+        fechaPedidoInput.addEventListener('change', function() {
+            const fechaP = this.value;
+            const fechaE = fechaEntregaInput.value;
+            
+            if (fechaP && fechaE) {
+                const validacion = validarFechasPedido(fechaP, fechaE);
+                if (!validacion.valido) {
+                    mensaje(validacion.error, 'error');
+                    fechaEntregaInput.focus();
+                } else {
+                    mensaje('', '');
+                }
+            }
+        });
+    }
+}
+
+// ========== VALIDACIÓN DE PRODUCTOS ==========
+function validarProductosPedido() {
+    const filasDetalle = $$('#detalleTable tbody tr');
+    const tieneBarriles = Array.from(filasDetalle).some(tr => 
+        tr.dataset.tipo === 'barril' || tr.dataset.tipo === 'cerveza'
+    );
+    const tieneAccesorios = Array.from(filasDetalle).some(tr => 
+        tr.dataset.tipo === 'accesorio'
+    );
+
+    if (!tieneBarriles && tieneAccesorios) {
+        return { 
+            valido: false, 
+            error: '❌ No se pueden agregar accesorios sin al menos un barril en el pedido' 
+        };
+    }
+
+    if (!tieneBarriles && !tieneAccesorios) {
+        return { 
+            valido: false, 
+            error: '❌ Debe agregar al menos un producto al pedido' 
+        };
+    }
+
+    return { valido: true, error: '' };
 }
 
 // ========== INICIALIZACIÓN ==========
