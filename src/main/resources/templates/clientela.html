@@ -1,516 +1,1386 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear una cuenta - Sistema Sierra Maestra</title>
-    <!-- Bootstrap CSS -->
+    <title>Sistema de Inventario Completo</title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        /* Todos tus estilos existentes se mantienen igual */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        .estado-badge {
+            font-size: 0.75em;
+            padding: 0.35em 0.65em;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
-            min-height: 100vh;
+        .card-estadistica {
+            transition: transform 0.2s;
         }
-        
-        /* ... (todos tus estilos CSS existentes) ... */
-
-        /* Nuevos estilos para el selector de tipo */
-        .tipo-cliente-group {
-            margin-bottom: 2rem;
-            text-align: center;
+        .card-estadistica:hover {
+            transform: translateY(-5px);
         }
-        
-        .tipo-cliente-label {
-            color: #8B4513;
+        .sidebar {
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            min-height: calc(100vh - 56px);
+        }
+        .nav-pills .nav-link.active {
+            background-color: #0d6efd;
             font-weight: 600;
-            margin-bottom: 1rem;
+        }
+        .module-section {
+            display: none;
+        }
+        .module-section.active {
             display: block;
-            font-size: 1.1rem;
         }
-        
-        .tipo-cliente-options {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
+        .cerveza-card {
+            border-left: 4px solid #0d6efd;
         }
-        
-        .tipo-option {
-            padding: 1rem 2rem;
-            border: 2px solid #DAA520;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            color: #8B4513;
+        .barril-card {
+            border-left: 4px solid #198754;
         }
-        
-        .tipo-option:hover {
-            background: #FFF8DC;
-            transform: translateY(-2px);
+        .accesorio-card {
+            border-left: 4px solid #ffc107;
         }
-        
-        .tipo-option.active {
-            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
-            border-color: #FFD700;
-            color: #583207;
-            box-shadow: 0 5px 15px rgba(218, 165, 32, 0.3);
+        .lote-card {
+            border-left: 4px solid #dc3545;
         }
-
-        /* Clase para ocultar campos */
-        .hidden-field {
-            display: none !important;
+        .export-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tabla-container {
+            max-height: 600px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
-    <!-- Header (se mantiene igual) -->
-    <header class="header">
-        <a th:href="@{/inicio}" class="logo" style="text-decoration: none; cursor: pointer;">
-            <div class="logo-circle">
-                <img src="/images/logo.jpg" alt="Sierra Maestra Logo">   
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi-bar-chart-fill me-2"></i>
+                Sistema de Inventario Completo
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text text-light">
+                    <i class="bi-calendar me-1"></i>
+                    <span id="fechaActual"></span>
+                </span>
             </div>
-            <div class="logo-text">Sierra Maestra</div>
-        </a>
-        <p class="subtitle">Para todos la luz, para todos todo</p>
-        
-        <nav class="nav-menu">
-            <a href="#cervezas" class="nav-item">Nuestras Cervezas</a>
-            <a href="#promos" class="nav-item">Promos</a>
-            <a href="#quienes-somos" class="nav-item">¿Quiénes somos?</a>
-            <a th:href="@{/inicio}" class=" nav-item active" id="btn-iniciar-sesion">Iniciar sesión</a>
-        </nav>
-    </header>
-    
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Burbujas de cerveza -->
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        <div class="bubble"></div>
-        
-        <div class="form-container">
-            <h1>Crear Cuenta</h1>
-
-            <!-- Success Message -->
-            <div id="success-message" class="success-message">
-                ¡REGISTRADO CON ÉXITO!
-            </div>
-
-            <!-- Error Message -->
-            <div id="error-message" class="error-message">
-                <!-- Error messages will be inserted here -->
-            </div>
-
-            <!-- Registration Form -->
-            <form id="formulario-registro" novalidate>
-                <!-- Selector de Tipo de Cliente -->
-                <div class="tipo-cliente-group">
-                    <label class="tipo-cliente-label">Tipo de Cliente</label>
-                    <div class="tipo-cliente-options">
-                        <div class="tipo-option active" data-tipo="cliente">Cliente Personal</div>
-                        <div class="tipo-option" data-tipo="empresa">Empresa</div>
-                    </div>
-                    <input type="hidden" id="tipo" name="tipo" value="cliente">
-                </div>
-
-                <div class="form-row">
-                    <!-- Left Column -->
-                    <div class="form-column">
-                        <div class="form-group">
-                            <label for="nombre" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="nombre" name="nombre" required
-                                   placeholder="Ingrese su nombre">
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group" id="dni-group">
-                            <label for="documento" class="form-label">DNI</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="documento" 
-                                   name="documento" 
-                                   required
-                                   placeholder="Ej: 12345678" 
-                                   maxlength="8"
-                                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                            <div class="invalid-feedback">El DNI debe contener 8 dígitos numéricos</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="mail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="mail" name="mail" required
-                                   placeholder="ejemplo@email.com">
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group" id="fecha-nacimiento-group">
-                            <label for="fecha_nacimiento" class="form-label">Fecha de nacimiento</label>
-                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required>
-                            <div class="invalid-feedback"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Right Column -->
-                    <div class="form-column">
-                        <div class="form-group" id="apellido-group">
-                            <label for="apellido" class="form-label">Apellido</label>
-                            <input type="text" class="form-control" id="apellido" name="apellido" required
-                                   placeholder="Ingrese su apellido">
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="direccion" class="form-label">Dirección</label>
-                            <input type="text" class="form-control" id="direccion" name="direccion" required
-                                   placeholder="Calle, número, ciudad">
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="telefono" class="form-label">Teléfono</label>
-                            <input type="tel" class="form-control" id="telefono" name="telefono" required
-                                   placeholder="Ej: 1123456789" maxlength="15">
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="cuit" class="form-label">Cuit</label>
-                            <input type="text" class="form-control" id="cuit" name="cuit"
-                                   placeholder="Ej: 20-12345678-9">
-                            <div class="invalid-feedback"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Password Fields -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="contrasenia" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="contrasenia" name="contrasenia" required
-                               placeholder="Mínimo 6 caracteres" minlength="6">
-                        <div class="invalid-feedback"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confirmar_contrasenia" class="form-label">Confirmar contraseña</label>
-                        <input type="password" class="form-control" id="confirmar_contrasenia" required
-                               placeholder="Repita su contraseña">
-                        <div class="invalid-feedback"></div>
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" class="btn-register" id="btn-registrar">
-                    Registrarte
-                </button>
-                
-                <!-- Back Button -->
-                <button type="button" class="btn-register" onclick="window.location.href='http://localhost:8080/'">   
-                    <i class="bi bi-arrow-left"></i>
-                    Volver
-                </button>
-            </form>
         </div>
-    </main>
-    
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3">
+                <h6 class="text-uppercase text-muted mb-3">Módulos</h6>
+                
+                <!-- Navegación entre módulos -->
+                <ul class="nav nav-pills flex-column mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-module="dashboard">
+                            <i class="bi-speedometer2 me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-module="barriles">
+                            <i class="bi-droplet me-2"></i>Barriles
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-module="cervezas">
+                            <i class="bi-cup-straw me-2"></i>Cervezas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-module="accesorios">
+                            <i class="bi-tools me-2"></i>Accesorios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-module="lotes">
+                            <i class="bi-box-seam me-2"></i>Lotes
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Filtros Comunes -->
+                <h6 class="text-uppercase text-muted mb-3">Filtros Rápidos</h6>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Estado</label>
+                    <select class="form-select" id="filtroEstadoGlobal">
+                        <option value="">Todos los estados</option>
+                        <option value="Activo">Activo</option>
+                        <option value="Cargado">Cargado</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="Alquilado">Alquilado</option>
+                    </select>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="aplicarFiltrosGlobales()">
+                        <i class="bi-funnel me-1"></i>Aplicar Filtros
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="limpiarFiltrosGlobales()">
+                        <i class="bi-arrow-clockwise me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenido Principal -->
+            <div class="col-md-9 col-lg-10 p-4">
+                
+                <!-- MÓDULO: DASHBOARD -->
+                <div id="dashboard" class="module-section active">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi-speedometer2 me-2"></i>Dashboard General</h2>
+                        <button class="btn btn-success" onclick="actualizarDashboard()">
+                            <i class="bi-arrow-repeat me-1"></i>Actualizar
+                        </button>
+                    </div>
+
+                    <!-- Estadísticas Generales -->
+                    <div class="row mb-4">
+                        <div class="col-xl-2 col-md-4 col-6 mb-3">
+                            <div class="card stats-card text-white shadow">
+                                <div class="card-body text-center">
+                                    <div class="text-primary mb-2">
+                                        <i class="bi-cup-straw fs-1"></i>
+                                    </div>
+                                    <h4 class="card-title" id="totalCervezas">0</h4>
+                                    <p class="card-text">Cervezas Activas</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-6 mb-3">
+                            <div class="card stats-card text-white shadow">
+                                <div class="card-body text-center">
+                                    <div class="text-success mb-2">
+                                        <i class="bi-droplet fs-1"></i>
+                                    </div>
+                                    <h4 class="card-title" id="totalBarriles">0</h4>
+                                    <p class="card-text">Total Barriles</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-6 mb-3">
+                            <div class="card stats-card text-white shadow">
+                                <div class="card-body text-center">
+                                    <div class="text-warning mb-2">
+                                        <i class="bi-tools fs-1"></i>
+                                    </div>
+                                    <h4 class="card-title" id="totalAccesorios">0</h4>
+                                    <p class="card-text">Total Accesorios</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-6 mb-3">
+                            <div class="card stats-card text-white shadow">
+                                <div class="card-body text-center">
+                                    <div class="text-danger mb-2">
+                                        <i class="bi-box-seam fs-1"></i>
+                                    </div>
+                                    <h4 class="card-title" id="totalLotes">0</h4>
+                                    <p class="card-text">Total Lotes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-6 mb-3">
+                            <div class="card stats-card text-white shadow">
+                                <div class="card-body text-center">
+                                    <div class="text-info mb-2">
+                                        <i class="bi-check-circle fs-1"></i>
+                                    </div>
+                                    <h4 class="card-title" id="barrilesCargados">0</h4>
+                                    <p class="card-text">Barriles Cargados</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-6 mb-3">
+                            <div class="card stats-card text-white shadow">
+                                <div class="card-body text-center">
+                                    <div class="text-secondary mb-2">
+                                        <i class="bi-water fs-1"></i>
+                                    </div>
+                                    <h4 class="card-title" id="capacidadTotal">0L</h4>
+                                    <p class="card-text">Capacidad Total</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen Rápido -->
+                    <div class="row">
+                        <!-- Cervezas Recientes -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi-cup-straw me-2"></i>Cervezas Recientes
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="listaCervezasRecientes">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Barriles por Estado -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi-droplet me-2"></i>Barriles por Estado
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="graficoBarrilesEstado">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-success" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accesorios y Lotes -->
+                    <div class="row">
+                        <!-- Accesorios por Estado -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="bi-tools me-2"></i>Accesorios por Estado
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="graficoAccesoriosEstado">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-warning" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lotes por Estado -->
+                        <div class="col-lg-6 mb-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi-box-seam me-2"></i>Lotes por Estado
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="graficoLotesEstado">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-danger" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO: BARRILES -->
+                <div id="barriles" class="module-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi-droplet me-2"></i>Gestión de Barriles</h2>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="cargarTodosLosBarriles()">
+                                <i class="bi-arrow-repeat me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-primary" onclick="exportarExcelBarriles()">
+                                <i class="bi-file-earmark-excel me-1"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Específicos de Barriles -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Estado del Barril</label>
+                            <select class="form-select" id="filtroEstadoBarril">
+                                <option value="">Todos los estados</option>
+                                <option value="Cargado">Cargado</option>
+                                <option value="Alquilado">Alquilado</option>
+                                <option value="Vacio">Vacío</option>
+                                <option value="En mantenimiento">En mantenimiento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cerveza</label>
+                            <select class="form-select" id="filtroCervezaBarril">
+                                <option value="">Todas las cervezas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Búsqueda</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Buscar barriles..." id="busquedaBarriles">
+                                <button class="btn btn-outline-secondary" onclick="buscarBarriles()">
+                                    <i class="bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Barriles -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi-list-ul me-2"></i>Lista de Barriles
+                                <span class="badge bg-primary ms-2" id="contadorBarriles">0</span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive tabla-container">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Estado</th>
+                                            <th>Litros</th>
+                                            <th>Notas</th>
+                                            <th>Cerveza</th>
+                                            <th>Lote</th>
+                                            <th>Reserva</th>
+                                            <th width="100">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaBarrilesBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Cargando...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO: CERVEZAS -->
+                <div id="cervezas" class="module-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi-cup-straw me-2"></i>Gestión de Cervezas</h2>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="cargarTodasLasCervezas()">
+                                <i class="bi-arrow-repeat me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-primary" onclick="exportarExcelCervezas()">
+                                <i class="bi-file-earmark-excel me-1"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Específicos de Cervezas -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="filtroEstadoCerveza">
+                                <option value="">Todos los estados</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                                <option value="Discontinuado">Discontinuado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Búsqueda</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Buscar cervezas..." id="busquedaCervezas">
+                                <button class="btn btn-outline-secondary" onclick="buscarCervezas()">
+                                    <i class="bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-outline-primary w-100" onclick="mostrarModalNuevaCerveza()">
+                                <i class="bi-plus-circle me-1"></i>Nueva Cerveza
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Cervezas -->
+                    <div class="row" id="gridCervezas">
+                        <div class="col-12">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO: ACCESORIOS -->
+                <div id="accesorios" class="module-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi-tools me-2"></i>Gestión de Accesorios</h2>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="cargarTodosLosAccesorios()">
+                                <i class="bi-arrow-repeat me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-warning" onclick="exportarExcelAccesorios()">
+                                <i class="bi-file-earmark-excel me-1"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Específicos de Accesorios -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="filtroEstadoAccesorio">
+                                <option value="">Todos los estados</option>
+                                <option value="Disponible">Disponible</option>
+                                <option value="Alquilado">Alquilado</option>
+                                <option value="En mantenimiento">En mantenimiento</option>
+                                <option value="Reservado">Reservado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Búsqueda</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Buscar accesorios..." id="busquedaAccesorios">
+                                <button class="btn btn-outline-secondary" onclick="buscarAccesorios()">
+                                    <i class="bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-outline-warning w-100" onclick="mostrarModalNuevoAccesorio()">
+                                <i class="bi-plus-circle me-1"></i>Nuevo Accesorio
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Accesorios -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi-list-ul me-2"></i>Lista de Accesorios
+                                <span class="badge bg-warning ms-2" id="contadorAccesorios">0</span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive tabla-container">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Estado</th>
+                                            <th>Notas</th>
+                                            <th>Reserva</th>
+                                            <th width="120">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaAccesoriosBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">
+                                                <div class="spinner-border text-warning" role="status">
+                                                    <span class="visually-hidden">Cargando...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MÓDULO: LOTES -->
+                <div id="lotes" class="module-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2><i class="bi-box-seam me-2"></i>Gestión de Lotes</h2>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="cargarTodosLosLotes()">
+                                <i class="bi-arrow-repeat me-1"></i>Actualizar
+                            </button>
+                            <button class="btn btn-danger" onclick="exportarExcelLotes()">
+                                <i class="bi-file-earmark-excel me-1"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Específicos de Lotes -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="filtroEstadoLote">
+                                <option value="">Todos los estados</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Completado">Completado</option>
+                                <option value="En proceso">En proceso</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cerveza</label>
+                            <select class="form-select" id="filtroCervezaLote">
+                                <option value="">Todas las cervezas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Búsqueda</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Buscar lotes..." id="busquedaLotes">
+                                <button class="btn btn-outline-secondary" onclick="buscarLotes()">
+                                    <i class="bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Lotes -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi-list-ul me-2"></i>Lista de Lotes
+                                <span class="badge bg-danger ms-2" id="contadorLotes">0</span>
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive tabla-container">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Cerveza</th>
+                                            <th>Cantidad (L)</th>
+                                            <th>Estado</th>
+                                            <th>Fecha Carga</th>
+                                            <th>Fecha Vencimiento</th>
+                                            <th>Notas</th>
+                                            <th width="100">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaLotesBody">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <div class="spinner-border text-danger" role="status">
+                                                    <span class="visually-hidden">Cargando...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <script>
+        // Variables globales
+        let moduloActual = 'dashboard';
+        let todasLasCervezas = [];
+        let todosLosBarriles = [];
+        let todosLosAccesorios = [];
+        let todosLosLotes = [];
+        let cervezasFiltradas = [];
+        let barrilesFiltrados = [];
+        let accesoriosFiltrados = [];
+        let lotesFiltrados = [];
+
+        // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', function() {
-            const formulario = document.getElementById('formulario-registro');
-            const successMessage = document.getElementById('success-message');
-            const errorMessage = document.getElementById('error-message');
-            const btnRegistrar = document.getElementById('btn-registrar');
-            const tipoOptions = document.querySelectorAll('.tipo-option');
-            const tipoHidden = document.getElementById('tipo');
-            const dniGroup = document.getElementById('dni-group');
-            const apellidoGroup = document.getElementById('apellido-group');
-            const fechaNacimientoGroup = document.getElementById('fecha-nacimiento-group');
-            const documentoInput = document.getElementById('documento');
-            const apellidoInput = document.getElementById('apellido');
-            const fechaNacimientoInput = document.getElementById('fecha_nacimiento');
-
-            // URL base de la API
-            const API_BASE_URL = 'http://localhost:8080';
-            const API_ENDPOINT = '/addCliente';
-
-            // Manejar selección de tipo de cliente
-            tipoOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remover clase active de todos
-                    tipoOptions.forEach(opt => opt.classList.remove('active'));
-                    // Agregar clase active al seleccionado
-                    this.classList.add('active');
-                    // Actualizar valor del hidden
-                    const tipo = this.getAttribute('data-tipo');
-                    tipoHidden.value = tipo;
-                    
-                    // Mostrar/ocultar campos según el tipo
-                    if (tipo === 'empresa') {
-                        dniGroup.classList.add('hidden-field');
-                        apellidoGroup.classList.add('hidden-field');
-                        fechaNacimientoGroup.classList.add('hidden-field');
-                        // Remover requeridos para estos campos
-                        documentoInput.removeAttribute('required');
-                        apellidoInput.removeAttribute('required');
-                        fechaNacimientoInput.removeAttribute('required');
-                    } else {
-                        dniGroup.classList.remove('hidden-field');
-                        apellidoGroup.classList.remove('hidden-field');
-                        fechaNacimientoGroup.classList.remove('hidden-field');
-                        // Restaurar requeridos
-                        documentoInput.setAttribute('required', 'required');
-                        apellidoInput.setAttribute('required', 'required');
-                        fechaNacimientoInput.setAttribute('required', 'required');
-                    }
-                });
-            });
-
-            // Función para formatear fecha de yyyy-mm-dd a dd/mm/aaaa
-            function formatearFecha(fechaISO) {
-                if (!fechaISO) return '';
-                const fecha = new Date(fechaISO);
-                const dia = fecha.getDate().toString().padStart(2, '0');
-                const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
-                const año = fecha.getFullYear();
-                return `${dia}/${mes}/${año}`;
-            }
-
-            function mostrarMensaje(mensaje, tipo) {
-                if (tipo === 'success') {
-                    successMessage.style.display = 'block';
-                    errorMessage.style.display = 'none';
-                    successMessage.textContent = mensaje;
-                } else {
-                    errorMessage.style.display = 'block';
-                    errorMessage.textContent = mensaje;
-                    successMessage.style.display = 'none';
-                }
-            }
-            
-            function validarFormulario() {
-                const contrasenia = document.getElementById('contrasenia').value;
-                const confirmarContrasenia = document.getElementById('confirmar_contrasenia').value;
-                const tipo = tipoHidden.value;
-                
-                // Validar DNI solo para cliente personal
-                if (tipo === 'cliente') {
-                    const dni = document.getElementById('documento').value;
-                    if (!/^\d{8}$/.test(dni)) {
-                        document.getElementById('documento').setCustomValidity('El DNI debe contener exactamente 8 dígitos numéricos');
-                        document.getElementById('documento').classList.add('is-invalid');
-                        return false;
-                    } else {
-                        document.getElementById('documento').setCustomValidity('');
-                    }
-                }
-
-                // Validar que las contraseñas coincidan
-                if (contrasenia !== confirmarContrasenia) {
-                    document.getElementById('confirmar_contrasenia').setCustomValidity('Las contraseñas no coinciden');
-                    return false;
-                } else {
-                    document.getElementById('confirmar_contrasenia').setCustomValidity('');
-                }
-
-                // Validar campos requeridos según el tipo
-                let camposRequeridos = [
-                    'nombre', 'mail', 'direccion', 'telefono', 
-                    'contrasenia', 'confirmar_contrasenia'
-                ];
-
-                // Para cliente personal, agregar DNI, apellido y fecha_nacimiento
-                if (tipo === 'cliente') {
-                    camposRequeridos.push('documento', 'apellido', 'fecha_nacimiento');
-                }
-
-                let esValido = true;
-                camposRequeridos.forEach(campo => {
-                    const elemento = document.getElementById(campo);
-                    if (!elemento.checkValidity()) {
-                        elemento.classList.add('is-invalid');
-                        esValido = false;
-                    } else {
-                        elemento.classList.remove('is-invalid');
-                        elemento.classList.add('is-valid');
-                    }
-                });
-
-                return esValido;
-            }
-
-            // Event listener para el formulario
-            formulario.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                if (!validarFormulario()) {
-                    mostrarMensaje('Por favor corrija los errores en el formulario', 'error');
-                    return;
-                }
-
-                btnRegistrar.disabled = true;
-                btnRegistrar.textContent = 'Registrando...';
-
-                try {
-                    const formData = new FormData(formulario);
-                    const tipo = tipoHidden.value;
-                    
-                    // Preparar datos según el tipo
-                    let documentoValor = '';
-                    let apellidoValor = '';
-                    let fechaNacimientoValor = '';
-
-                    if (tipo === 'empresa') {
-                        // Para empresa: valores fijos
-                        documentoValor = '99999999';
-                        apellidoValor = 'Empresa';
-                        fechaNacimientoValor = ''; // Nada como pediste
-                    } else {
-                        // Para cliente personal: valores normales del formulario
-                        documentoValor = formData.get('documento');
-                        apellidoValor = formData.get('apellido').trim();
-                        fechaNacimientoValor = formatearFecha(formData.get('fecha_nacimiento'));
-                    }
-
-                    // Crear objeto con la estructura exacta que espera la entidad Cliente
-                    const clienteData = {
-                        activo: true,
-                        apellido: apellidoValor,
-                        contrasenia: formData.get('contrasenia'),
-                        cuit: formData.get('cuit') ? formData.get('cuit').trim() : null,
-                        direccion: formData.get('direccion').trim(),
-                        documento: documentoValor,
-                        fecha_nacimiento: fechaNacimientoValor,
-                        legajo: "",
-                        mail: formData.get('mail').trim(),
-                        nombre: formData.get('nombre').trim(),
-                        telefono: formData.get('telefono').trim(),
-                        tipo: tipo
-                    };
-
-                    console.log('Enviando datos:', clienteData);
-                    console.log('Endpoint:', API_BASE_URL + API_ENDPOINT);
-
-                    // Enviar petición al endpoint
-                    const response = await fetch(API_BASE_URL + API_ENDPOINT, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(clienteData)
-                    });
-
-                    const resultado = await response.json();
-                    console.log('Respuesta del servidor:', resultado);
-
-                    if (response.ok) {
-                        mostrarMensaje('¡REGISTRADO CON ÉXITO!', 'success');
-                        formulario.reset();
-                        
-                        // Restaurar estado inicial a Cliente Personal
-                        tipoOptions[0].click();
-                        
-                        // Redirigir al home después de 3 segundos
-                        setTimeout(() => {
-                            window.location.href = '/inicio';
-                        }, 3000);
-                    } else {
-                        // Mostrar error específico del servidor
-                        if (resultado.descripcion) {
-                            mostrarMensaje(resultado.descripcion, 'error');
-                        } else if (resultado.data) {
-                            mostrarMensaje(resultado.data, 'error');
-                        } else {
-                            mostrarMensaje('Error al crear la cuenta. Intente nuevamente.', 'error');
-                        }
-                    }
-
-                } catch (error) {
-                    console.error('Error:', error);
-                    mostrarMensaje('Error de conexión. Verifique su internet e intente nuevamente.', 'error');
-                } finally {
-                    btnRegistrar.disabled = false;
-                    btnRegistrar.textContent = 'Registrarte';
-                }
-            });
-
-            // Validación en tiempo real para DNI (solo para cliente personal)
-            document.getElementById('documento').addEventListener('input', function() {
-                if (tipoHidden.value === 'cliente') {
-                    const dni = this.value;
-                    if (/^\d{8}$/.test(dni)) {
-                        this.classList.remove('is-invalid');
-                        this.classList.add('is-valid');
-                        this.setCustomValidity('');
-                    } else {
-                        this.classList.remove('is-valid');
-                        if (dni.length > 0) {
-                            this.classList.add('is-invalid');
-                        }
-                    }
-                }
-            });
-
-            // Validaciones en tiempo real para el resto de campos
-            const camposValidacion = document.querySelectorAll('#formulario-registro input');
-            camposValidacion.forEach(campo => {
-                campo.addEventListener('blur', function() {
-                    if (this.checkValidity()) {
-                        this.classList.remove('is-invalid');
-                        this.classList.add('is-valid');
-                    } else {
-                        this.classList.remove('is-valid');
-                        this.classList.add('is-invalid');
-                    }
-                });
-
-                // Limpiar validación visual al escribir
-                campo.addEventListener('input', function() {
-                    if (this.classList.contains('is-invalid')) {
-                        this.classList.remove('is-invalid');
-                    }
-                    if (this.classList.contains('is-valid')) {
-                        this.classList.remove('is-valid');
-                    }
-                });
-            });
-
-            // Validación especial: Confirmar contraseña
-            document.getElementById('confirmar_contrasenia').addEventListener('input', function() {
-                const contrasenia = document.getElementById('contrasenia').value;
-                const confirmar = this.value;
-                
-                if (confirmar && contrasenia !== confirmar) {
-                    this.setCustomValidity('Las contraseñas no coinciden');
-                    this.classList.add('is-invalid');
-                } else {
-                    this.setCustomValidity('');
-                    this.classList.remove('is-invalid');
-                    if (confirmar && contrasenia === confirmar) {
-                        this.classList.add('is-valid');
-                    }
-                }
-            });
+            actualizarFecha();
+            configurarNavegacion();
+            cargarDashboard();
         });
+
+        function actualizarFecha() {
+            const ahora = new Date();
+            document.getElementById('fechaActual').textContent = 
+                ahora.toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+        }
+
+        function configurarNavegacion() {
+            document.querySelectorAll('[data-module]').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const modulo = this.getAttribute('data-module');
+                    
+                    // Actualizar navegación activa
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    // Mostrar módulo correspondiente
+                    document.querySelectorAll('.module-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(modulo).classList.add('active');
+                    
+                    moduloActual = modulo;
+                    
+                    // Cargar datos del módulo si es necesario
+                    switch(modulo) {
+                        case 'barriles':
+                            if (todosLosBarriles.length === 0) cargarTodosLosBarriles();
+                            break;
+                        case 'cervezas':
+                            if (todasLasCervezas.length === 0) cargarTodasLasCervezas();
+                            break;
+                        case 'accesorios':
+                            if (todosLosAccesorios.length === 0) cargarTodosLosAccesorios();
+                            break;
+                        case 'lotes':
+                            if (todosLosLotes.length === 0) cargarTodosLosLotes();
+                            break;
+                    }
+                });
+            });
+        }
+
+        // ========== DASHBOARD ==========
+        async function cargarDashboard() {
+            try {
+                const [cervezasResp, barrilesResp, accesoriosResp, lotesResp] = await Promise.all([
+                    fetch('/getAllCerveza').then(r => r.json()),
+                    fetch('/getAllBarril').then(r => r.json()),
+                    fetch('/getAllAccesorio').then(r => r.json()),
+                    fetch('/getAllLote').then(r => r.json())
+                ]);
+
+                if (cervezasResp.codigo === '200') {
+                    todasLasCervezas = cervezasResp.data || [];
+                }
+                if (barrilesResp.codigo === '200') {
+                    todosLosBarriles = barrilesResp.data || [];
+                }
+                if (accesoriosResp.codigo === '200') {
+                    todosLosAccesorios = accesoriosResp.data || [];
+                }
+                if (lotesResp.codigo === '200') {
+                    todosLosLotes = lotesResp.data || [];
+                }
+
+                actualizarEstadisticasDashboard();
+                cargarCervezasRecientes();
+                cargarGraficoBarriles();
+                cargarGraficoAccesorios();
+                cargarGraficoLotes();
+            } catch (error) {
+                console.error('Error cargando dashboard:', error);
+            }
+        }
+
+        function actualizarEstadisticasDashboard() {
+            const cervezasActivas = todasLasCervezas.filter(c => c.estado === 'Activo').length;
+            const totalBarriles = todosLosBarriles.length;
+            const totalAccesorios = todosLosAccesorios.length;
+            const totalLotes = todosLosLotes.length;
+            const barrilesCargados = todosLosBarriles.filter(b => b.estado === 'Cargado').length;
+            const capacidadTotal = todosLosBarriles.reduce((sum, b) => sum + (b.litros || 0), 0);
+
+            document.getElementById('totalCervezas').textContent = cervezasActivas;
+            document.getElementById('totalBarriles').textContent = totalBarriles;
+            document.getElementById('totalAccesorios').textContent = totalAccesorios;
+            document.getElementById('totalLotes').textContent = totalLotes;
+            document.getElementById('barrilesCargados').textContent = barrilesCargados;
+            document.getElementById('capacidadTotal').textContent = capacidadTotal + 'L';
+        }
+
+        function cargarCervezasRecientes() {
+            const contenedor = document.getElementById('listaCervezasRecientes');
+            const cervezasRecientes = todasLasCervezas.slice(0, 5);
+
+            if (cervezasRecientes.length === 0) {
+                contenedor.innerHTML = '<p class="text-muted">No hay cervezas registradas</p>';
+                return;
+            }
+
+            contenedor.innerHTML = cervezasRecientes.map(cerveza => `
+                <div class="card cerveza-card mb-2">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">${cerveza.nombreCerveza}</h6>
+                                <small class="text-muted">${cerveza.estado}</small>
+                            </div>
+                            <span class="badge ${getClaseEstadoCerveza(cerveza.estado)}">
+                                ${cerveza.estado}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function cargarGraficoBarriles() {
+            const contenedor = document.getElementById('graficoBarrilesEstado');
+            const estados = {};
+            
+            todosLosBarriles.forEach(barril => {
+                estados[barril.estado] = (estados[barril.estado] || 0) + 1;
+            });
+
+            const total = todosLosBarriles.length;
+            
+            if (total === 0) {
+                contenedor.innerHTML = '<p class="text-muted">No hay barriles registrados</p>';
+                return;
+            }
+
+            contenedor.innerHTML = Object.entries(estados).map(([estado, cantidad]) => {
+                const porcentaje = ((cantidad / total) * 100).toFixed(1);
+                return `
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>${estado}</span>
+                            <span>${cantidad} (${porcentaje}%)</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar ${getClaseEstadoBarril(estado)}" 
+                                 style="width: ${porcentaje}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function cargarGraficoAccesorios() {
+            const contenedor = document.getElementById('graficoAccesoriosEstado');
+            const estados = {};
+            
+            todosLosAccesorios.forEach(accesorio => {
+                estados[accesorio.estado] = (estados[accesorio.estado] || 0) + 1;
+            });
+
+            const total = todosLosAccesorios.length;
+            
+            if (total === 0) {
+                contenedor.innerHTML = '<p class="text-muted">No hay accesorios registrados</p>';
+                return;
+            }
+
+            contenedor.innerHTML = Object.entries(estados).map(([estado, cantidad]) => {
+                const porcentaje = ((cantidad / total) * 100).toFixed(1);
+                return `
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>${estado}</span>
+                            <span>${cantidad} (${porcentaje}%)</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar ${getClaseEstadoAccesorio(estado)}" 
+                                 style="width: ${porcentaje}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function cargarGraficoLotes() {
+            const contenedor = document.getElementById('graficoLotesEstado');
+            const estados = {};
+            
+            todosLosLotes.forEach(lote => {
+                estados[lote.estado] = (estados[lote.estado] || 0) + 1;
+            });
+
+            const total = todosLosLotes.length;
+            
+            if (total === 0) {
+                contenedor.innerHTML = '<p class="text-muted">No hay lotes registrados</p>';
+                return;
+            }
+
+            contenedor.innerHTML = Object.entries(estados).map(([estado, cantidad]) => {
+                const porcentaje = ((cantidad / total) * 100).toFixed(1);
+                return `
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>${estado}</span>
+                            <span>${cantidad} (${porcentaje}%)</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar ${getClaseEstadoLote(estado)}" 
+                                 style="width: ${porcentaje}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function actualizarDashboard() {
+            cargarDashboard();
+        }
+
+        // ========== BARRILES ==========
+        async function cargarTodosLosBarriles() {
+            try {
+                const response = await fetch('/getAllBarril');
+                const resultado = await response.json();
+                
+                if (resultado.codigo === '200') {
+                    todosLosBarriles = resultado.data || [];
+                    barrilesFiltrados = [...todosLosBarriles];
+                    actualizarTablaBarriles();
+                    cargarFiltroCervezasBarriles();
+                }
+            } catch (error) {
+                console.error('Error cargando barriles:', error);
+            }
+        }
+
+        function actualizarTablaBarriles() {
+            const tbody = document.getElementById('tablaBarrilesBody');
+            document.getElementById('contadorBarriles').textContent = barrilesFiltrados.length;
+
+            if (barrilesFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi-inbox fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">No se encontraron barriles</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = barrilesFiltrados.map(barril => `
+                <tr>
+                    <td><strong>${barril.id}</strong></td>
+                    <td>
+                        <span class="badge estado-badge ${getClaseEstadoBarril(barril.estado)}">
+                            ${barril.estado}
+                        </span>
+                    </td>
+                    <td>${barril.litros}L</td>
+                    <td>${barril.notas || '-'}</td>
+                    <td>${obtenerNombreCerveza(barril)}</td>
+                    <td>${barril.lote ? barril.lote.id : '-'}</td>
+                    <td>
+                        ${barril.sessionReserva ? 
+                            `<span class="badge bg-warning text-dark">
+                                <i class="bi-clock me-1"></i>Reservado
+                            </span>` : 
+                            `<span class="badge bg-success">Libre</span>`
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="verDetallesBarril(${barril.id})">
+                            <i class="bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function cargarFiltroCervezasBarriles() {
+            const select = document.getElementById('filtroCervezaBarril');
+            const cervezas = [...new Set(todosLosBarriles
+                .map(b => b.lote && b.lote.cerveza ? b.lote.cerveza.nombreCerveza : null)
+                .filter(nombre => nombre !== null)
+            )].sort();
+
+            select.innerHTML = '<option value="">Todas las cervezas</option>' +
+                cervezas.map(cerveza => 
+                    `<option value="${cerveza}">${cerveza}</option>`
+                ).join('');
+        }
+
+        function buscarBarriles() {
+            const estado = document.getElementById('filtroEstadoBarril').value;
+            const cerveza = document.getElementById('filtroCervezaBarril').value;
+            const busqueda = document.getElementById('busquedaBarriles').value.toLowerCase();
+
+            barrilesFiltrados = todosLosBarriles.filter(barril => {
+                const cumpleEstado = !estado || barril.estado === estado;
+                const cumpleCerveza = !cerveza || obtenerNombreCerveza(barril) === cerveza;
+                const cumpleBusqueda = !busqueda || 
+                    barril.id.toString().includes(busqueda) ||
+                    (barril.notas && barril.notas.toLowerCase().includes(busqueda));
+
+                return cumpleEstado && cumpleCerveza && cumpleBusqueda;
+            });
+
+            actualizarTablaBarriles();
+        }
+
+        async function verDetallesBarril(id) {
+            try {
+                const response = await fetch(`/getByIdBarril/${id}`);
+                const resultado = await response.json();
+                if (resultado.codigo === '200') {
+                    alert(`Detalles del barril #${id}\nEstado: ${resultado.data.estado}\nLitros: ${resultado.data.litros}L`);
+                }
+            } catch (error) {
+                console.error('Error cargando detalles del barril:', error);
+            }
+        }
+
+        function exportarExcelBarriles() {
+            const estado = document.getElementById('filtroEstadoBarril').value || 'todos';
+            window.open(`/barriles/exportarExcel/${estado}`, '_blank');
+        }
+
+        // ========== CERVEZAS ==========
+        async function cargarTodasLasCervezas() {
+            try {
+                const response = await fetch('/getAllCerveza');
+                const resultado = await response.json();
+                
+                if (resultado.codigo === '200') {
+                    todasLasCervezas = resultado.data || [];
+                    cervezasFiltradas = [...todasLasCervezas];
+                    actualizarGridCervezas();
+                }
+            } catch (error) {
+                console.error('Error cargando cervezas:', error);
+            }
+        }
+
+        function actualizarGridCervezas() {
+            const grid = document.getElementById('gridCervezas');
+
+            if (cervezasFiltradas.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi-cup-straw fs-1 text-muted"></i>
+                        <p class="mt-2 text-muted">No se encontraron cervezas</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = cervezasFiltradas.map(cerveza => `
+                <div class="col-xl-4 col-lg-6 mb-4">
+                    <div class="card h-100 shadow-sm cerveza-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title">${cerveza.nombreCerveza}</h5>
+                                <span class="badge ${getClaseEstadoCerveza(cerveza.estado)}">
+                                    ${cerveza.estado}
+                                </span>
+                            </div>
+                            <p class="card-text text-muted">${cerveza.notas || 'Sin descripción'}</p>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi-calendar me-1"></i>
+                                    ID: ${cerveza.id}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="btn-group w-100">
+                                <button class="btn btn-outline-primary btn-sm" onclick="verDetallesCerveza(${cerveza.id})">
+                                    <i class="bi-eye me-1"></i>Ver
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="editarCerveza(${cerveza.id})">
+                                    <i class="bi-pencil me-1"></i>Editar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function buscarCervezas() {
+            const estado = document.getElementById('filtroEstadoCerveza').value;
+            const busqueda = document.getElementById('busquedaCervezas').value.toLowerCase();
+
+            cervezasFiltradas = todasLasCervezas.filter(cerveza => {
+                const cumpleEstado = !estado || cerveza.estado === estado;
+                const cumpleBusqueda = !busqueda || 
+                    cerveza.nombreCerveza.toLowerCase().includes(busqueda) ||
+                    (cerveza.notas && cerveza.notas.toLowerCase().includes(busqueda));
+
+                return cumpleEstado && cumpleBusqueda;
+            });
+
+            actualizarGridCervezas();
+        }
+
+        async function verDetallesCerveza(id) {
+            try {
+                const response = await fetch(`/getByIdCerveza/${id}`);
+                const resultado = await response.json();
+                
+                if (resultado.codigo === '200') {
+                    const cerveza = resultado.data;
+                    alert(`Detalles de la cerveza:\n\nNombre: ${cerveza.nombreCerveza}\nEstado: ${cerveza.estado}\nNotas: ${cerveza.notas || 'Sin notas'}`);
+                }
+            } catch (error) {
+                console.error('Error cargando detalles de cerveza:', error);
+            }
+        }
+
+        function editarCerveza(id) {
+            alert(`Editar cerveza #${id} - Funcionalidad en desarrollo`);
+        }
+
+        function mostrarModalNuevaCerveza() {
+            alert('Crear nueva cerveza - Funcionalidad en desarrollo');
+        }
+
+        function exportarExcelCervezas() {
+            const estado = document.getElementById('filtroEstadoCerveza').value || 'todos';
+            window.open(`/cervezas/exportar-estado-excel/${estado}`, '_blank');
+        }
+
+        // ========== ACCESORIOS ==========
+        async function cargarTodosLosAccesorios() {
+            try {
+                const response = await fetch('/getAllAccesorio');
+                const resultado = await response.json();
+                
+                if (resultado.codigo === '200') {
+                    todosLosAccesorios = resultado.data || [];
+                    accesoriosFiltrados = [...todosLosAccesorios];
+                    actualizarTablaAccesorios();
+                }
+            } catch (error) {
+                console.error('Error cargando accesorios:', error);
+            }
+        }
+
+        function actualizarTablaAccesorios() {
+            const tbody = document.getElementById('tablaAccesoriosBody');
+            document.getElementById('contadorAccesorios').textContent = accesoriosFiltrados.length;
+
+            if (accesoriosFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="bi-inbox fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">No se encontraron accesorios</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = accesoriosFiltrados.map(accesorio => `
+                <tr>
+                    <td><strong>${accesorio.id}</strong></td>
+                    <td>${accesorio.nombre}</td>
+                    <td>
+                        <span class="badge estado-badge ${getClaseEstadoAccesorio(accesorio.estado)}">
+                            ${accesorio.estado}
+                        </span>
+                    </td>
+                    <td>${accesorio.notas || '-'}</td>
+                    <td>
+                        ${accesorio.sessionReserva ? 
+                            `<span class="badge bg-warning text-dark">
+                                <i class="bi-clock me-1"></i>Reservado
+                            </span>` : 
+                            `<span class="badge bg-success">Libre</span>`
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-warning" onclick="verDetallesAccesorio(${accesorio.id})">
+                                <i class="bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="editarAccesorio(${accesorio.id})">
+                                <i class="bi-pencil"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function buscarAccesorios() {
+            const estado = document.getElementById('filtroEstadoAccesorio').value;
+            const busqueda = document.getElementById('busquedaAccesorios').value.toLowerCase();
+
+            accesoriosFiltrados = todosLosAccesorios.filter(accesorio => {
+                const cumpleEstado = !estado || accesorio.estado === estado;
+                const cumpleBusqueda = !busqueda || 
+                    accesorio.nombre.toLowerCase().includes(busqueda) ||
+                    (accesorio.notas && accesorio.notas.toLowerCase().includes(busqueda)) ||
+                    accesorio.id.toString().includes(busqueda);
+
+                return cumpleEstado && cumpleBusqueda;
+            });
+
+            actualizarTablaAccesorios();
+        }
+
+        async function verDetallesAccesorio(id) {
+            try {
+                const response = await fetch(`/getByIdAccesorio/${id}`);
+                const resultado = await response.json();
+                if (resultado.codigo === '200') {
+                    alert(`Detalles del accesorio #${id}\nNombre: ${resultado.data.nombre}\nEstado: ${resultado.data.estado}`);
+                }
+            } catch (error) {
+                console.error('Error cargando detalles del accesorio:', error);
+            }
+        }
+
+        function editarAccesorio(id) {
+            alert(`Editar accesorio #${id} - Funcionalidad en desarrollo`);
+        }
+
+        function mostrarModalNuevoAccesorio() {
+            alert('Crear nuevo accesorio - Funcionalidad en desarrollo');
+        }
+
+        function exportarExcelAccesorios() {
+            // Nota: Necesitarías implementar el endpoint de exportación para accesorios
+            alert('Exportar accesorios a Excel - Funcionalidad en desarrollo');
+        }
+
+        // ========== LOTES ==========
+        async function cargarTodosLosLotes() {
+            try {
+                const response = await fetch('/getAllLote');
+                const resultado = await response.json();
+                
+                if (resultado.codigo === '200') {
+                    todosLosLotes = resultado.data || [];
+                    lotesFiltrados = [...todosLosLotes];
+                    actualizarTablaLotes();
+                    cargarFiltroCervezasLotes();
+                }
+            } catch (error) {
+                console.error('Error cargando lotes:', error);
+            }
+        }
+
+        function actualizarTablaLotes() {
+            const tbody = document.getElementById('tablaLotesBody');
+            document.getElementById('contadorLotes').textContent = lotesFiltrados.length;
+
+            if (lotesFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi-inbox fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">No se encontraron lotes</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = lotesFiltrados.map(lote => `
+                <tr>
+                    <td><strong>${lote.id}</strong></td>
+                    <td>${lote.cerveza ? lote.cerveza.nombreCerveza : '-'}</td>
+                    <td>${lote.cantidadLitros}L</td>
+                    <td>
+                        <span class="badge estado-badge ${getClaseEstadoLote(lote.estado)}">
+                            ${lote.estado}
+                        </span>
+                    </td>
+                    <td>${formatearFecha(lote.fechaCarga)}</td>
+                    <td>${formatearFecha(lote.fechaVencimiento)}</td>
+                    <td>${lote.notas || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="verDetallesLote(${lote.id})">
+                            <i class="bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function cargarFiltroCervezasLotes() {
+            const select = document.getElementById('filtroCervezaLote');
+            const cervezas = [...new Set(todosLosLotes
+                .map(l => l.cerveza ? l.cerveza.nombreCerveza : null)
+                .filter(nombre => nombre !== null)
+            )].sort();
+
+            select.innerHTML = '<option value="">Todas las cervezas</option>' +
+                cervezas.map(cerveza => 
+                    `<option value="${cerveza}">${cerveza}</option>`
+                ).join('');
+        }
+
+        function buscarLotes() {
+            const estado = document.getElementById('filtroEstadoLote').value;
+            const cerveza = document.getElementById('filtroCervezaLote').value;
+            const busqueda = document.getElementById('busquedaLotes').value.toLowerCase();
+
+            lotesFiltrados = todosLosLotes.filter(lote => {
+                const cumpleEstado = !estado || lote.estado === estado;
+                const cumpleCerveza = !cerveza || (lote.cerveza && lote.cerveza.nombreCerveza === cerveza);
+                const cumpleBusqueda = !busqueda || 
+                    lote.id.toString().includes(busqueda) ||
+                    (lote.notas && lote.notas.toLowerCase().includes(busqueda));
+
+                return cumpleEstado && cumpleCerveza && cumpleBusqueda;
+            });
+
+            actualizarTablaLotes();
+        }
+
+        async function verDetallesLote(id) {
+            try {
+                const response = await fetch(`/getByIdLote/${id}`);
+                const resultado = await response.json();
+                if (resultado.codigo === '200') {
+                    const lote = resultado.data;
+                    alert(`Detalles del lote #${id}\nCerveza: ${lote.cerveza.nombreCerveza}\nCantidad: ${lote.cantidadLitros}L\nEstado: ${lote.estado}`);
+                }
+            } catch (error) {
+                console.error('Error cargando detalles del lote:', error);
+            }
+        }
+
+        function exportarExcelLotes() {
+            const estado = document.getElementById('filtroEstadoLote').value || 'todos';
+            window.open(`/lotes/exportarExcel/${estado}`, '_blank');
+        }
+
+        // ========== FUNCIONES UTILITARIAS ==========
+        function obtenerNombreCerveza(barril) {
+            if (barril.lote && barril.lote.cerveza) {
+                return barril.lote.cerveza.nombreCerveza;
+            }
+            return '-';
+        }
+
+        function formatearFecha(fecha) {
+            if (!fecha) return '-';
+            return new Date(fecha).toLocaleDateString('es-ES');
+        }
+
+        function getClaseEstadoBarril(estado) {
+            const clases = {
+                'Cargado': 'bg-success',
+                'Alquilado': 'bg-primary',
+                'Vacio': 'bg-secondary',
+                'En mantenimiento': 'bg-warning text-dark',
+                'Reservado': 'bg-info'
+            };
+            return clases[estado] || 'bg-secondary';
+        }
+
+        function getClaseEstadoCerveza(estado) {
+            const clases = {
+                'Activo': 'bg-success',
+                'Inactivo': 'bg-secondary',
+                'Discontinuado': 'bg-danger'
+            };
+            return clases[estado] || 'bg-secondary';
+        }
+
+        function getClaseEstadoAccesorio(estado) {
+            const clases = {
+                'Disponible': 'bg-success',
+                'Alquilado': 'bg-primary',
+                'En mantenimiento': 'bg-warning text-dark',
+                'Reservado': 'bg-info'
+            };
+            return clases[estado] || 'bg-secondary';
+        }
+
+        function getClaseEstadoLote(estado) {
+            const clases = {
+                'Activo': 'bg-success',
+                'Completado': 'bg-primary',
+                'En proceso': 'bg-warning text-dark',
+                'Cancelado': 'bg-danger'
+            };
+            return clases[estado] || 'bg-secondary';
+        }
+
+        function aplicarFiltrosGlobales() {
+            const estado = document.getElementById('filtroEstadoGlobal').value;
+            
+            switch(moduloActual) {
+                case 'barriles':
+                    document.getElementById('filtroEstadoBarril').value = estado;
+                    buscarBarriles();
+                    break;
+                case 'cervezas':
+                    document.getElementById('filtroEstadoCerveza').value = estado;
+                    buscarCervezas();
+                    break;
+                case 'accesorios':
+                    document.getElementById('filtroEstadoAccesorio').value = estado;
+                    buscarAccesorios();
+                    break;
+                case 'lotes':
+                    document.getElementById('filtroEstadoLote').value = estado;
+                    buscarLotes();
+                    break;
+            }
+        }
+
+        function limpiarFiltrosGlobales() {
+            document.getElementById('filtroEstadoGlobal').value = '';
+            
+            switch(moduloActual) {
+                case 'barriles':
+                    document.getElementById('filtroEstadoBarril').value = '';
+                    document.getElementById('filtroCervezaBarril').value = '';
+                    document.getElementById('busquedaBarriles').value = '';
+                    barrilesFiltrados = [...todosLosBarriles];
+                    actualizarTablaBarriles();
+                    break;
+                case 'cervezas':
+                    document.getElementById('filtroEstadoCerveza').value = '';
+                    document.getElementById('busquedaCervezas').value = '';
+                    cervezasFiltradas = [...todasLasCervezas];
+                    actualizarGridCervezas();
+                    break;
+                case 'accesorios':
+                    document.getElementById('filtroEstadoAccesorio').value = '';
+                    document.getElementById('busquedaAccesorios').value = '';
+                    accesoriosFiltrados = [...todosLosAccesorios];
+                    actualizarTablaAccesorios();
+                    break;
+                case 'lotes':
+                    document.getElementById('filtroEstadoLote').value = '';
+                    document.getElementById('filtroCervezaLote').value = '';
+                    document.getElementById('busquedaLotes').value = '';
+                    lotesFiltrados = [...todosLosLotes];
+                    actualizarTablaLotes();
+                    break;
+            }
+        }
     </script>
 </body>
 </html>
