@@ -1504,8 +1504,11 @@
     function mostrarListaCervezas(cervezas) {
         let html = ``;
         
-        if (cervezas && cervezas.length > 0) {
-            cervezas.forEach(cerveza => {
+        // Filtrar solo las cervezas con estado "Disponible"
+        const cervezasDisponibles = cervezas ? cervezas.filter(c => c.estado === 'Disponible') : [];
+
+        if (cervezasDisponibles.length > 0) {
+            cervezasDisponibles.forEach(cerveza => {
                 html += `
                 <div class="col-md-4 mb-4">
                     <div class="cerveza-card">
