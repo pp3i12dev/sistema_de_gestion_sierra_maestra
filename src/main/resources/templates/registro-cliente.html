@@ -177,7 +177,7 @@
             50% {
                 opacity: 0.6;
             }
-            100% {
+           100% {
                 bottom: 110vh;
                 opacity: 0;
                 transform: translateX(var(--drift)) scale(0.8);
@@ -252,6 +252,58 @@
         
         .form-control::placeholder {
             color: #999;
+        }
+
+        /* Tipo Cliente Selector */
+        .tipo-cliente-selector {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tipo-cliente-option {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .tipo-cliente-btn {
+            width: 100%;
+            padding: 1rem;
+            border: 3px solid #DAA520;
+            border-radius: 10px;
+            background: white;
+            color: #8B4513;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .tipo-cliente-btn:hover {
+            background: #FFF8E1;
+            transform: translateY(-2px);
+        }
+        
+        .tipo-cliente-btn.active {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(218, 165, 32, 0.4);
+        }
+        
+        /* Campos condicionales */
+        .campo-condicional {
+            transition: all 0.3s ease;
+        }
+        
+        .campo-condicional.hidden {
+            display: none;
+        }
+        
+        .campo-requerido::after {
+            content: " *";
+            color: #dc3545;
         }
         
         /* Success Message */
@@ -338,6 +390,16 @@
             .form-container {
                 padding: 1.5rem;
             }
+            
+            .tipo-cliente-selector {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .tipo-cliente-option {
+                max-width: 100%;
+            }
         }
         
         /* Validation Styles */
@@ -353,6 +415,44 @@
             color: #ff6b6b;
             font-size: 0.9rem;
             margin-top: 0.25rem;
+        }
+        
+        /* Estilos para auto-completado de CUIT */
+        .cuit-helper {
+            font-size: 0.8rem;
+            color: #28a745;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
+        .form-control.auto-filled {
+            background-color: #f8fff8;
+            border-color: #28a745;
+        }
+        
+        /* Indicador visual de extracción exitosa */
+        .dni-extracted {
+            animation: pulse-green 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse-green {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(40, 167, 69, 0.1); }
+            100% { background-color: transparent; }
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -402,40 +502,58 @@
                 <!-- Error messages will be inserted here -->
             </div>
 
+            <!-- Tipo Cliente Selector -->
+            <div class="tipo-cliente-selector">
+                <div class="tipo-cliente-option">
+                    <button type="button" class="tipo-cliente-btn active" data-tipo="cliente">
+                        <i class="bi bi-person-fill"></i><br>
+                        Cliente Individual
+                    </button>
+                </div>
+                <div class="tipo-cliente-option">
+                    <button type="button" class="tipo-cliente-btn" data-tipo="empresa">
+                        <i class="bi bi-building"></i><br>
+                        Empresa
+                    </button>
+                </div>
+            </div>
+
             <!-- Registration Form -->
             <form id="formulario-registro" novalidate>
+                <input type="hidden" id="tipo" name="tipo" value="cliente">
+                
                 <div class="form-row">
                     <!-- Left Column -->
                     <div class="form-column">
                         <div class="form-group">
-                            <label for="nombre" class="form-label">Nombre</label>
+                            <label for="nombre" class="form-label campo-requerido">Nombre</label>
                             <input type="text" class="form-control" id="nombre" name="nombre" required
                                    placeholder="Ingrese su nombre">
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="form-group">
-                            <label for="documento" class="form-label">DNI</label>
+                            <label for="documento" class="form-label campo-requerido">DNI</label>
                             <input type="text" 
                                    class="form-control" 
                                    id="documento" 
                                    name="documento" 
                                    required
-                                   placeholder="Ej: 12345678" 
+                                   placeholder="Ej: 12345678 (7 u 8 dígitos)" 
                                    maxlength="8"
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                            <div class="invalid-feedback">El DNI debe contener 8 dígitos numéricos</div>
+                            <div class="invalid-feedback">El DNI debe contener 7 u 8 dígitos numéricos</div>
                         </div>
 
                         <div class="form-group">
-                            <label for="mail" class="form-label">Email</label>
+                            <label for="mail" class="form-label campo-requerido">Email</label>
                             <input type="email" class="form-control" id="mail" name="mail" required
                                    placeholder="ejemplo@email.com">
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="form-group">
-                            <label for="fecha_nacimiento" class="form-label">Fecha de nacimiento</label>
+                            <label for="fecha_nacimiento" class="form-label campo-requerido">Fecha de nacimiento</label>
                             <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" required>
                             <div class="invalid-feedback"></div>
                         </div>
@@ -444,28 +562,35 @@
                     <!-- Right Column -->
                     <div class="form-column">
                         <div class="form-group">
-                            <label for="apellido" class="form-label">Apellido</label>
+                            <label for="apellido" class="form-label campo-requerido">Apellido</label>
                             <input type="text" class="form-control" id="apellido" name="apellido" required
                                    placeholder="Ingrese su apellido">
                             <div class="invalid-feedback"></div>
                         </div>
 
+                        <div class="form-group campo-condicional hidden" id="grupo-razon-social">
+                            <label for="razon_social" class="form-label campo-requerido">Razón Social</label>
+                            <input type="text" class="form-control" id="razon_social" name="razon_social"
+                                   placeholder="Nombre legal de la empresa">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
                         <div class="form-group">
-                            <label for="direccion" class="form-label">Dirección</label>
+                            <label for="direccion" class="form-label campo-requerido">Dirección</label>
                             <input type="text" class="form-control" id="direccion" name="direccion" required
                                    placeholder="Calle, número, ciudad">
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="form-group">
-                            <label for="telefono" class="form-label">Teléfono</label>
+                            <label for="telefono" class="form-label campo-requerido">Teléfono</label>
                             <input type="tel" class="form-control" id="telefono" name="telefono" required
                                    placeholder="Ej: 1123456789" maxlength="15">
                             <div class="invalid-feedback"></div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="cuit" class="form-label">Cuit</label>
+                        <div class="form-group campo-condicional hidden" id="grupo-cuit">
+                            <label for="cuit" class="form-label">CUIT</label>
                             <input type="text" class="form-control" id="cuit" name="cuit"
                                    placeholder="Ej: 20-12345678-9">
                             <div class="invalid-feedback"></div>
@@ -476,14 +601,14 @@
                 <!-- Password Fields -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="contrasenia" class="form-label">Contraseña</label>
+                        <label for="contrasenia" class="form-label campo-requerido">Contraseña</label>
                         <input type="password" class="form-control" id="contrasenia" name="contrasenia" required
                                placeholder="Mínimo 6 caracteres" minlength="6">
                         <div class="invalid-feedback"></div>
                     </div>
 
                     <div class="form-group">
-                        <label for="confirmar_contrasenia" class="form-label">Confirmar contraseña</label>
+                        <label for="confirmar_contrasenia" class="form-label campo-requerido">Confirmar contraseña</label>
                         <input type="password" class="form-control" id="confirmar_contrasenia" required
                                placeholder="Repita su contraseña">
                         <div class="invalid-feedback"></div>
@@ -513,10 +638,141 @@
             const successMessage = document.getElementById('success-message');
             const errorMessage = document.getElementById('error-message');
             const btnRegistrar = document.getElementById('btn-registrar');
+            const tipoInput = document.getElementById('tipo');
 
             // URL base de la API
             const API_BASE_URL = 'http://localhost:8080';
             const API_ENDPOINT = '/addCliente';
+
+            // Manejar selección del tipo de cliente
+            document.querySelectorAll('.tipo-cliente-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remover clase active de todos los botones
+                    document.querySelectorAll('.tipo-cliente-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    
+                    // Agregar clase active al botón clickeado
+                    this.classList.add('active');
+                    
+                    // Actualizar el valor del tipo
+                    const tipo = this.getAttribute('data-tipo');
+                    tipoInput.value = tipo;
+                    
+                    // Mostrar/ocultar campos según el tipo
+                    actualizarCamposPorTipo(tipo);
+                });
+            });
+
+            function actualizarCamposPorTipo(tipo) {
+                const grupoCUIT = document.getElementById('grupo-cuit');
+                const grupoRazonSocial = document.getElementById('grupo-razon-social');
+                
+                if (tipo === 'cliente') {
+                    // Mostrar campos de cliente individual
+                    grupoCUIT.classList.add('hidden');
+                    grupoRazonSocial.classList.add('hidden');
+                    
+                    // Hacer requeridos los campos de cliente
+                    document.getElementById('cuit').required = false;
+                    document.getElementById('razon_social').required = false;
+                    
+                    // Limpiar campos de empresa
+                    document.getElementById('cuit').value = '';
+                    document.getElementById('razon_social').value = '';
+                    
+                } else if (tipo === 'empresa') {
+                    // Mostrar campos de empresa
+                    grupoCUIT.classList.remove('hidden');
+                    grupoRazonSocial.classList.remove('hidden');
+                    
+                    // Hacer requeridos los campos de empresa
+                    document.getElementById('cuit').required = true;
+                    document.getElementById('razon_social').required = true;
+                }
+                
+                // Limpiar validaciones
+                limpiarValidaciones();
+            }
+
+            function limpiarValidaciones() {
+                document.querySelectorAll('.form-control').forEach(input => {
+                    input.classList.remove('is-valid', 'is-invalid');
+                    input.setCustomValidity('');
+                });
+            }
+
+            /**
+             * Extrae el DNI (8 dígitos del medio) desde un CUIT con formato XX-XXXXXXXX-X
+             * @param {string} cuit - CUIT en formato XX-XXXXXXXX-X
+             * @returns {string} - DNI de 8 dígitos o string vacío si no es válido
+             */
+            function extraerDNIDesdeCUIT(cuit) {
+                if (!cuit || typeof cuit !== 'string') return '';
+                
+                // Remover espacios y validar formato XX-XXXXXXXX-X
+                const cuitLimpio = cuit.trim().replace(/\s/g, '');
+                const regexCUIT = /^\d{2}-(\d{8})-\d{1}$/;
+                
+                const match = cuitLimpio.match(regexCUIT);
+                return match ? match[1] : ''; // Retorna los 8 dígitos del medio
+            }
+
+            /**
+             * Formatea un CUIT automáticamente mientras el usuario escribe
+             * @param {string} valor - Valor actual del campo CUIT
+             * @returns {string} - CUIT formateado
+             */
+            function formatearCUIT(valor) {
+                // Remover todo excepto números
+                const soloNumeros = valor.replace(/[^\d]/g, '');
+                
+                if (soloNumeros.length <= 2) {
+                    return soloNumeros;
+                } else if (soloNumeros.length <= 10) {
+                    return `${soloNumeros.substring(0, 2)}-${soloNumeros.substring(2)}`;
+                } else {
+                    return `${soloNumeros.substring(0, 2)}-${soloNumeros.substring(2, 10)}-${soloNumeros.substring(10, 11)}`;
+                }
+            }
+
+            /**
+             * Normaliza el DNI para enviarlo al backend
+             * Si tiene 7 dígitos, agrega un 0 al principio
+             * @param {string} dni - DNI ingresado por el usuario
+             * @returns {string} - DNI normalizado a 8 dígitos
+             */
+            function normalizarDNI(dni) {
+                if (!dni) return '';
+                
+                // Limpiar el DNI (solo números)
+                const dniLimpio = dni.replace(/[^\d]/g, '');
+                
+                // Si tiene 7 dígitos, agregar un 0 al principio
+                if (dniLimpio.length === 7) {
+                    return '0' + dniLimpio;
+                }
+                
+                // Si tiene 8 dígitos, devolver tal cual
+                return dniLimpio;
+            }
+
+            function mostrarFeedbackDNI() {
+                const dniInput = document.getElementById('documento');
+                const cuitInput = document.getElementById('cuit');
+                
+                if (dniInput.value && cuitInput.value) {
+                    const dniDesdeCUIT = extraerDNIDesdeCUIT(cuitInput.value);
+                    
+                    if (dniDesdeCUIT === dniInput.value) {
+                        // Feedback visual de coincidencia
+                        dniInput.classList.add('dni-extracted');
+                        setTimeout(() => {
+                            dniInput.classList.remove('dni-extracted');
+                        }, 1000);
+                    }
+                }
+            }
 
             // Función para formatear fecha de yyyy-mm-dd a dd/mm/aaaa
             function formatearFecha(fechaISO) {
@@ -544,14 +800,42 @@
                 const contrasenia = document.getElementById('contrasenia').value;
                 const confirmarContrasenia = document.getElementById('confirmar_contrasenia').value;
                 const dni = document.getElementById('documento').value;
+                const tipo = tipoInput.value;
                 
-                // Validar DNI - EXACTAMENTE 8 dígitos
-                if (!/^\d{8}$/.test(dni)) {
-                    document.getElementById('documento').setCustomValidity('El DNI debe contener exactamente 8 dígitos numéricos');
+                // Validar DNI - 7 u 8 dígitos
+                if (!/^\d{7,8}$/.test(dni)) {
+                    document.getElementById('documento').setCustomValidity('El DNI debe contener 7 u 8 dígitos numéricos');
                     document.getElementById('documento').classList.add('is-invalid');
                     return false;
                 } else {
                     document.getElementById('documento').setCustomValidity('');
+                }
+
+                // Validaciones específicas por tipo
+                if (tipo === 'empresa') {
+                    const cuit = document.getElementById('cuit').value;
+                    const razonSocial = document.getElementById('razon_social').value;
+                    
+                    // Validar CUIT
+                    if (cuit && cuit.trim() !== '') {
+                        const dniDesdeCUIT = extraerDNIDesdeCUIT(cuit);
+                        if (!dniDesdeCUIT) {
+                            document.getElementById('cuit').setCustomValidity('Formato de CUIT inválido. Use: XX-XXXXXXXX-X');
+                            document.getElementById('cuit').classList.add('is-invalid');
+                            return false;
+                        }
+                        
+                        document.getElementById('cuit').setCustomValidity('');
+                    }
+                    
+                    // Validar Razón Social
+                    if (!razonSocial || razonSocial.trim() === '') {
+                        document.getElementById('razon_social').setCustomValidity('La razón social es obligatoria para empresas');
+                        document.getElementById('razon_social').classList.add('is-invalid');
+                        return false;
+                    } else {
+                        document.getElementById('razon_social').setCustomValidity('');
+                    }
                 }
 
                 // Validar que las contraseñas coincidan
@@ -563,18 +847,23 @@
                 }
 
                 // Validar campos requeridos
-                const camposRequeridos = [
+                let camposRequeridos = [
                     'nombre', 'apellido', 'documento', 'fecha_nacimiento', 
                     'mail', 'direccion', 'telefono', 'contrasenia', 'confirmar_contrasenia'
                 ];
 
+                // Agregar campos específicos por tipo
+                if (tipo === 'empresa') {
+                    camposRequeridos.push('cuit', 'razon_social');
+                }
+
                 let esValido = true;
                 camposRequeridos.forEach(campo => {
                     const elemento = document.getElementById(campo);
-                    if (!elemento.checkValidity()) {
+                    if (elemento && !elemento.checkValidity()) {
                         elemento.classList.add('is-invalid');
                         esValido = false;
-                    } else {
+                    } else if (elemento) {
                         elemento.classList.remove('is-invalid');
                         elemento.classList.add('is-valid');
                     }
@@ -593,26 +882,36 @@
                 }
 
                 btnRegistrar.disabled = true;
-                btnRegistrar.textContent = 'Registrando...';
+                btnRegistrar.innerHTML = '<span class="loading-spinner"></span> Registrando...';
 
                 try {
                     const formData = new FormData(formulario);
+                    const tipo = tipoInput.value;
+                    
+                    // Normalizar el DNI antes de enviarlo
+                    const dniNormalizado = normalizarDNI(formData.get('documento'));
                     
                     // Crear objeto con la estructura exacta que espera la entidad Cliente
                     const clienteData = {
                         activo: true, // SIEMPRE true
                         apellido: formData.get('apellido').trim(),
                         contrasenia: formData.get('contrasenia'),
+                        // CUIT se envía exactamente igual que en cliente - sin modificar
                         cuit: formData.get('cuit') ? formData.get('cuit').trim() : null,
                         direccion: formData.get('direccion').trim(),
-                        documento: formData.get('documento'), // String con solo números
+                        documento: dniNormalizado, // DNI normalizado a 8 dígitos
                         fecha_nacimiento: formatearFecha(formData.get('fecha_nacimiento')), // Formato dd/mm/aaaa
                         legajo: "", // Campo requerido pero puede estar vacío
                         mail: formData.get('mail').trim(),
                         nombre: formData.get('nombre').trim(),
                         telefono: formData.get('telefono').trim(),
-                        tipo: "cliente" // En minúsculas como en tu BD
+                        tipo: tipo // "cliente" o "empresa"
                     };
+
+                    // Para empresas, agregar razón social si existe
+                    if (tipo === 'empresa' && formData.get('razon_social')) {
+                        clienteData.razon_social = formData.get('razon_social').trim();
+                    }
 
                     console.log('Enviando datos:', clienteData);
                     console.log('Endpoint:', API_BASE_URL + API_ENDPOINT);
@@ -657,10 +956,62 @@
                 }
             });
 
+            // Auto-completar DNI desde CUIT (para empresas)
+            document.getElementById('cuit').addEventListener('input', function(e) {
+                const cuitInput = e.target;
+                const dniInput = document.getElementById('documento');
+                const tipo = tipoInput.value;
+                
+                // Formatear CUIT automáticamente
+                const cursorPosition = cuitInput.selectionStart;
+                const valorFormateado = formatearCUIT(cuitInput.value);
+                cuitInput.value = valorFormateado;
+                
+                // Restaurar posición del cursor
+                const cambios = valorFormateado.length - cuitInput.value.length;
+                cuitInput.setSelectionRange(cursorPosition + cambios, cursorPosition + cambios);
+                
+                // Extraer DNI solo si es empresa y el campo DNI está vacío o contiene solo el valor del CUIT anterior
+                if (tipo === 'empresa') {
+                    const dniDesdeCUIT = extraerDNIDesdeCUIT(valorFormateado);
+                    
+                    if (dniDesdeCUIT && (!dniInput.value || dniInput.value === this.ultimoDNIExtraido)) {
+                        dniInput.value = dniDesdeCUIT;
+                        this.ultimoDNIExtraido = dniDesdeCUIT; // Guardar referencia
+                        
+                        // Disparar eventos de validación
+                        dniInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        dniInput.dispatchEvent(new Event('blur', { bubbles: true }));
+                    }
+                }
+            });
+
+            // Validación específica para CUIT
+            document.getElementById('cuit').addEventListener('blur', function() {
+                const cuit = this.value.trim();
+                const tipo = tipoInput.value;
+                
+                if (cuit && cuit !== '' && tipo === 'empresa') {
+                    const dniExtraido = extraerDNIDesdeCUIT(cuit);
+                    
+                    if (!dniExtraido) {
+                        this.classList.add('is-invalid');
+                        this.setCustomValidity('Formato de CUIT inválido. Use: XX-XXXXXXXX-X');
+                    } else {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        this.setCustomValidity('');
+                    }
+                } else {
+                    this.classList.remove('is-invalid', 'is-valid');
+                    this.setCustomValidity('');
+                }
+            });
+
             // Validación en tiempo real para DNI
             document.getElementById('documento').addEventListener('input', function() {
                 const dni = this.value;
-                if (/^\d{8}$/.test(dni)) {
+                if (/^\d{7,8}$/.test(dni)) {
                     this.classList.remove('is-invalid');
                     this.classList.add('is-valid');
                     this.setCustomValidity('');
@@ -712,6 +1063,9 @@
                     }
                 }
             });
+
+            // Inicializar con campos de cliente individual
+            actualizarCamposPorTipo('cliente');
         });
     </script>
 </body>

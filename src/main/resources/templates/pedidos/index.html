@@ -450,7 +450,8 @@ function actualizarUIusuario(usuario) {
 
 function cerrarSesion() {
     sessionStorage.removeItem('usuarioLogueado');
-    window.location.href = `${window.location.origin}/inicio`;
+    // ✅ REDIRIGIR A CLIENTE-DASHBOARD EN LUGAR DE INICIO
+    window.location.href = `${window.location.origin}/cliente-dashboard`;
 }
 
 // ========== FUNCIONES BASE ==========
