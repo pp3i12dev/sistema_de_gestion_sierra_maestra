@@ -1,5 +1,8 @@
 package com.sca.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.websocket.server.PathParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sca.model.Cliente;
 import com.sca.model.Respuesta;
 import com.sca.service.impl.ClienteServiceImpl;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
