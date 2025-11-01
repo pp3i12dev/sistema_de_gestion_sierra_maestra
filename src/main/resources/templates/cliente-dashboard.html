@@ -1316,8 +1316,10 @@
                     </div> -->
 
                         <!-- PRUEBA -->
-                    <div id="cervezas-list" class="row">
-                    </div>
+                         
+                        <div id="cervezas-list" class="row">
+                            <div class="promo-badge">Nuevo</div>
+                        </div>
                 </div>
 
                 
@@ -1508,7 +1510,13 @@
         const cervezasDisponibles = cervezas ? cervezas.filter(c => c.estado === 'Disponible') : [];
 
         if (cervezasDisponibles.length > 0) {
+
+            // Encontrar la cerveza más nueva (la de mayor ID)
+            const maxId = Math.max(...cervezasDisponibles.map(c => c.id || 0));
+
             cervezasDisponibles.forEach(cerveza => {
+                // Si esta cerveza es la más nueva, mostrar el badge “Nuevo”
+                const esNueva = cerveza.id === maxId;
                 html += `
                 <div class="col-md-4 mb-4">
                     <div class="cerveza-card">
