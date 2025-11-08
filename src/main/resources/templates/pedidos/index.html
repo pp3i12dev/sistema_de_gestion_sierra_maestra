@@ -343,139 +343,150 @@
   </div>
 
   <!-- FORM + PRODUCTOS -->
-  <div class="card p-3 mb-4">
-    <h4>Registrar / Editar Pedido</h4>
-    <form id="pedidoForm" class="row g-3 mt-2" autocomplete="off">
-      <input type="hidden" id="pedidoId">
+  <!-- FORM + PRODUCTOS -->
+<div class="card p-3 mb-4">
+  <h4>Registrar / Editar Pedido</h4>
+  <form id="pedidoForm" class="row g-3 mt-2" autocomplete="off">
+    <input type="hidden" id="pedidoId">
 
-      <div class="col-md-6">
-        <label class="form-label">Cliente</label>
-        <select id="cliente" class="form-select" required></select>
-      </div>
+    <div class="col-md-6">
+      <label class="form-label">Cliente</label>
+      <select id="cliente" class="form-select" required></select>
+    </div>
 
-      <div class="col-md-6">
-        <label class="form-label">Asociado (Usuario)</label>
-        <select id="asociado" class="form-select" required>
-          <option value="">Cargando...</option>
-        </select>
-        <small class="text-info" id="asociadoInfo">Puede asignar cualquier asociado al pedido</small>
-      </div>
+    <div class="col-md-6">
+      <label class="form-label">Asociado (Usuario)</label>
+      <select id="asociado" class="form-select" required>
+        <option value="">Cargando...</option>
+      </select>
+      <small class="text-info" id="asociadoInfo">Puede asignar cualquier asociado al pedido</small>
+    </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Cerveza</label>
-        <select id="cerveza" class="form-select"></select>
-        <small class="barril-info">Precio por litro: <span id="cervezaPrecio">-</span></small>
-      </div>
+    <div class="col-md-4">
+      <label class="form-label">Cerveza</label>
+      <select id="cerveza" class="form-select"></select>
+      <small class="barril-info">Precio por litro: <span id="cervezaPrecio">-</span></small>
+    </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Barril (disponible)</label>
-        <select id="barril" class="form-select"></select>
-        <small class="barril-info">Litros: <span id="barrilLitros">-</span></small>
-      </div>
+    <div class="col-md-4">
+      <label class="form-label">Barril (disponible)</label>
+      <select id="barril" class="form-select"></select>
+      <small class="barril-info">Litros: <span id="barrilLitros">-</span></small>
+    </div>
 
-      <div class="col-md-2">
-        <label class="form-label">Cantidad (barriles)</label>
-        <input type="number" id="cantidad" class="form-control" min="1" value="1">
-      </div>
+    <div class="col-md-2">
+      <label class="form-label">Cantidad (barriles)</label>
+      <input type="number" id="cantidad" class="form-control" min="1" value="1">
+    </div>
 
-      <div class="col-md-2 d-flex align-items-end">
-        <button type="button" id="btnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
-      </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <button type="button" id="btnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
+    </div>
 
-      <div class="col-12">
-        <label class="form-label">Accesorios (marcar para incluir)</label>
-        <div id="accesoriosContainer" style="max-height:140px; overflow:auto; padding-right:6px;"></div>
-        <small class="text-muted">Si colocás precio al accesorio, se usará para calcular el total.</small>
-      </div>
+    <div class="col-12">
+      <label class="form-label">Accesorios (marcar para incluir)</label>
+      <div id="accesoriosContainer" style="max-height:140px; overflow:auto; padding-right:6px;"></div>
+      <small class="text-muted">Si colocás precio al accesorio, se usará para calcular el total.</small>
+    </div>
 
-      <div class="col-md-3">
-        <label class="form-label">Fecha Pedido</label>
-        <input type="date" id="fechaPedido" class="form-control" required>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Fecha Entrega</label>
-        <input type="date" id="fechaEntrega" class="form-control">
-      </div>
+    <!-- FILA DE FECHAS Y ENVÍO - ACTUALIZADA -->
+    <div class="col-md-3">
+      <label class="form-label">Fecha Pedido</label>
+      <input type="date" id="fechaPedido" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Fecha Entrega</label>
+      <input type="date" id="fechaEntrega" class="form-control">
+    </div>
 
-      <div class="col-md-3 d-flex align-items-end">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="envio">
-          <label class="form-check-label">Requiere envío</label>
-        </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="envio">
+        <label class="form-check-label">Requiere envío</label>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Dirección de Entrega</label>
-        <input type="text" id="direccionEntrega" class="form-control" value="Sin envío" disabled>
-      </div>
+    </div>
+    
+    <!-- ✅ NUEVO CAMPO: COSTO DE ENVÍO -->
+    <div class="col-md-2">
+      <label class="form-label">Costo de Envío ($)</label>
+      <input type="number" id="costoEnvio" class="form-control" step="1" min="0" value="0">
+      <small class="text-muted">Sin decimales</small>
+    </div>
+    
+    <div class="col-md-2">
+      <label class="form-label">Dirección de Entrega</label>
+      <input type="text" id="direccionEntrega" class="form-control" value="Sin envío" disabled>
+    </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Estado</label>
-        <select id="estado" class="form-select">
-          <option value="Pendiente">Pendiente</option>
-          <option value="Confirmado">Confirmado</option>
-          <option value="En preparación">En preparación</option>
-          <option value="En camino">En camino</option>
-          <option value="Entregado">Entregado</option>
-          <option value="Cancelado">Cancelado</option>
-        </select>
-      </div>
+    <div class="col-md-4">
+      <label class="form-label">Estado</label>
+      <select id="estado" class="form-select">
+        <option value="Pendiente">Pendiente</option>
+        <option value="Confirmado">Confirmado</option>
+        <option value="En preparación">En preparación</option>
+        <option value="En camino">En camino</option>
+        <option value="Entregado">Entregado</option>
+        <option value="Cancelado">Cancelado</option>
+      </select>
+    </div>
 
-      <div class="col-md-2 d-flex align-items-center">
-        <div class="form-check mt-2">
-          <input class="form-check-input" type="checkbox" id="estadoPago">
-          <label class="form-check-label">Pagado</label>
-        </div>
+    <div class="col-md-2 d-flex align-items-center">
+      <div class="form-check mt-2">
+        <input class="form-check-input" type="checkbox" id="estadoPago">
+        <label class="form-check-label">Pagado</label>
       </div>
+    </div>
 
-      <div class="col-12">
-        <label class="form-label">Detalle del Pedido</label>
-        <div class="table-responsive">
-          <table id="detalleTable" class="table table-sm table-bordered">
-            <thead class="table-secondary">
-              <tr>
-                <th>Tipo</th>
-                <th>Nombre</th>
-                <th>Litros</th>
-                <th>Cantidad</th>
-                <th>Precio unit.</th>
-                <th>Subtotal</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+    <!-- Resto del formulario se mantiene igual -->
+    <div class="col-12">
+      <label class="form-label">Detalle del Pedido</label>
+      <div class="table-responsive">
+        <table id="detalleTable" class="table table-sm table-bordered">
+          <thead class="table-secondary">
+            <tr>
+              <th>Tipo</th>
+              <th>Nombre</th>
+              <th>Litros</th>
+              <th>Cantidad</th>
+              <th>Precio unit.</th>
+              <th>Subtotal</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
+    </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Total Cervezas</label>
-        <input type="text" id="totalCervezas" class="form-control" readonly>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Total Accesorios</label>
-        <input type="text" id="totalAccesorios" class="form-control" readonly>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Total General</label>
-        <input type="text" id="totalGral" class="form-control" readonly>
-      </div>
+    <div class="col-md-4">
+      <label class="form-label">Total Cervezas</label>
+      <input type="text" id="totalCervezas" class="form-control" readonly>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Total Accesorios</label>
+      <input type="text" id="totalAccesorios" class="form-control" readonly>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Total General</label>
+      <input type="text" id="totalGral" class="form-control" readonly>
+    </div>
 
-      <div class="col-12">
-        <label class="form-label">Nota</label>
-        <textarea id="nota" class="form-control" rows="2"></textarea>
-      </div>
+    <div class="col-12">
+      <label class="form-label">Nota</label>
+      <textarea id="nota" class="form-control" rows="2"></textarea>
+    </div>
 
-      <!-- Mensajes ubicados arriba de los botones -->
-      <div class="col-12">
-        <div id="msg"></div>
-      </div>
+    <!-- Mensajes ubicados arriba de los botones -->
+    <div class="col-12">
+      <div id="msg"></div>
+    </div>
 
-      <div class="col-12 d-flex justify-content-end gap-2">
-        <button type="reset" id="resetBtn" class="btn btn-secondary">Limpiar</button>
-        <button type="submit" class="btn btn-success">Guardar Pedido</button>
-      </div>
-    </form>
-  </div>
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <button type="reset" id="resetBtn" class="btn btn-secondary">Limpiar</button>
+      <button type="submit" class="btn btn-success">Guardar Pedido</button>
+    </div>
+  </form>
+</div>
 
   <!-- BÚSQUEDA + LISTADO -->
         <div class="card p-3">
@@ -548,24 +559,7 @@
     <div class="table-responsive">
       <table id="pedidosTable" class="table table-striped table-hover">
         <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Teléfono</th> <!-- SOLO ESTA LÍNEA NUEVA -->
-            <th>Asociado</th>
-            <th>Cerveza</th>
-            <th>Barril</th>
-            <th>Accesorios</th>
-            <th>Cantidad</th>
-            <th>Fecha Pedido</th>
-            <th>Fecha Entrega</th>
-            <th>Estado</th>
-            <th>Estado Pago</th>
-            <th>Dirección Envío</th>
-            <th>Notas</th>
-            <th>Total</th>
-            <th>Acciones</th>
-        </tr>
+        
         </thead>
         <tbody id="pedidosTableBody"></tbody>
       </table>
@@ -1942,14 +1936,58 @@ function recalcTotal() {
         }
     });
 
-    const totalGeneral = Math.round((totalCervezas + totalAccesorios + Number.EPSILON) * 100) / 100;
+    // ✅ OBTENER COSTO DE ENVÍO Y AGREGAR AL CÁLCULO
+    const costoEnvio = parseInt($('#costoEnvio').value) || 0;
+    const totalGeneral = Math.round((totalCervezas + totalAccesorios + costoEnvio + Number.EPSILON) * 100) / 100;
 
     // ✅ Mostrar con formato "$X.XX" SOLO en los inputs (no en los cálculos internos)
     $('#totalCervezas').value = totalCervezas > 0 ? ('$' + totalCervezas.toFixed(2)) : '';
     $('#totalAccesorios').value = totalAccesorios > 0 ? ('$' + totalAccesorios.toFixed(2)) : '';
     $('#totalGral').value = totalGeneral > 0 ? ('$' + totalGeneral.toFixed(2)) : '';
 
+    // ✅ ACTUALIZAR FILA DE ENVÍO EN DETALLE
+    actualizarFilaEnvioDetalle(costoEnvio);
+
     return totalGeneral;
+}
+
+// ✅ FUNCIÓN PARA AGREGAR/ACTUALIZAR FILA DE ENVÍO EN EL DETALLE
+function actualizarFilaEnvioDetalle(costoEnvio) {
+    const tbody = $('#detalleTable tbody');
+    let filaEnvio = tbody.querySelector('tr[data-tipo="envio"]');
+    
+    if (costoEnvio > 0) {
+        if (!filaEnvio) {
+            // Crear nueva fila para envío
+            filaEnvio = document.createElement('tr');
+            filaEnvio.dataset.tipo = 'envio';
+            filaEnvio.innerHTML = `
+                <td>Envío</td>
+                <td>Costo de envío</td>
+                <td class="litros">-</td>
+                <td class="qty">1</td>
+                <td class="unit">${costoEnvio.toFixed(2)}</td>
+                <td class="subtotal">${costoEnvio.toFixed(2)}</td>
+                <td class="nowrap">
+                    <button type="button" class="btn btn-sm btn-danger btn-remove-envio">Quitar</button>
+                </td>
+            `;
+            tbody.appendChild(filaEnvio);
+            
+            // Agregar evento al botón de quitar envío
+            filaEnvio.querySelector('.btn-remove-envio').addEventListener('click', function() {
+                $('#costoEnvio').value = '0';
+                recalcTotal();
+            });
+        } else {
+            // Actualizar fila existente
+            filaEnvio.querySelector('.unit').textContent = costoEnvio.toFixed(2);
+            filaEnvio.querySelector('.subtotal').textContent = costoEnvio.toFixed(2);
+        }
+    } else if (filaEnvio) {
+        // Eliminar fila si el costo de envío es 0
+        filaEnvio.remove();
+    }
 }
 
 // ========== FUNCIÓN PARA ORDENAR Y FILTRAR PEDIDOS ==========
@@ -2062,20 +2100,32 @@ function renderPedidosTable(items) {
     }
 
     pedidosFiltrados.forEach(p => {
-        // Obtener información del cliente
-        let clienteNombre = '';
+        // ✅ CORREGIDO: Obtener información del cliente directamente desde el pedido
+        let clienteNombre = 'Cliente no disponible';
+        let clienteId = '';
         let clienteTelefono = '';
+        
+        // Verificar si el pedido tiene la propiedad cliente
         if (p.cliente) {
-            if (typeof p.cliente === 'object') {
+            if (typeof p.cliente === 'object' && p.cliente !== null) {
+                // El cliente viene como objeto completo
                 clienteNombre = ((p.cliente.nombre || '') + ' ' + (p.cliente.apellido || '')).trim();
+                clienteId = p.cliente.id || '';
                 clienteTelefono = p.cliente.telefono || p.cliente.celular || p.cliente.phone || '';
+                
+                // Si no hay nombre, usar el ID
+                if (!clienteNombre) {
+                    clienteNombre = `Cliente ${clienteId}`;
+                }
             } else {
-                const found = clientesList.find(c => String(c.id) === String(p.cliente));
+                // El cliente viene solo como ID, buscar en clientesList
+                clienteId = String(p.cliente);
+                const found = clientesList.find(c => String(c.id) === clienteId);
                 if (found) {
-                    clienteNombre = ((found.nombre || '') + ' ' + (found.apellido || '')).trim();
+                    clienteNombre = ((found.nombre || '') + ' ' + (found.apellido || '')).trim() || `Cliente ${found.id}`;
                     clienteTelefono = found.telefono || found.celular || found.phone || '';
                 } else {
-                    clienteNombre = 'ID:' + p.cliente;
+                    clienteNombre = `ID: ${clienteId}`;
                 }
             }
         }
@@ -2130,15 +2180,9 @@ function renderPedidosTable(items) {
             }).join(', ');
         }
 
-        // Calcular cantidad total
-        let cantidadTotal = 0;
-        if (p.cervezas && Array.isArray(p.cervezas)) {
-            p.cervezas.forEach(c => {
-                if (typeof c === 'object') {
-                    cantidadTotal += Number(c.cantidad || 1);
-                }
-            });
-        }
+        // ✅ OBTENER COSTO DE ENVÍO DESDE METADATA
+        const metadata = p.metadata ? JSON.parse(p.metadata) : {};
+        const costoEnvio = metadata.costoEnvio || 0;
 
         const fechaP = formatDateFromMillis(p.fechaPedido);
         const fechaE = formatDateFromMillis(p.fechaEntrega);
@@ -2168,45 +2212,57 @@ function renderPedidosTable(items) {
                 </div>
                 
                 <div class="pedido-body">
+                    <!-- ✅ FILA CLIENTE - FORMATO MEJORADO -->
                     <div class="pedido-info-row">
                         <span class="pedido-label">Cliente:</span>
-                        <span class="pedido-value">${clienteNombre}</span>
-                    </div>
-                    
-                    <div class="pedido-info-row">
-                        <span class="pedido-label">Teléfono:</span>
-                        <span class="pedido-value">${clienteTelefono || 'N/A'}</span>
+                        <span class="pedido-value">
+                            <div class="cliente-info">
+                                <div class="cliente-nombre">${clienteNombre}</div>
+                                <div class="cliente-detalles">
+                                    <span class="cliente-id">ID: ${clienteId || 'N/A'}</span>
+                                    ${clienteTelefono ? `<span class="cliente-telefono">📞 ${clienteTelefono}</span>` : ''}
+                                </div>
+                            </div>
+                        </span>
                     </div>
                     
                     <div class="pedido-info-row">
                         <span class="pedido-label">Asociado:</span>
-                        <span class="pedido-value">${asociadoNombre}</span>
+                        <span class="pedido-value">${asociadoNombre || 'No asignado'}</span>
                     </div>
                     
+                    ${cervezaNombre ? `
                     <div class="pedido-info-row">
                         <span class="pedido-label">Cerveza:</span>
-                        <span class="pedido-value" title="${cervezaNombre}">${cervezaNombre.length > 30 ? cervezaNombre.substring(0, 30) + '...' : cervezaNombre}</span>
+                        <span class="pedido-value">${cervezaNombre}</span>
                     </div>
+                    ` : ''}
                     
+                    ${barrilNombre ? `
                     <div class="pedido-info-row">
                         <span class="pedido-label">Barriles:</span>
-                        <span class="pedido-value" title="${barrilNombre}">${barrilNombre.length > 25 ? barrilNombre.substring(0, 25) + '...' : barrilNombre}</span>
+                        <span class="pedido-value">${barrilNombre}</span>
                     </div>
+                    ` : ''}
                     
+                    ${accesoriosTxt ? `
                     <div class="pedido-info-row">
                         <span class="pedido-label">Accesorios:</span>
-                        <span class="pedido-value" title="${accesoriosTxt}">${accesoriosTxt.length > 25 ? accesoriosTxt.substring(0, 25) + '...' : accesoriosTxt || 'Ninguno'}</span>
+                        <span class="pedido-value">${accesoriosTxt}</span>
                     </div>
-                    
-                    <div class="pedido-info-row">
-                        <span class="pedido-label">Cantidad:</span>
-                        <span class="pedido-value">${cantidadTotal} barril(es)</span>
-                    </div>
+                    ` : ''}
                     
                     <div class="pedido-info-row">
                         <span class="pedido-label">Dirección:</span>
-                        <span class="pedido-value" title="${direccionEnvio}">${direccionEnvio.length > 30 ? direccionEnvio.substring(0, 30) + '...' : direccionEnvio}</span>
+                        <span class="pedido-value">${direccionEnvio}</span>
                     </div>
+                    
+                    ${costoEnvio > 0 ? `
+                    <div class="pedido-info-row">
+                        <span class="pedido-label">Costo envío:</span>
+                        <span class="pedido-value">$${costoEnvio.toFixed(2)}</span>
+                    </div>
+                    ` : ''}
                     
                     <div class="pedido-info-row">
                         <span class="pedido-label">Pago:</span>
@@ -2225,7 +2281,7 @@ function renderPedidosTable(items) {
                     ${notas ? `
                     <div class="pedido-info-row">
                         <span class="pedido-label">Notas:</span>
-                        <span class="pedido-value" title="${notas}">${notas.length > 40 ? notas.substring(0, 40) + '...' : notas}</span>
+                        <span class="pedido-value">${notas}</span>
                     </div>
                     ` : ''}
                 </div>
@@ -2252,7 +2308,7 @@ function renderPedidosTable(items) {
         container.appendChild(cardCol);
     });
 }
-// ========== FUNCIÓN CARGAR PEDIDO EN FORMULARIO ==========
+
 // ========== FUNCIÓN CARGAR PEDIDO EN FORMULARIO ==========
 async function loadPedidoIntoForm(id) {
     try {
@@ -2324,6 +2380,12 @@ async function loadPedidoIntoForm(id) {
             }
         }
 
+        // ✅ CARGAR COSTO DE ENVÍO DESDE METADATA
+        const metadata = p.metadata ? JSON.parse(p.metadata) : {};
+        const preciosAccesorios = metadata.accesoriosPrecios || {};
+        const costoEnvio = metadata.costoEnvio || 0;
+        $('#costoEnvio').value = costoEnvio;
+
         // LIMPIAR TABLA
         $('#detalleTable tbody').innerHTML = '';
 
@@ -2362,9 +2424,6 @@ async function loadPedidoIntoForm(id) {
         }
 
         // ✅ PROCESAR ACCESORIOS — ¡USAR metadata! 🔑
-        const metadata = p.metadata ? JSON.parse(p.metadata) : {};
-        const preciosAccesorios = metadata.accesoriosPrecios || {};
-
         if (p.accesorios && Array.isArray(p.accesorios)) {
             p.accesorios.forEach(acc => {
                 const accId = typeof acc === 'object' ? acc.id : acc;
@@ -2661,8 +2720,8 @@ async function deletePedido(id) {
     }
 }
 
-// ========== FUNCIÓN COMPLETAMENTE CORREGIDA PARA GUARDAR PEDIDO ==========
-// ========== FUNCIÓN COMPLETAMENTE CORREGIDA PARA GUARDAR PEDIDO ==========
+
+// ========== FUNCIÓN PARA GUARDAR PEDIDO ==========
 async function submitFormHandler(e) {
     e.preventDefault();
 
@@ -2846,6 +2905,13 @@ async function submitFormHandler(e) {
         const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
         const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
 
+        // ✅ OBTENER COSTO DE ENVÍO Y AGREGAR AL METADATA
+        const costoEnvio = parseInt($('#costoEnvio').value) || 0;
+        const metadataObj = {
+            accesoriosPrecios: accesoriosPrecios,
+            costoEnvio: costoEnvio
+        };
+
         let payload;
         if (isNew) {
             payload = {
@@ -2862,10 +2928,10 @@ async function submitFormHandler(e) {
                 cliente: { id: Number(clienteId) },
                 totalGral: total,
                 nota: notaValor,
-                metadata: JSON.stringify({ accesoriosPrecios }) // ✅ AGREGAR METADATA
+                metadata: JSON.stringify(metadataObj) // ✅ AGREGAR METADATA ACTUALIZADO
             };
         } else {
-            // ✅ EDICIÓN: también incluye metadata
+            // ✅ EDICIÓN: también incluye metadata actualizado
             payload = {
                 id: pedidoId,
                 fechaPedido: fechaPedidoMillis,
@@ -2881,7 +2947,7 @@ async function submitFormHandler(e) {
                 cliente: { id: Number(clienteId) },
                 totalGral: total,
                 nota: notaValor,
-                metadata: JSON.stringify({ accesoriosPrecios }) // ✅ CLAVE: guardar precios editados
+                metadata: JSON.stringify(metadataObj) // ✅ CLAVE: guardar precios editados y costo de envío
             };
         }
 
@@ -2950,7 +3016,7 @@ async function submitFormHandler(e) {
     }
 }
 
-// ========== FUNCIÓN DE DIAGNÓSTICO MEJORADA ==========
+// ========== FUNCIÓN DE DIAGNÓSTICO==========
 function diagnosticarPayload(filasDetalle, isNew) {
     console.log('🔍 DIAGNÓSTICO COMPLETO DEL PAYLOAD');
     console.log('📝 Estado:', isNew ? 'NUEVO PEDIDO' : 'EDITANDO PEDIDO');
@@ -3486,6 +3552,14 @@ function resetForm() {
     $('#direccionEntrega').disabled = true; 
     $('#direccionEntrega').value = 'Sin envío';
     $('#cantidad').value = 1;
+    
+    // ✅ RESETEAR COSTO DE ENVÍO Y ELIMINAR FILA DE ENVÍO
+    $('#costoEnvio').value = '0';
+    const filaEnvio = $('#detalleTable tbody').querySelector('tr[data-tipo="envio"]');
+    if (filaEnvio) {
+        filaEnvio.remove();
+    }
+    
     $('#detalleTable tbody').innerHTML = '';
     $('#totalCervezas').value = ''; 
     $('#totalAccesorios').value = ''; 
@@ -3631,6 +3705,10 @@ function attachListeners() {
         }
     });
 
+    // ✅ AGREGAR LISTENER PARA COSTO DE ENVÍO
+    const costoEnvioInput = $('#costoEnvio');
+    if (costoEnvioInput) costoEnvioInput.addEventListener('input', recalcTotal);
+
     const pedidosTableBody = $('#pedidosTableBody'); 
     if (pedidosTableBody) {
         pedidosTableBody.addEventListener('click', pedidosTableClickHandler);
@@ -3695,31 +3773,62 @@ function generarVistaTicket(pedido) {
     const ticketContent = $('#ticketContent');
     if (!ticketContent) return;
 
-    // Procesar productos y calcular totales
     let productosHTML = '';
-    let subtotalTotal = 0;
+    let subtotalProductos = 0;
 
-    // ✅ EXTRAER PRECIOS PERSONALIZADOS DE ACCESORIOS DESDE metadata
+    // ✅ EXTRAER PRECIOS PERSONALIZADOS DE ACCESORIOS Y COSTO DE ENVÍO DESDE metadata
     const metadata = pedido.metadata ? JSON.parse(pedido.metadata) : {};
     const preciosAccesorios = metadata.accesoriosPrecios || {};
+    const costoEnvio = metadata.costoEnvio || 0;
 
-    // Procesar cervezas y barriles
-    if (pedido.cervezas && Array.isArray(pedido.cervezas)) {
-        pedido.cervezas.forEach(cerveza => {
-            const cervezaId = typeof cerveza === 'object' ? cerveza.id : cerveza;
-            const cervezaCompleta = cervezasList.find(c => c.id == cervezaId) || cerveza;
+    // ✅ CORREGIDO: PROCESAR BARRILES CORRECTAMENTE (agrupados y con cantidad real)
+    if (pedido.barriles && Array.isArray(pedido.barriles)) {
+        const barrilesAgrupados = {};
+
+        pedido.barriles.forEach(barril => {
+            const barrilId = typeof barril === 'object' ? barril.id : barril;
+            const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+            if (barrilCompleto) {
+                let cervezaNombre = 'Cerveza no especificada';
+                let precioPorLitro = 0;
+                const litros = barrilCompleto.litros || 0;
+
+                // Obtener información desde el lote
+                if (barrilCompleto.loteId) {
+                    const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                    if (lote && lote.cerveza) {
+                        cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                        precioPorLitro = lote.cerveza.precioPorLitro || 0;
+                    }
+                }
+
+                // Crear clave única
+                const key = `${cervezaNombre}-${litros}`;
+
+                if (!barrilesAgrupados[key]) {
+                    barrilesAgrupados[key] = {
+                        cervezaNombre,
+                        litros,
+                        precioPorLitro,
+                        cantidad: 0
+                    };
+                }
+
+                barrilesAgrupados[key].cantidad++;
+            }
+        });
+
+        // ✅ Generar HTML con subtotal correcto por cantidad
+        Object.values(barrilesAgrupados).forEach(grupo => {
+            const subtotal = grupo.cantidad * grupo.litros * grupo.precioPorLitro;
+            subtotalProductos += subtotal;
             
-            const cantidad = cervezaCompleta.cantidad || 1;
-            const litrosPorBarril = cervezaCompleta.litros || 25;
-            const precioPorLitro = cervezaCompleta.precioPorLitro || 0;
-            const subtotal = cantidad * litrosPorBarril * precioPorLitro;
-            subtotalTotal += subtotal;
-
             productosHTML += `
                 <div class="ticket-producto">
                     <div>
-                        <strong>${cervezaCompleta.nombreCerveza || cervezaCompleta.nombre || 'Cerveza'}</strong><br>
-                        <small>${cantidad} barril(es) de ${litrosPorBarril}L - $${precioPorLitro}/L</small>
+                        <strong>${grupo.cervezaNombre}</strong><br>
+                        <small>${grupo.cantidad} barril(es) de ${grupo.litros}L - $${grupo.precioPorLitro}/L</small>
                     </div>
                     <div>$${subtotal.toFixed(2)}</div>
                 </div>
@@ -3732,13 +3841,12 @@ function generarVistaTicket(pedido) {
         pedido.accesorios.forEach(accesorio => {
             const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
             const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
-            
-            // 🔑 USAR PRECIO EDITADO SI EXISTE EN metadata, SINO EL PRECIO ORIGINAL
+
             const precio = preciosAccesorios[accesorioId] != null
                 ? parseFloat(preciosAccesorios[accesorioId])
                 : (accesorioCompleto.precio || 0);
 
-            subtotalTotal += precio;
+            subtotalProductos += precio;
 
             productosHTML += `
                 <div class="ticket-producto">
@@ -3752,7 +3860,17 @@ function generarVistaTicket(pedido) {
         });
     }
 
-    // Información del cliente
+    // ✅ COSTO DE ENVÍO
+    if (costoEnvio > 0) {
+        productosHTML += `
+            <div class="ticket-producto">
+                <div><strong>Costo de envío</strong></div>
+                <div>$${costoEnvio.toFixed(2)}</div>
+            </div>
+        `;
+    }
+
+    // ✅ INFORMACIÓN DEL CLIENTE
     let nombreCliente = 'Cliente no disponible';
     let documentoCliente = '';
     
@@ -3769,7 +3887,7 @@ function generarVistaTicket(pedido) {
         }
     }
 
-    // Información del asociado
+    // ✅ INFORMACIÓN DEL ASOCIADO
     let nombreAsociado = 'No asignado';
     if (pedido.usuario || pedido.asociado) {
         const usuarioField = pedido.usuario || pedido.asociado;
@@ -3788,28 +3906,24 @@ function generarVistaTicket(pedido) {
     
     const fechaPedido = formatDateFromMillis(pedido.fechaPedido);
     const fechaEntrega = formatDateFromMillis(pedido.fechaEntrega);
-    const totalFinal = pedido.totalGral || subtotalTotal;
+    
+    const totalFinal = pedido.totalGral || (subtotalProductos + costoEnvio);
 
-    // Construir el HTML del ticket con el logo
     const ticketHTML = `
         <div class="ticket-header">
-            <!-- Logo de la empresa -->
-            <img src="/images/logo.jpg" alt="Logo Sierra Maestra" class="ticket-logo" 
+            <img src="/images/logo.jpg" alt="Logo Sierra Maestra" class="ticket-logo"
                  onerror="this.style.display='none'; console.log('Error cargando logo')">
             <h2>🍺 Sierra Maestra</h2>
             <h3>Ticket de Pedido</h3>
             <h4>Nº ${pedido.id}</h4>
             <p><small>${new Date().toLocaleDateString('es-ES', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
             })}</small></p>
         </div>
 
         <div class="ticket-section">
-            <div class="ticket-section-title">📦 Productos</div>
+            <div class="ticket-section-title">📦 Productos y Servicios</div>
             ${productosHTML || '<div class="text-muted text-center">No hay productos en este pedido</div>'}
         </div>
 
@@ -3822,6 +3936,7 @@ function generarVistaTicket(pedido) {
             <div class="ticket-section-title">📍 Información de Entrega</div>
             <div class="mb-2"><strong>Dirección:</strong> ${direccionEnvio}</div>
             <div class="mb-2"><strong>Fecha de entrega:</strong> ${fechaEntrega || 'Por coordinar'}</div>
+            ${costoEnvio > 0 ? `<div class="mb-2"><strong>Costo de envío:</strong> $${costoEnvio.toFixed(2)}</div>` : ''}
         </div>
 
         <div class="ticket-cliente">
@@ -3833,8 +3948,7 @@ function generarVistaTicket(pedido) {
             <div class="mb-2">
                 <strong>Estado:</strong> 
                 <span class="badge ${pedido.estado === 'Entregado' ? 'bg-success' : 
-                                  pedido.estado === 'Cancelado' ? 'bg-danger' : 
-                                  'bg-warning'}">
+                                  pedido.estado === 'Cancelado' ? 'bg-danger' : 'bg-warning'}">
                     ${pedido.estado || 'Pendiente'}
                 </span>
             </div>
@@ -3853,8 +3967,7 @@ function generarVistaTicket(pedido) {
     `;
 
     ticketContent.innerHTML = ticketHTML;
-    
-    // Verificar si el logo se cargó correctamente
+
     setTimeout(() => {
         const logo = ticketContent.querySelector('.ticket-logo');
         if (logo && logo.naturalHeight === 0) {
