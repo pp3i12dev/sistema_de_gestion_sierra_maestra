@@ -711,7 +711,7 @@
     <header class="header">
         <div class="logo" style="text-decoration: none; cursor: pointer;">
             <div class="logo-circle">
-                <i class="bi bi-beer" style="font-size: 2rem; color: #DAA520;"></i>  
+                <img src="/images/logo.jpg" alt="Logo Sierra Maestra" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div class="logo-text">Sierra Maestra</div>
         </div>
@@ -766,10 +766,16 @@
                     <form id="pedidoForm" class="row g-3 mt-2" autocomplete="off">
                         <input type="hidden" id="pedidoId">
                         
-                        <!-- FECHAS AUTOMÁTICAS - OCULTAS AL CLIENTE -->
+                        <!-- FECHA DE PEDIDO OCULTA -->
                         <input type="hidden" id="fechaPedido">
-                        <input type="hidden" id="fechaEntrega">
                         <input type="hidden" id="asociado" value="001">
+
+                        <!-- FECHA DE ENTREGA VISIBLE -->
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha de Entrega *</label>
+                            <input type="date" id="fechaEntrega" class="form-control" required>
+                            <small class="text-muted">La fecha debe ser hoy o posterior</small>
+                        </div>
 
                         <div class="col-md-4">
                             <label class="form-label">Cerveza</label>
@@ -790,12 +796,6 @@
 
                         <div class="col-md-2 d-flex align-items-end">
                             <button type="button" id="btnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label">Accesorios (marcar para incluir)</label>
-                            <div id="accesoriosContainer" style="max-height:140px; overflow:auto; padding-right:6px;"></div>
-                            <small class="text-muted">El precio del accesorio es fijo y no se puede modificar.</small>
                         </div>
 
                         <div class="col-md-6 d-flex align-items-center">
@@ -984,13 +984,6 @@
 
                             <div class="col-md-2 d-flex align-items-end">
                                 <button type="button" id="editarBtnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">Accesorios</label>
-                                <div id="editarAccesoriosContainer" style="max-height:140px; overflow:auto; padding-right:6px;"></div>
                             </div>
                         </div>
 
@@ -1541,7 +1534,6 @@
 
                 // Inicializar la interfaz
                 populateSelects();
-                renderAccesorios();
                 renderPedidosTable(pedidosClienteActual);
                 setDefaultFecha();
 
@@ -1577,6 +1569,11 @@
             const itemsOrdenados = [...items].sort((a, b) => b.id - a.id);
 
             itemsOrdenados.forEach(p => {
+                // ✅ NUEVO: Obtener metadata para mostrar información completa
+                const metadata = p.metadata ? JSON.parse(p.metadata) : {};
+                const costoEnvio = metadata.costoEnvio || 0;
+                const preciosAccesorios = metadata.accesoriosPrecios || {};
+
                 let productosInfo = [];
                 let cantidadesInfo = [];
 
@@ -1591,6 +1588,7 @@
                     });
                 }
 
+                // Cervezas
                 if (p.cervezas && Array.isArray(p.cervezas)) {
                     p.cervezas.forEach(cerveza => {
                         const cervezaId = cerveza.id;
@@ -1604,18 +1602,32 @@
                     });
                 }
 
+                // ✅ MEJORADO: Accesorios con precios desde metadata
                 if (p.accesorios && Array.isArray(p.accesorios)) {
                     p.accesorios.forEach(accesorio => {
-                        const nombre = accesorio.nombre || `Accesorio ${accesorio.id}`;
+                        const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
+                        const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
+                        
+                        const precio = preciosAccesorios[accesorioId] != null 
+                            ? parseFloat(preciosAccesorios[accesorioId])
+                            : (accesorioCompleto.precio || 0);
+
+                        const nombre = accesorioCompleto.nombre || `Accesorio ${accesorioId}`;
                         productosInfo.push(nombre);
-                        cantidadesInfo.push('1 unidad');
+                        cantidadesInfo.push(`1 unidad - $${precio.toFixed(2)}`);
                     });
+                }
+
+                // ✅ NUEVO: Mostrar costo de envío en la lista
+                if (costoEnvio > 0) {
+                    productosInfo.push('Costo de envío');
+                    cantidadesInfo.push(`$${costoEnvio.toFixed(2)}`);
                 }
 
                 const estado = p.estado || 'Pendiente';
                 const estadoPago = p.estadoPago || 'Pendiente';
                 const direccionEnvio = p.direccionEntrega && p.direccionEntrega !== 'Sin envío' ? p.direccionEntrega : 'Sin envío';
-                const total = p.totalGral ? `$${p.totalGral}` : '';
+                const total = p.totalGral ? `$${p.totalGral.toFixed(2)}` : '';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -1627,7 +1639,7 @@
                         ${cantidadesInfo.map(cant => `<div class="producto-item">${cant}</div>`).join('')}
                     </td>
                     <td>
-                        <span class="badge ${estado === 'Pendiente' ? 'bg-warning' : estado === 'Entregado' ? 'bg-success' : 'bg-secondary'} badge-estado">
+                        <span class="badge ${estado === 'Pendiente' ? 'bg-warning' : estado === 'Entregado' ? 'bg-success' : estado === 'Cancelado' ? 'bg-danger' : 'bg-secondary'} badge-estado">
                             ${estado}
                         </span>
                     </td>
@@ -1645,6 +1657,9 @@
                             ${estado === 'Pendiente' ? 
                                 `<button class="btn btn-warning btn-sm btn-editar" onclick="editarPedido(${p.id})">
                                     <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm btn-cancelar" onclick="cancelarPedido(${p.id})">
+                                    <i class="bi bi-x-circle"></i> Cancelar
                                 </button>` : 
                                 ''
                             }
@@ -1656,6 +1671,33 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+        // ========== FUNCIÓN CANCELAR PEDIDO ==========
+        async function cancelarPedido(pedidoId) {
+            if (!confirm('¿Está seguro de que desea cancelar este pedido? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            try {
+                mensaje('Cancelando pedido...');
+                
+                const res = await fetchJSON(`${API}/cancelPedido/${pedidoId}`, {
+                    method: 'PUT'
+                });
+
+                console.log('Respuesta de cancelación:', res);
+
+                if (res && res.codigo === '200') {
+                    mensaje('✅ Pedido cancelado correctamente. Los barriles han sido liberados.', 'success');
+                    await loadAll(); // Recargar la lista de pedidos
+                } else {
+                    const errorMsg = res?.descripcion || res?.message || 'Error al cancelar el pedido';
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.error('Error al cancelar pedido:', error);
+                mensaje('❌ Error al cancelar pedido: ' + error.message, 'error');
+            }
         }
 
         // ========== FUNCIÓN EDITAR PEDIDO ==========
@@ -1713,14 +1755,20 @@
                 });
             }
 
+            // ✅ NUEVO: Obtener metadata con precios de accesorios y costo de envío
+            const metadata = pedido.metadata ? JSON.parse(pedido.metadata) : {};
+            const preciosAccesorios = metadata.accesoriosPrecios || {};
+            const costoEnvio = metadata.costoEnvio || 0;
+
             let productosHTML = '';
             let subtotalTotal = 0;
 
+            // ✅ Cervezas (existente)
             if (pedido.cervezas && Array.isArray(pedido.cervezas)) {
                 pedido.cervezas.forEach(cerveza => {
                     const cantidad = barrilesPorCerveza[cerveza.id] || 0;
                     if (cantidad > 0) {
-                        const litrosPorBarril = 25;
+                        const litrosPorBarril = 25; // Asumiendo 25L por barril
                         const precioPorLitro = cerveza.precioPorLitro || 0;
                         const subtotal = cantidad * litrosPorBarril * precioPorLitro;
                         subtotalTotal += subtotal;
@@ -1735,27 +1783,52 @@
                 });
             }
 
+            // ✅ CORREGIDO: Accesorios con precios desde metadata
             if (pedido.accesorios && Array.isArray(pedido.accesorios)) {
                 pedido.accesorios.forEach(accesorio => {
-                    const precio = accesorio.precio || 0;
+                    const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
+                    const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
+                    
+                    // Usar precio desde metadata si existe, sino el precio base
+                    const precio = preciosAccesorios[accesorioId] != null 
+                        ? parseFloat(preciosAccesorios[accesorioId])
+                        : (accesorioCompleto.precio || 0);
+
                     subtotalTotal += precio;
 
                     productosHTML += `
                         <div class="ticket-producto">
-                            <div>${accesorio.nombre} - 1 unidad</div>
+                            <div>${accesorioCompleto.nombre || 'Accesorio ' + accesorioId} - 1 unidad</div>
                             <div>$${precio.toFixed(2)}</div>
                         </div>
                     `;
                 });
             }
 
+            // ✅ NUEVO: Mostrar costo de envío si existe
+            if (costoEnvio > 0) {
+                productosHTML += `
+                    <div class="ticket-producto">
+                        <div>Costo de envío</div>
+                        <div>$${costoEnvio.toFixed(2)}</div>
+                    </div>
+                `;
+                subtotalTotal += costoEnvio;
+            }
+
             const nombreCliente = pedido.cliente ? 
                 `${pedido.cliente.nombre} ${pedido.cliente.apellido}` : 
                 'Cliente no disponible';
             
-            const direccionEnvio = pedido.direccionEntrega || 'Sin envío';
+            const direccionEnvio = pedido.direccionEntrega && pedido.direccionEntrega !== 'Sin envío' 
+                ? pedido.direccionEntrega 
+                : 'Sin envío';
+            
             const fechaPedido = formatDateFromMillis(pedido.fechaPedido);
             const fechaEntrega = formatDateFromMillis(pedido.fechaEntrega);
+
+            // ✅ Usar totalGral del pedido (que ya incluye accesorios y envío)
+            const totalFinal = pedido.totalGral || subtotalTotal;
 
             const ticketHTML = `
                 <div class="ticket-header">
@@ -1771,12 +1844,13 @@
 
                 <div class="ticket-total">
                     <div>Precio Total:</div>
-                    <div>$${(pedido.totalGral || subtotalTotal).toFixed(2)}</div>
+                    <div>$${totalFinal.toFixed(2)}</div>
                 </div>
 
                 <div class="ticket-section">
                     <div class="ticket-section-title">Dirección de envío:</div>
                     <div>${direccionEnvio}</div>
+                    ${costoEnvio > 0 ? `<div><small>Costo de envío: $${costoEnvio.toFixed(2)}</small></div>` : ''}
                 </div>
 
                 <div class="ticket-cliente">
@@ -1790,7 +1864,6 @@
 
             ticketContent.innerHTML = ticketHTML;
         }
-
         // ========== GENERACIÓN DE PDF ==========
         async function descargarTicketPDF() {
             if (!pedidoActualParaTicket) {
@@ -1898,7 +1971,6 @@
             cargarDetalleEdicion(pedido);
             calcularTotalesEdicion();
             configurarEventosEdicion();
-            renderAccesoriosEdicion();
         }
 
         function cargarDetalleEdicion(pedido) {
@@ -2313,102 +2385,6 @@
             }
         }
 
-        function renderAccesoriosEdicion() {
-            const cont = document.getElementById('editarAccesoriosContainer');
-            if (!cont) return;
-            cont.innerHTML = '';
-
-            const addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.textContent = 'Agregar accesorio';
-            addBtn.className = 'btn btn-sm btn-primary mb-2';
-
-            addBtn.addEventListener('click', () => {
-                const tieneBarriles = document.querySelectorAll('#editarDetalleTable tbody tr[data-tipo="cerveza"]').length > 0;
-                if (!tieneBarriles) {
-                    mensaje('Primero debe agregar al menos un barril de cerveza antes de agregar accesorios', 'error');
-                    return;
-                }
-                addAccesorioRowEdicion(cont);
-            });
-
-            cont.appendChild(addBtn);
-        }
-
-        function addAccesorioRowEdicion(container) {
-            const row = document.createElement('div');
-            row.className = 'd-flex align-items-center mb-2 gap-2';
-
-            const nombresUnicos = [...new Set(accesoriosList.map(a => a.nombre))];
-            const selectNombre = document.createElement('select');
-            selectNombre.className = 'form-select form-select-sm';
-            selectNombre.style.width = '150px';
-            selectNombre.innerHTML = `<option value="">Tipo accesorio</option>`;
-            nombresUnicos.forEach(nombre => {
-                const opt = document.createElement('option');
-                opt.value = nombre;
-                opt.textContent = nombre;
-                selectNombre.appendChild(opt);
-            });
-
-            const selectAccesorio = document.createElement('select');
-            selectAccesorio.className = 'form-select form-select-sm';
-            selectAccesorio.style.width = '220px';
-            selectAccesorio.innerHTML = `<option value="">Accesorio disponible</option>`;
-
-            const priceInput = document.createElement('input');
-            priceInput.type = 'number';
-            priceInput.step = '100';
-            priceInput.placeholder = 'Precio';
-            priceInput.className = 'form-control form-control-sm acc-price';
-            priceInput.style.width = '120px';
-            priceInput.disabled = true;
-            priceInput.readOnly = true;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.textContent = 'X';
-            removeBtn.className = 'btn btn-sm btn-danger';
-            removeBtn.addEventListener('click', () => {
-                row.remove();
-            });
-
-            selectNombre.addEventListener('change', () => {
-                selectAccesorio.innerHTML = `<option value="">Accesorio disponible</option>`;
-                priceInput.value = '';
-                priceInput.disabled = true;
-
-                if (selectNombre.value) {
-                    const filtrados = accesoriosList.filter(a =>
-                        a.nombre === selectNombre.value && a.estado === "Disponible"
-                    );
-                    filtrados.forEach(acc => {
-                        const opt = document.createElement('option');
-                        opt.value = acc.id;
-                        opt.textContent = `${acc.nombre} ${acc.notas ? '- ' + acc.notas : ''}`;
-                        selectAccesorio.appendChild(opt);
-                    });
-                }
-            });
-
-            selectAccesorio.addEventListener('change', () => {
-                if (selectAccesorio.value) {
-                    const accId = selectAccesorio.value;
-                    const acc = accesoriosList.find(a => String(a.id) === String(accId));
-                    if (acc) {
-                        agregarDetalleEdicion("Accesorio", accId, 1);
-                        priceInput.value = acc.precio || 0;
-                    }
-                }
-            });
-
-            row.appendChild(selectNombre);
-            row.appendChild(selectAccesorio);
-            row.appendChild(priceInput);
-            row.appendChild(removeBtn);
-            container.appendChild(row);
-        }
-
         // ========== EDICIÓN DE CLIENTE ==========
         async function cargarDatosClienteEnModal(cliente) {
             try {
@@ -2593,207 +2569,75 @@
             console.log("✅ Selects poblados correctamente");
         }
 
-        // ========== SISTEMA DE ACCESORIOS ==========
-        function renderAccesorios() {
-            const cont = document.getElementById('accesoriosContainer');
-            if (!cont) return;
-            cont.innerHTML = '';
-
-            const addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.textContent = 'Agregar accesorio';
-            addBtn.className = 'btn btn-sm btn-primary mb-2';
-
-            addBtn.addEventListener('click', () => {
-                const tieneBarriles = $$('#detalleTable tbody tr[data-tipo="cerveza"]').length > 0;
-                if (!tieneBarriles) {
-                    mensaje('Primero debe agregar al menos un barril de cerveza antes de agregar accesorios', 'error');
-                    return;
-                }
-                addAccesorioRow(cont);
-            });
-
-            cont.appendChild(addBtn);
-        }
-
-        function addAccesorioRow(container) {
-            const row = document.createElement('div');
-            row.className = 'd-flex align-items-center mb-2 gap-2';
-
-            const nombresUnicos = [...new Set(accesoriosList.map(a => a.nombre))];
-            const selectNombre = document.createElement('select');
-            selectNombre.className = 'form-select form-select-sm';
-            selectNombre.style.width = '150px';
-            selectNombre.innerHTML = `<option value="">Tipo accesorio</option>`;
-            nombresUnicos.forEach(nombre => {
-                const opt = document.createElement('option');
-                opt.value = nombre;
-                opt.textContent = nombre;
-                selectNombre.appendChild(opt);
-            });
-
-            const selectAccesorio = document.createElement('select');
-            selectAccesorio.className = 'form-select form-select-sm';
-            selectAccesorio.style.width = '220px';
-            selectAccesorio.innerHTML = `<option value="">Accesorio disponible</option>`;
-
-            const priceInput = document.createElement('input');
-            priceInput.type = 'number';
-            priceInput.step = '100';
-            priceInput.placeholder = 'Precio';
-            priceInput.className = 'form-control form-control-sm acc-price';
-            priceInput.style.width = '120px';
-            priceInput.disabled = true;
-            priceInput.readOnly = true;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.textContent = 'X';
-            removeBtn.className = 'btn btn-sm btn-danger';
-            removeBtn.addEventListener('click', () => {
-                row.remove();
-                recalcTotal();
-            });
-
-            selectNombre.addEventListener('change', () => {
-                selectAccesorio.innerHTML = `<option value="">Accesorio disponible</option>`;
-                priceInput.value = '';
-                priceInput.disabled = true;
-
-                if (selectNombre.value) {
-                    const filtrados = accesoriosList.filter(a =>
-                        a.nombre === selectNombre.value && a.estado === "Disponible"
-                    );
-                    filtrados.forEach(acc => {
-                        const opt = document.createElement('option');
-                        opt.value = acc.id;
-                        opt.textContent = `${acc.nombre} ${acc.notas ? '- ' + acc.notas : ''}`;
-                        selectAccesorio.appendChild(opt);
-                    });
-                }
-            });
-
-            selectAccesorio.addEventListener('change', () => {
-                if (selectAccesorio.value) {
-                    const accId = selectAccesorio.value;
-                    const acc = accesoriosList.find(a => String(a.id) === String(accId));
-                    if (acc) {
-                        agregarDetalle("Accesorio", accId, 1);
-                        priceInput.value = acc.precio || 0;
-                        const fila = document.querySelector(`#detalleTable tbody tr[data-tipo="accesorio"][data-id="${accId}"]`);
-                        if (fila) {
-                            fila.querySelector('.unit').textContent = acc.precio || 0;
-                            fila.querySelector('.subtotal').textContent = acc.precio || 0;
-                        }
-                    }
-                }
-            });
-
-            row.appendChild(selectNombre);
-            row.appendChild(selectAccesorio);
-            row.appendChild(priceInput);
-            row.appendChild(removeBtn);
-            container.appendChild(row);
-        }
-
         // ========== AGREGAR DETALLE ==========
         async function agregarDetalle(tipo, id, cantidad = 1) {
             if (!id) {
-                mensaje('Seleccioná un artículo para agregar', 'error');
+                mensaje('Seleccioná una cerveza para agregar', 'error');
                 return;
             }
 
             try {
-                if (tipo === 'Cerveza') {
-                    const cer = cervezasList.find(c => String(c.id) === String(id));
-                    if (!cer) {
-                        mensaje('Cerveza no encontrada', 'error');
-                        return;
-                    }
+                // Solo manejar cervezas ahora
+                const cer = cervezasList.find(c => String(c.id) === String(id));
+                if (!cer) {
+                    mensaje('Cerveza no encontrada', 'error');
+                    return;
+                }
 
-                    const litrosSeleccionados = $('#barril').value;
-                    if (!litrosSeleccionados) {
-                        mensaje('Debe seleccionar un tamaño de barril', 'error');
-                        return;
-                    }
+                const litrosSeleccionados = $('#barril').value;
+                if (!litrosSeleccionados) {
+                    mensaje('Debe seleccionar un tamaño de barril', 'error');
+                    return;
+                }
 
-                    const barrilesCerveza = obtenerBarrilesPorCerveza(id);
-                    const barrilesDelTamaño = barrilesCerveza.filter(b => b.litros == litrosSeleccionados);
-                    const qty = Number($('#cantidad').value) || Number(cantidad);
+                const barrilesCerveza = obtenerBarrilesPorCerveza(id);
+                const barrilesDelTamaño = barrilesCerveza.filter(b => b.litros == litrosSeleccionados);
+                const qty = Number($('#cantidad').value) || Number(cantidad);
 
-                    if (barrilesDelTamaño.length < qty) {
-                        mensaje(`No hay suficientes barriles de ${litrosSeleccionados}L disponibles. Solo hay ${barrilesDelTamaño.length}`, 'error');
-                        return;
-                    }
+                if (barrilesDelTamaño.length < qty) {
+                    mensaje(`No hay suficientes barriles de ${litrosSeleccionados}L disponibles. Solo hay ${barrilesDelTamaño.length}`, 'error');
+                    return;
+                }
 
-                    const litrosPorBarril = Number(litrosSeleccionados);
-                    const precioPorLitro = Number(cer.precioPorLitro || 0);
-                    const litrosTotales = litrosPorBarril * qty;
-                    const subtotal = Math.round((precioPorLitro * litrosTotales + Number.EPSILON) * 100) / 100;
+                const litrosPorBarril = Number(litrosSeleccionados);
+                const precioPorLitro = Number(cer.precioPorLitro || 0);
+                const litrosTotales = litrosPorBarril * qty;
+                const subtotal = Math.round((precioPorLitro * litrosTotales + Number.EPSILON) * 100) / 100;
 
-                    const existe = document.querySelector(`#detalleTable tbody tr[data-tipo="cerveza"][data-id="${id}"][data-litros="${litrosPorBarril}"]`);
+                const existe = document.querySelector(`#detalleTable tbody tr[data-tipo="cerveza"][data-id="${id}"][data-litros="${litrosPorBarril}"]`);
 
-                    if (existe) {
-                        const existingQty = Number(existe.querySelector('.qty').textContent);
-                        const newQty = existingQty + qty;
-                        existe.querySelector('.qty').textContent = newQty;
-                        existe.querySelector('.subtotal').textContent = Math.round((precioPorLitro * litrosPorBarril * newQty + Number.EPSILON) * 100) / 100;
-                    } else {
-                        const tr = document.createElement('tr');
-                        tr.dataset.tipo = 'cerveza';
-                        tr.dataset.id = cer.id;
-                        tr.dataset.litros = litrosPorBarril;
-                        tr.innerHTML = `
-                            <td>Cerveza</td>
-                            <td>${cer.nombreCerveza || cer.nombre || 'Cerveza ' + cer.id} (${litrosPorBarril}L)</td>
-                            <td class="litros">${litrosPorBarril || ''}</td>
-                            <td class="qty">${qty}</td>
-                            <td class="unit">${precioPorLitro || 0}</td>
-                            <td class="subtotal">${subtotal}</td>
-                            <td class="nowrap">
-                                <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
-                            </td>
-                        `;
-                        $('#detalleTable tbody').appendChild(tr);
-                    }
-
-                    $('#barril').value = '';
-                    actualizarSelectBarriles();
-                    recalcTotal();
-                    mensaje(`Producto agregado correctamente`, 'success');
-
-                } else if (tipo === 'Accesorio') {
-                    const acc = accesoriosList.find(a => String(a.id) === String(id));
-                    if (!acc) {
-                        mensaje('Accesorio no encontrada', 'error');
-                        return;
-                    }
-
-                    const precio = parseFloat(acc.precio) || 0;
-                    const subtotal = precio * cantidad;
-
+                if (existe) {
+                    const existingQty = Number(existe.querySelector('.qty').textContent);
+                    const newQty = existingQty + qty;
+                    existe.querySelector('.qty').textContent = newQty;
+                    existe.querySelector('.subtotal').textContent = Math.round((precioPorLitro * litrosPorBarril * newQty + Number.EPSILON) * 100) / 100;
+                } else {
                     const tr = document.createElement('tr');
-                    tr.dataset.tipo = 'accesorio';
-                    tr.dataset.id = acc.id;
+                    tr.dataset.tipo = 'cerveza';
+                    tr.dataset.id = cer.id;
+                    tr.dataset.litros = litrosPorBarril;
                     tr.innerHTML = `
-                        <td>Accesorio</td>
-                        <td>${acc.nombre || 'Accesorio ' + acc.id} ${acc.notas ? '- ' + acc.notas : ''}</td>
-                        <td class="litros">-</td>
-                        <td class="qty">${cantidad}</td>
-                        <td class="unit">${precio.toFixed(2)}</td>
-                        <td class="subtotal">${subtotal.toFixed(2)}</td>
+                        <td>Cerveza</td>
+                        <td>${cer.nombreCerveza || cer.nombre || 'Cerveza ' + cer.id} (${litrosPorBarril}L)</td>
+                        <td class="litros">${litrosPorBarril || ''}</td>
+                        <td class="qty">${qty}</td>
+                        <td class="unit">${precioPorLitro || 0}</td>
+                        <td class="subtotal">${subtotal}</td>
                         <td class="nowrap">
                             <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
                         </td>
                     `;
                     $('#detalleTable tbody').appendChild(tr);
-                    recalcTotal();
-                    mensaje(`Accesorio "${acc.nombre}" agregado correctamente`, 'success');
                 }
-                
+
+                $('#barril').value = '';
+                actualizarSelectBarriles();
+                recalcTotal();
+                mensaje(`Cerveza agregada correctamente`, 'success');
+
             } catch (error) {
                 console.error('Error en agregarDetalle:', error);
-                mensaje('Error agregando producto: ' + error.message, 'error');
+                mensaje('Error agregando cerveza: ' + error.message, 'error');
             }
         }
 
@@ -2817,6 +2661,16 @@
             const clienteLogueado = verificarClienteLogueado();
             if (!clienteLogueado) {
                 mensaje('Debe iniciar sesión para realizar pedidos', 'error');
+                return;
+            }
+
+            // VALIDAR FECHA DE ENTREGA
+            const fechaEntregaInput = new Date($('#fechaEntrega').value);
+            const fechaHoy = new Date();
+            fechaHoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+
+            if (fechaEntregaInput < fechaHoy) {
+                mensaje('La fecha de entrega no puede ser anterior a la fecha actual', 'error');
                 return;
             }
 
@@ -2859,8 +2713,7 @@
             const notaValor = $('#nota')?.value.trim() || '';
             
             const fechaActual = new Date();
-            const fechaEntrega = new Date();
-            fechaEntrega.setDate(fechaActual.getDate() + 7);
+            const fechaEntrega = new Date($('#fechaEntrega').value);
             
             const fechaPedidoMillis = fechaActual.getTime();
             const fechaEntregaMillis = fechaEntrega.getTime();
@@ -2933,12 +2786,6 @@
             $('#totalGral').value = '';
             $('#nota').value = '';
             
-            const accesoriosContainer = document.getElementById('accesoriosContainer');
-            if (accesoriosContainer) {
-                accesoriosContainer.innerHTML = '';
-                renderAccesorios();
-            }
-            
             setDefaultFecha();
             actualizarSelectBarriles();
             mensaje('', '');
@@ -2947,18 +2794,23 @@
         function setDefaultFecha() {
             const hoy = new Date();
             const yyyy = hoy.getFullYear();
-            const mm = String(hoy.getMonth()+1).padStart(2,'0');
-            const dd = String(hoy.getDate()).padStart(2,'0');
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            
+            // Fecha actual como fecha de pedido (oculta)
             $('#fechaPedido').value = `${yyyy}-${mm}-${dd}`;
             
+            // Fecha por defecto de entrega: 7 días después
             const entrega = new Date();
             entrega.setDate(hoy.getDate() + 7);
             const yyyyE = entrega.getFullYear();
-            const mmE = String(entrega.getMonth()+1).padStart(2,'0');
-            const ddE = String(entrega.getDate()).padStart(2,'0');
-            $('#fechaEntrega').value = `${yyyyE}-${mmE}-${ddE}`;
+            const mmE = String(entrega.getMonth() + 1).padStart(2, '0');
+            const ddE = String(entrega.getDate()).padStart(2, '0');
+            const fechaEntregaDefault = `${yyyyE}-${mmE}-${ddE}`;
+            
+            $('#fechaEntrega').value = fechaEntregaDefault;
+            $('#fechaEntrega').min = `${yyyy}-${mm}-${dd}`; // Establecer fecha mínima = hoy
         }
-        
 
         // ========== CONFIGURACIÓN DE EVENTOS ==========
         function attachListeners() {

@@ -1219,7 +1219,6 @@ function mostrarNotificacionGlobal(mensaje, tipo = 'info') {
 // ========== INSTANCIA GLOBAL DEL SISTEMA DE RESERVAS ==========
 const sistemaReservas = new SistemaReservas();
 
-// ========== FUNCIONES DE LIBERACIÓN INDIVIDUAL (COMO CANCELAR) ==========
 // ========== FUNCIÓN CORREGIDA PARA LIBERAR BARRIL INDIVIDUAL ==========
 async function liberarBarrilIndividual(barrilId) {
     try {
@@ -3447,7 +3446,6 @@ async function agregarDetalle(tipo, id, cantidad = 1) {
     }
 }
 
-// ========== POPULATE SELECTS ==========
 // ========== POPULATE SELECTS ==========
 function populateSelects() {
     console.log("🔄 Poblando selects...");
