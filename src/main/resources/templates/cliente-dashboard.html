@@ -1294,26 +1294,6 @@
             <div class="section-container">
                 <h2 class="section-title">Nuestras Cervezas</h2>
                 <div class="cervezas-grid">
-                    <!-- <div class="cerveza-card">
-                        <img src="/images/img6.jpg" alt="Sierra Maestra IPA" class="cerveza-image">
-                        <h3>Sierra Maestra IPA</h3>
-                        <p>Cerveza artesanal con un sabor intenso y amargo característico de las IPAs.</p>
-                        <div class="cerveza-price">$3.50</div>
-                    </div>
-                    
-                    <div class="cerveza-card">
-                        <img src="/images/img13.jpg" alt="Sierra Maestra Lager" class="cerveza-image">
-                        <h3>Sierra Maestra Lager</h3>
-                        <p>Una cerveza ligera y refrescante, perfecta para cualquier ocasión.</p>
-                        <div class="cerveza-price">$3.00</div>
-                    </div>
-                    
-                    <div class="cerveza-card">
-                        <img src="/images/img20.jpg" alt="Sierra Maestra Stout" class="cerveza-image">
-                        <h3>Sierra Maestra Stout</h3>
-                        <p>Cerveza oscura y robusta con notas de café y chocolate.</p>
-                        <div class="cerveza-price">$4.00</div>
-                    </div> -->
 
                         <!-- PRUEBA -->
                          
@@ -1520,10 +1500,15 @@
             cervezasDisponibles.forEach(cerveza => {
                 // Si esta cerveza es la más nueva, mostrar el badge “Nuevo”
                 const esNueva = cerveza.id === maxId;
+
+                // Verificar si ya se mostró el badge de esta cerveza antes (Prueba)
+                const badgeYaMostrado = localStorage.getItem(`badgeMostrado_${cerveza.id}`);
+
+
                 html += `
                 <div class="col-md-4 mb-4">
                     <div class="cerveza-card position-relative">
-                        ${esNueva ? `<span class="promo-badge">¡Nuevo!</span>` : ''}
+                        ${esNueva && !badgeYaMostrado ? `<span class="promo-badge" id="badge-${cerveza.id}">¡Nuevo!</span>` : ''}
                         <div class="card-body">
                             <h5 class="section-title mb-2">
                                 ${cerveza.nombreCerveza || 'Sin nombre'}
@@ -1532,7 +1517,7 @@
                             <p class="card-text"><strong>Grado alcohólico:</strong> ${cerveza.gradoAlcoholico ? cerveza.gradoAlcoholico + '°' : 'N/A'}</p>
                             <p class="card-text"><strong>IBU:</strong> ${cerveza.amargorIbu || 'N/A'}</p>
                             <p class="card-text"><strong>Precio:</strong> ${cerveza.precioPorLitro ? '$' + cerveza.precioPorLitro.toFixed(2) : 'N/A'}</p>
-                            <p class="card-text small text-muted">${cerveza.descripcion ? (cerveza.descripcion.length > 50 ? cerveza.descripcion.substring(0, 50) + '...' : cerveza.descripcion) : 'Sin descripción'}</p>
+                            <p class="card-text small text-muted">${cerveza.descripcion ? (cerveza.descripcion.length > 150 ? cerveza.descripcion.substring(0, 150) + '...' : cerveza.descripcion) : 'Sin descripción'}</p>
                         </div>
                     </div>
                 </div>
@@ -1549,6 +1534,21 @@
         }
         
         document.getElementById('cervezas-list').innerHTML = html;
+
+        // ⏱️ Hacer desaparecer el badge después de unos segundos y marcarlo como “mostrado”
+        const badges = document.querySelectorAll('.promo-badge');
+        badges.forEach(badge => {
+            setTimeout(() => {
+                badge.style.transition = "opacity 1s";
+                badge.style.opacity = "0";
+                setTimeout(() => {
+                    badge.remove();
+                    const id = badge.id.replace("badge-", "");
+                    localStorage.setItem(`badgeMostrado_${id}`, "true");
+                }, 1000);
+            }, 5000); // se oculta después de 5 segundos
+        });
+
     }
 
     function getBadgeClass(estado) {
