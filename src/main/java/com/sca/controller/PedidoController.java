@@ -70,4 +70,11 @@ public class PedidoController {
     public Respuesta cancelPedido(@PathVariable Long id) {
         return pedidosServiceImpl.cancel(id);
     }
+
+    // 🔹 Nuevo: actualizar solo estado
+    @PutMapping(value = "/updatePedidoEstado/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Actualizar estado del Pedido", notes = "Actualiza únicamente el estado de un pedido")
+    public Respuesta updateEstadoPedido(@PathVariable Long id, @RequestParam String estado) {
+        return pedidosServiceImpl.updateEstado(id, estado);
+    }
 }

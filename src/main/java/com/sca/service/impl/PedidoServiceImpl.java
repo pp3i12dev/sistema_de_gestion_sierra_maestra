@@ -236,4 +236,34 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
         }
         return respuesta;
     }
+
+    @Override
+    public Respuesta updateEstado(Long id, String estado) {
+        respuesta = new Respuesta();
+        try {
+            Pedido pedido = pedidoRepository.findById(id).orElse(null);
+            if (pedido == null) {
+                respuesta.setCodigo("404");
+                respuesta.setStatus("Not Found");
+                respuesta.setDescripcion("Pedido no encontrado");
+                respuesta.setData(null);
+                return respuesta;
+            }
+
+            // Actualizar estado
+            pedido.setEstado(estado);
+            Pedido saved = pedidoRepository.save(pedido);
+
+            respuesta.setCodigo("200");
+            respuesta.setStatus("Ok");
+            respuesta.setDescripcion("Estado del pedido actualizado");
+            respuesta.setData(saved);
+        } catch (Exception e) {
+            respuesta.setCodigo("400");
+            respuesta.setStatus("Error");
+            respuesta.setDescripcion("No se pudo actualizar el estado del pedido");
+            respuesta.setData(e.getMessage());
+        }
+        return respuesta;
+    }
 }

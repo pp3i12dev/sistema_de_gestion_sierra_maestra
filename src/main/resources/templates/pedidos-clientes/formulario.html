@@ -513,7 +513,19 @@
                         <div class="col-md-6">
                             <p><strong>Fecha de Pedido:</strong> <span id="detalleFechaPedido"></span></p>
                             <p><strong>Fecha de Entrega:</strong> <span id="detalleFechaEntrega"></span></p>
-                            <p><strong>Estado:</strong> <span id="detalleEstado" class="status-badge"></span></p>
+                            <p><strong>Estado:</strong>
+                                <span id="detalleEstado" class="status-badge"></span>
+                            </p>
+                            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                                <select id="detalleEstadoSelect" onchange="showConfirmEstado()" class="form-select" style="width:auto;">
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="En preparación">En preparación</option>
+                                    <option value="Listo para envío">Listo para envío</option>
+                                    <option value="Entregado">Entregado</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                                <button id="btnCancelarPedido" class="btn-action btn-danger" onclick="showConfirmCancelar()">Cancelar</button>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Forma de Pago:</strong> <span id="detalleFormaPago"></span></p>
@@ -575,6 +587,47 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+        <!-- Confirmar cambio de estado Modal -->
+        <div class="modal fade" id="confirmStateModal" tabindex="-1" aria-labelledby="confirmStateModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmStateModalLabel">Confirmar cambio de estado</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ¿Deseas cambiar el estado del pedido <strong id="confirmPedidoId"></strong> a <strong id="confirmNuevoEstadoText"></strong>?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="btnConfirmarEstado">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmar cancelación Modal -->
+        <div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmCancelModalLabel">Confirmar cancelación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        ¿Confirma que desea cancelar el pedido <strong id="confirmCancelPedidoId"></strong>? Esta acción solo se permite si el pedido está en estado <strong>Pendiente</strong>.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-danger" id="btnConfirmarCancel">Sí, cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast container -->
+        <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;" id="toastContainer"></div>
     
     <script>
         // Datos de ejemplo - En una aplicación real estos vendrían del backend
@@ -676,6 +729,36 @@
                     cerrarModal();
                 }
             });
+
+            // Confirm/Cancel modals handlers (Bootstrap)
+            const btnConfirmarEstado = document.getElementById('btnConfirmarEstado');
+            if (btnConfirmarEstado) {
+                btnConfirmarEstado.addEventListener('click', async () => {
+                    const modalEl = document.getElementById('confirmStateModal');
+                    const modalInst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modalInst.hide();
+                    if (pedidoSeleccionado && pendingNuevoEstado) {
+                        await actualizarEstadoPedido(pedidoSeleccionado.id, pendingNuevoEstado);
+                    }
+                    pendingNuevoEstado = null;
+                });
+                const stateModalEl = document.getElementById('confirmStateModal');
+                stateModalEl.addEventListener('hidden.bs.modal', () => {
+                    if (pendingNuevoEstado && pedidoSeleccionado) {
+                        document.getElementById('detalleEstadoSelect').value = pedidoSeleccionado.estado;
+                        pendingNuevoEstado = null;
+                    }
+                });
+            }
+            const btnConfirmarCancel = document.getElementById('btnConfirmarCancel');
+            if (btnConfirmarCancel) {
+                btnConfirmarCancel.addEventListener('click', () => {
+                    const modalEl = document.getElementById('confirmCancelModal');
+                    const modalInst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modalInst.hide();
+                    if (pedidoSeleccionado) cancelarPedido(pedidoSeleccionado.id);
+                });
+            }
         }
 
         function aplicarFiltros() {
@@ -771,6 +854,9 @@
             const estadoElement = document.getElementById('detalleEstado');
             estadoElement.textContent = pedidoSeleccionado.estado;
             estadoElement.className = `status-badge status-${pedidoSeleccionado.estado.toLowerCase().replace(' ', '')}`;
+            // Asegurar que el select muestre el estado actual
+            const detalleSelect = document.getElementById('detalleEstadoSelect');
+            if (detalleSelect) detalleSelect.value = pedidoSeleccionado.estado;
             
             // Información de pago y envío
             document.getElementById('detalleFormaPago').textContent = pedidoSeleccionado.formaPago;
@@ -867,6 +953,106 @@
         function formatearFecha(fechaString) {
             const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
             return new Date(fechaString).toLocaleDateString('es-ES', opciones);
+        }
+
+        // ---- Estado update and cancel helpers ----
+        let pendingNuevoEstado = null;
+
+        function showConfirmEstado() {
+            if (!pedidoSeleccionado) return;
+            const select = document.getElementById('detalleEstadoSelect');
+            const nuevoEstado = select.value;
+            // No action if same
+            if (nuevoEstado === pedidoSeleccionado.estado) return;
+            pendingNuevoEstado = nuevoEstado;
+            document.getElementById('confirmPedidoId').textContent = pedidoSeleccionado.id;
+            document.getElementById('confirmNuevoEstadoText').textContent = nuevoEstado;
+            const modal = new bootstrap.Modal(document.getElementById('confirmStateModal'));
+            modal.show();
+        }
+
+        async function actualizarEstadoPedido(id, estado) {
+            try {
+                const resp = await fetch(`/updatePedidoEstado/${id}?estado=${encodeURIComponent(estado)}`, {
+                    method: 'PUT',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok) throw new Error('Error al actualizar estado');
+                const data = await resp.json();
+                if (data && data.codigo === '200') {
+                    pedidoSeleccionado.estado = estado;
+                    // actualizar badge
+                    const estadoElement = document.getElementById('detalleEstado');
+                    estadoElement.textContent = estado;
+                    estadoElement.className = `status-badge status-${estado.toLowerCase().replace(/\s+/g,'')}`;
+                    mostrarNotificacion('Estado actualizado correctamente', 'success');
+                    // Also update list badge if present
+                    renderizarPedidos();
+                } else {
+                    mostrarNotificacion(data.descripcion || 'No se pudo actualizar el estado', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarNotificacion('Error al actualizar estado', 'error');
+            }
+        }
+
+        function showConfirmCancelar() {
+            if (!pedidoSeleccionado) return;
+            document.getElementById('confirmCancelPedidoId').textContent = pedidoSeleccionado.id;
+            const modal = new bootstrap.Modal(document.getElementById('confirmCancelModal'));
+            modal.show();
+        }
+
+        async function cancelarPedido(id) {
+            try {
+                const resp = await fetch(`/cancelPedido/${id}`, { method: 'PUT', headers: { 'Accept': 'application/json' } });
+                if (!resp.ok) throw new Error('Error al cancelar');
+                const data = await resp.json();
+                if (data && data.codigo === '200') {
+                    pedidoSeleccionado.estado = 'Cancelado';
+                    document.getElementById('detalleEstado').textContent = 'Cancelado';
+                    document.getElementById('detalleEstado').className = 'status-badge status-cancelado';
+                    document.getElementById('detalleEstadoSelect').value = 'Cancelado';
+                    mostrarNotificacion('Pedido cancelado correctamente', 'success');
+                    renderizarPedidos();
+                    cerrarModal();
+                } else {
+                    mostrarNotificacion(data.descripcion || 'No se pudo cancelar el pedido', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                mostrarNotificacion('Error al cancelar el pedido', 'error');
+            }
+        }
+
+        // Bootstrap toast notification helper
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                // fallback to alert
+                alert(mensaje);
+                return;
+            }
+            const toastEl = document.createElement('div');
+            toastEl.className = 'toast';
+            toastEl.setAttribute('role', 'alert');
+            toastEl.setAttribute('aria-live', 'assertive');
+            toastEl.setAttribute('aria-atomic', 'true');
+
+            const variant = tipo === 'success' ? 'success' : (tipo === 'error' ? 'danger' : 'primary');
+
+            toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body text-${variant}">${mensaje}</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toastEl);
+            const bsToast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            bsToast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
         }
     </script>
 </body>

@@ -17,4 +17,7 @@ public interface PedidoService {
     // 🔹 nuevos
     Respuesta findByCliente(Long clienteId);
     Respuesta cancel(Long id);
+    
+    // Actualizar solo el estado de un pedido
+    Respuesta updateEstado(Long id, String estado);
 }
