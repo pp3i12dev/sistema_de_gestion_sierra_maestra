@@ -39,5 +39,8 @@ public interface BarrilService {
     // Exportar barriles a Excel filtrando por estado
     ResponseEntity<byte[]> exportarBarrilesPorEstadoExcel(String estado);
 
+    // Actualizar campos de reserva de un barril
+    Barril updateReservaBarril(Barril barril);
+
     
 }

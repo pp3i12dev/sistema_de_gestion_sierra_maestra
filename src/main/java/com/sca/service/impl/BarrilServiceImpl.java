@@ -1,7 +1,14 @@
 package com.sca.service.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -276,10 +283,53 @@ public class BarrilServiceImpl extends ResponseEntityExceptionHandler implements
         
         // Actualizar solo campos de reserva, mantener los demás
         existingBarril.setEstado(barril.getEstado());
-        existingBarril.setSession_reserva(barril.getSession_reserva());
-        existingBarril.setTimestamp_reserva(barril.getTimestamp_reserva());
+        // usar los nombres camelCase definidos en el modelo Barril
+        existingBarril.setSessionReserva(barril.getSessionReserva());
+        existingBarril.setTimestampReserva(barril.getTimestampReserva());
         
         return barrilRepository.save(existingBarril);
+    }
+
+    @Override
+    public ResponseEntity<byte[]> exportarBarrilesPorEstadoExcel(String estado) {
+        try {
+            List<Barril> barriles = barrilRepository.findByEstado(estado);
+
+            try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                Sheet sheet = workbook.createSheet("Barriles_" + estado);
+                Row header = sheet.createRow(0);
+                String[] columnas = {"ID", "Litros", "Estado", "Notas", "LoteId", "SessionReserva", "TimestampReserva"};
+                for (int i = 0; i < columnas.length; i++) {
+                    header.createCell(i).setCellValue(columnas[i]);
+                }
+
+                int fila = 1;
+                for (Barril b : barriles) {
+                    Row row = sheet.createRow(fila++);
+                    row.createCell(0).setCellValue(b.getId() != null ? b.getId() : 0);
+                    row.createCell(1).setCellValue(b.getLitros() != null ? b.getLitros() : 0);
+                    row.createCell(2).setCellValue(b.getEstado() != null ? b.getEstado() : "");
+                    row.createCell(3).setCellValue(b.getNotas() != null ? b.getNotas() : "");
+                    row.createCell(4).setCellValue(b.getLote() != null && b.getLote().getId() != null ? b.getLote().getId() : 0);
+                    row.createCell(5).setCellValue(b.getSessionReserva() != null ? b.getSessionReserva() : "");
+                    row.createCell(6).setCellValue(b.getTimestampReserva() != null ? b.getTimestampReserva().toString() : "");
+                }
+
+                workbook.write(out);
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Content-Disposition", "attachment; filename=barriles_" + estado + ".xlsx");
+
+                return ResponseEntity
+                        .ok()
+                        .headers(headers)
+                        .body(out.toByteArray());
+            }
+
+        } catch (IOException e) {
+            log.error("Error generando Excel de barriles", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
 
