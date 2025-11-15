@@ -795,6 +795,27 @@
                     successMessage.style.display = 'none';
                 }
             }
+
+            // ✅ VALIDACIÓN DNI MEJORADA - VERSIÓN CORREGIDA
+            document.getElementById('documento').addEventListener('input', function() {
+                const dni = this.value;
+                
+                // Permitir DNI de 7 u 8 dígitos, pero también aceptar temporalmente mientras se escribe
+                if (dni === '' || /^\d{0,8}$/.test(dni)) {
+                    this.classList.remove('is-invalid');
+                    this.setCustomValidity('');
+                    
+                    // Solo marcar como válido si tiene 7 u 8 dígitos completos
+                    if (/^\d{7,8}$/.test(dni)) {
+                        this.classList.add('is-valid');
+                    } else {
+                        this.classList.remove('is-valid');
+                    }
+                } else {
+                    this.classList.add('is-invalid');
+                    this.setCustomValidity('El DNI debe contener solo números (7 u 8 dígitos)');
+                }
+            });
             
             function validarFormulario() {
                 const contrasenia = document.getElementById('contrasenia').value;
@@ -802,13 +823,33 @@
                 const dni = document.getElementById('documento').value;
                 const tipo = tipoInput.value;
                 
-                // Validar DNI - 7 u 8 dígitos
-                if (!/^\d{7,8}$/.test(dni)) {
-                    document.getElementById('documento').setCustomValidity('El DNI debe contener 7 u 8 dígitos numéricos');
+                // ✅ VALIDACIÓN DNI MEJORADA - Más permisiva
+                if (!dni || dni.trim() === '') {
+                    document.getElementById('documento').setCustomValidity('El DNI es requerido');
                     document.getElementById('documento').classList.add('is-invalid');
                     return false;
+                }
+                
+                // Limpiar solo caracteres no numéricos y verificar longitud
+                const dniLimpio = dni.replace(/[^\d]/g, '');
+                
+                if (dniLimpio.length < 7 || dniLimpio.length > 8) {
+                    document.getElementById('documento').setCustomValidity('El DNI debe tener 7 u 8 dígitos');
+                    document.getElementById('documento').classList.add('is-invalid');
+                    return false;
+                }
+                
+                // ✅ DNI VÁLIDO
+                document.getElementById('documento').setCustomValidity('');
+                document.getElementById('documento').classList.remove('is-invalid');
+                document.getElementById('documento').classList.add('is-valid');
+
+                // Resto de validaciones...
+                if (contrasenia !== confirmarContrasenia) {
+                    document.getElementById('confirmar_contrasenia').setCustomValidity('Las contraseñas no coinciden');
+                    return false;
                 } else {
-                    document.getElementById('documento').setCustomValidity('');
+                    document.getElementById('confirmar_contrasenia').setCustomValidity('');
                 }
 
                 // Validaciones específicas por tipo
@@ -816,7 +857,6 @@
                     const cuit = document.getElementById('cuit').value;
                     const razonSocial = document.getElementById('razon_social').value;
                     
-                    // Validar CUIT
                     if (cuit && cuit.trim() !== '') {
                         const dniDesdeCUIT = extraerDNIDesdeCUIT(cuit);
                         if (!dniDesdeCUIT) {
@@ -824,11 +864,9 @@
                             document.getElementById('cuit').classList.add('is-invalid');
                             return false;
                         }
-                        
                         document.getElementById('cuit').setCustomValidity('');
                     }
                     
-                    // Validar Razón Social
                     if (!razonSocial || razonSocial.trim() === '') {
                         document.getElementById('razon_social').setCustomValidity('La razón social es obligatoria para empresas');
                         document.getElementById('razon_social').classList.add('is-invalid');
@@ -838,26 +876,13 @@
                     }
                 }
 
-                // Validar que las contraseñas coincidan
-                if (contrasenia !== confirmarContrasenia) {
-                    document.getElementById('confirmar_contrasenia').setCustomValidity('Las contraseñas no coinciden');
-                    return false;
-                } else {
-                    document.getElementById('confirmar_contrasenia').setCustomValidity('');
-                }
-
-                // Validar campos requeridos
-                let camposRequeridos = [
-                    'nombre', 'apellido', 'documento', 'fecha_nacimiento', 
+                // Validar campos requeridos básicos
+                let esValido = true;
+                const camposRequeridos = [
+                    'nombre', 'apellido', 'fecha_nacimiento', 
                     'mail', 'direccion', 'telefono', 'contrasenia', 'confirmar_contrasenia'
                 ];
 
-                // Agregar campos específicos por tipo
-                if (tipo === 'empresa') {
-                    camposRequeridos.push('cuit', 'razon_social');
-                }
-
-                let esValido = true;
                 camposRequeridos.forEach(campo => {
                     const elemento = document.getElementById(campo);
                     if (elemento && !elemento.checkValidity()) {
@@ -865,7 +890,9 @@
                         esValido = false;
                     } else if (elemento) {
                         elemento.classList.remove('is-invalid');
-                        elemento.classList.add('is-valid');
+                        if (elemento.value.trim() !== '') {
+                            elemento.classList.add('is-valid');
+                        }
                     }
                 });
 
@@ -875,6 +902,8 @@
             // Event listener para el formulario
             formulario.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                
+                console.log('🔍 DEBUG - DNI antes de validar:', document.getElementById('documento').value);
                 
                 if (!validarFormulario()) {
                     mostrarMensaje('Por favor corrija los errores en el formulario', 'error');
@@ -1005,21 +1034,6 @@
                 } else {
                     this.classList.remove('is-invalid', 'is-valid');
                     this.setCustomValidity('');
-                }
-            });
-
-            // Validación en tiempo real para DNI
-            document.getElementById('documento').addEventListener('input', function() {
-                const dni = this.value;
-                if (/^\d{7,8}$/.test(dni)) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
-                    this.setCustomValidity('');
-                } else {
-                    this.classList.remove('is-valid');
-                    if (dni.length > 0) {
-                        this.classList.add('is-invalid');
-                    }
                 }
             });
 
