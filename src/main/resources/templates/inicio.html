@@ -521,7 +521,7 @@
                 </div>
                 
                 <div class="modal-links">
-                    <a href="#">¿Olvidaste tu contraseña?</a>
+                    <a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
                 </div>
                 
                 <div class="modal-buttons">
@@ -582,6 +582,37 @@
         </div>
     </div>
 
+    <!-- Modal Recuperar Contraseña (nuevo) -->
+    <div id="forgot-password-modal" class="modal-overlay">
+      <div class="login-modal">
+        <button class="close-modal" id="close-forgot-password">&times;</button>
+        
+        <div class="modal-header">
+          <h2 class="modal-title">Recuperar Contraseña</h2>
+        </div>
+        
+        <!-- Mensajes -->
+        <div id="success-message-forgot" class="success-message">
+          ¡Se envió un correo con instrucciones!
+        </div>
+        <div id="error-message-forgot" class="error-message"></div>
+        
+        <form id="forgot-password-form" class="modal-form">
+          <div class="form-group">
+            <label for="forgot-email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="forgot-email" name="email" required
+                   placeholder="Ingrese su email">
+          </div>
+          
+          <div class="modal-buttons">
+            <button type="submit" class="btn-modal btn-login">
+              Enviar enlace
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
@@ -640,7 +671,7 @@
         clientes.forEach((cliente, index) => {
             const coincideEmail = cliente.mail === email;
             const coincidePassword = cliente.contrasenia === password;
-            // CORRECCIÓN: Usar activo === true en lugar de activo === 1
+            // Usar activo === true en lugar de activo === 1
             const estaActivo = cliente.activo === true;
             
             console.log(`Cliente ${index + 1}:`, {
@@ -657,16 +688,15 @@
             });
         });
         
-        // CORRECCIÓN: Buscar con activo === true en lugar de activo === 1
+        // Buscar con activo === true
         const clienteExacto = clientes.find(c => 
             c.mail === email && 
             c.contrasenia === password &&
-            c.activo === true  // ← ¡CORREGIDO!
+            c.activo === true
         );
         
         console.log('🎯 RESULTADO DE BÚSQUEDA EXACTA:', clienteExacto);
         
-        // Si no encuentra coincidencia exacta, buscar por partes para diagnosticar
         if (!clienteExacto) {
             console.log('🔎 DIAGNÓSTICO DEL PROBLEMA:');
             
@@ -674,7 +704,6 @@
             if (clientePorEmail) {
                 console.log('✅ Se encontró cliente con el email:', clientePorEmail);
                 console.log('   - ¿Coincide la contraseña?:', clientePorEmail.contrasenia === password ? '✅ SÍ' : '❌ NO');
-                // CORRECCIÓN: Verificar con activo === true
                 console.log('   - ¿Está activo?:', clientePorEmail.activo === true ? '✅ SÍ' : '❌ NO');
                 console.log('   - Tipo de dato de activo:', typeof clientePorEmail.activo);
                 console.log('   - Valor de activo:', clientePorEmail.activo);
@@ -693,7 +722,6 @@
         return clienteExacto;
     }
 
-    // Función para inicializar todo cuando el DOM esté listo
     function init() {
         // ===== LOGIN CLIENTE =====
         const modalCliente = document.getElementById('login-modal-cliente');
@@ -712,6 +740,14 @@
         const successMessageUsuario = document.getElementById('success-message');
         const errorMessageUsuario = document.getElementById('error-message');
         const btnLoginUsuario = document.getElementById('btn-login');
+
+        // ===== FORGOT PASSWORD =====
+        const forgotModal = document.getElementById("forgot-password-modal");
+        const forgotLink = document.getElementById("forgot-password-link");
+        const closeForgot = document.getElementById("close-forgot-password");
+        const forgotForm = document.getElementById("forgot-password-form");
+        const successForgot = document.getElementById("success-message-forgot");
+        const errorForgot = document.getElementById("error-message-forgot");
 
         // Mostrar modal cliente
         if (btnOpcionCliente && modalCliente) {
@@ -801,7 +837,7 @@
             }
         }
 
-        // Manejo del formulario de login de cliente - VERSIÓN CORREGIDA
+        // Manejo del formulario de login de cliente
         if (loginFormCliente && btnLoginCliente) {
             loginFormCliente.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -820,28 +856,21 @@
                 try {
                     console.log('🔄 Obteniendo clientes del servidor...');
                     
-                    // Obtener clientes del servidor
                     const response = await fetch(`${API}/getAllCliente`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
-                    }
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
                     
                     const data = await response.json();
                     console.log('✅ Clientes obtenidos correctamente');
                     
-                    // Procesar la respuesta
                     const clientes = procesarRespuestaServidor(data, 'getAllCliente');
                     console.log(`📊 ${clientes.length} clientes procesados`);
                     
-                    // Debug detallado de la búsqueda
                     const cliente = debugBusquedaCliente(clientes, email, password);
                     
                     if (cliente) {
                         console.log('✅ Cliente encontrado y activo:', cliente);
                         mostrarMensajeCliente('¡Inicio de sesión exitoso!', 'success');
                         
-                        // Guardar datos del cliente en sessionStorage para usar en otras páginas
                         sessionStorage.setItem('clienteLogueado', JSON.stringify({
                             id: cliente.id,
                             email: cliente.mail,
@@ -866,7 +895,7 @@
             });
         }
 
-        // Manejo del formulario de login de usuario/asociado - VERSIÓN CORREGIDA
+        // Manejo del formulario de login de usuario/asociado
         if (loginFormUsuario && btnLoginUsuario) {
             loginFormUsuario.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -885,28 +914,21 @@
                 try {
                     console.log('🔄 Obteniendo asociados del servidor...');
                     
-                    // Obtener asociados del servidor
                     const response = await fetch(`${API}/getAllAsociados`);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
-                    }
+                    if (!response.ok) throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
                     
                     const data = await response.json();
                     console.log('✅ Asociados obtenidos correctamente');
                     
-                    // Procesar la respuesta
                     const asociados = procesarRespuestaServidor(data, 'getAllAsociados');
                     console.log(`📊 ${asociados.length} asociados procesados`);
                     
-                    // DEBUG: Mostrar estructura de los asociados
                     console.log('🔍 ESTRUCTURA DE ASOCIADOS:');
                     if (asociados.length > 0) {
                         console.log('Campos del primer asociado:', Object.keys(asociados[0]));
                         asociados.forEach((asoc, index) => {
                             console.log(`Asociado ${index + 1}:`, {
                                 legajo: asoc.legajo,
-                                // CORRECCIÓN: Usar contrasenia en lugar de contrasena
                                 contrasenia: asoc.contrasenia,
                                 activo: asoc.activo,
                                 nombre: asoc.nombre
@@ -914,11 +936,8 @@
                         });
                     }
                     
-                    // Buscar asociado que coincida - CORREGIDO para usar contrasenia
                     const asociado = asociados.find(a => {
-                        // CORRECCIÓN: Usar el campo correcto contrasenia
                         const contraseniaCorrecta = a.contrasenia;
-                        // Manejar tanto activo booleano como numérico
                         const estaActivo = a.activo === true || a.activo === 1;
                         
                         const coincide = a.legajo == legajo && 
@@ -945,7 +964,6 @@
                         console.log('✅ LOGIN EXITOSO - Asociado encontrado:', asociado);
                         mostrarMensajeUsuario('¡Inicio de sesión exitoso!', 'success');
                         
-                        // Guardar datos del asociado en sessionStorage
                         sessionStorage.setItem('usuarioLogueado', JSON.stringify({
                             legajo: asociado.legajo,
                             nombre: asociado.nombre,
@@ -969,6 +987,73 @@
                 }
             });
         }
+
+        // Abrir modal "Olvidaste tu contraseña"
+        if (forgotLink && forgotModal) {
+            forgotLink.addEventListener("click", function(e) {
+              e.preventDefault();
+              forgotModal.style.display = "flex";
+              document.body.style.overflow = "hidden";
+              if (forgotForm) forgotForm.reset();
+              if (successForgot) successForgot.style.display = "none";
+              if (errorForgot) errorForgot.style.display = "none";
+            });
+        }
+
+        // Cerrar modal "Olvidaste tu contraseña"
+        if (closeForgot && forgotModal) {
+            closeForgot.addEventListener("click", function() {
+              forgotModal.style.display = "none";
+              document.body.style.overflow = "auto";
+            });
+        }
+
+        // Cerrar al hacer clic fuera del modal
+        if (forgotModal) {
+            forgotModal.addEventListener("click", function(e) {
+              if (e.target === forgotModal) {
+                forgotModal.style.display = "none";
+                document.body.style.overflow = "auto";
+              }
+            });
+        }
+
+        // Enviar formulario de recuperar contraseña
+        if (forgotForm) {
+            forgotForm.addEventListener("submit", async function(e) {
+              e.preventDefault();
+              const email = document.getElementById("forgot-email").value;
+
+              try {
+                const response = await fetch(`${API}/clientes/forgot-password`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: email })
+                });
+
+                if (response.ok) {
+                  if (successForgot) {
+                    successForgot.style.display = "block";
+                    successForgot.textContent = "¡Se envió un correo con instrucciones!";
+                  }
+                  if (errorForgot) errorForgot.style.display = "none";
+                } else {
+                  const data = await response.json().catch(() => ({}));
+                  if (errorForgot) {
+                    errorForgot.innerText = data.mensaje || "Error al enviar correo. Revisa el email ingresado.";
+                    errorForgot.style.display = "block";
+                  }
+                  if (successForgot) successForgot.style.display = "none";
+                }
+              } catch (err) {
+                if (errorForgot) {
+                  errorForgot.innerText = "Error de conexión con el servidor";
+                  errorForgot.style.display = "block";
+                }
+                if (successForgot) successForgot.style.display = "none";
+              }
+            });
+        }
     }
 
     // Inicializar cuando el DOM esté listo
@@ -977,6 +1062,6 @@
     } else {
         init();
     }
-</script>
+    </script>
 </body>
 </html>

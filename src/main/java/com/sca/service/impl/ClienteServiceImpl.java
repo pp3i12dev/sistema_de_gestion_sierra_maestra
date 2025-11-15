@@ -16,6 +16,10 @@ import com.sca.model.Cliente;
 import com.sca.model.Respuesta;
 import com.sca.repository.ClienteRepository;
 import com.sca.service.ClienteService;
+import com.sca.service.EmailService;
+
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ClienteServiceImpl extends ResponseEntityExceptionHandler implements ClienteService {
@@ -24,6 +28,9 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
 
     @Autowired
     ClienteRepository clienteRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     Respuesta respuesta;
     String resp = "";
@@ -148,8 +155,6 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
         }
         return respuesta;
     }
-
-    // 🔹 Nuevo: login
     @Override
     public Respuesta login(String documento, String contrasenia) {
         respuesta = new Respuesta();
@@ -175,19 +180,10 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
         return respuesta;
     }
 
-    /*
-     * MÉTODO: registrarCliente()
-     * Descripción: Registra un nuevo cliente con validaciones de unicidad
-     * Valida que el DNI y email no estén ya registrados en el sistema
-     * Parámetros: cliente (Cliente), bindingResult (BindingResult)
-     * Retorna: ResponseEntity<Object> con resultado del registro
-     */
     @Override
     public ResponseEntity<Object> registrarCliente(Cliente cliente, BindingResult bindingResult) throws BindException {
         respuesta = new Respuesta();
         try {
-            // VALIDACIONES DE UNICIDAD
-            // Verificar si el DNI ya existe
             if (clienteRepository.existsByDocumento(cliente.getDocumento())) {
                 respuesta.setCodigo("409");
                 respuesta.setStatus("Conflict");
@@ -196,7 +192,6 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
             }
 
-            // Verificar si el email ya existe
             if (clienteRepository.existsByMail(cliente.getMail())) {
                 respuesta.setCodigo("409");
                 respuesta.setStatus("Conflict");
@@ -205,30 +200,24 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
             }
 
-            // CONFIGURACIÓN INICIAL DEL CLIENTE
-            // Establecer valores por defecto para nuevos clientes
-            cliente.setActivo(true);  // Cliente activo por defecto
-            cliente.setTipo("Cliente");  // Tipo por defecto
-            cliente.setLegajo("CLI-" + System.currentTimeMillis());  // Legajo único generado
+            cliente.setActivo(true);
+            cliente.setTipo("Cliente");
+            cliente.setLegajo("CLI-" + System.currentTimeMillis());
 
-            // GUARDAR EL CLIENTE
             Cliente clienteGuardado = clienteRepository.save(cliente);
-            
-            // RESPUESTA DE ÉXITO
+
             respuesta.setCodigo("201");
             respuesta.setStatus("Created");
             respuesta.setDescripcion("Cliente registrado exitosamente");
             respuesta.setData(clienteGuardado);
-            
+
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
 
         } catch (Exception e) {
-            // MANEJO DE ERRORES
             respuesta.setCodigo(String.valueOf(HttpStatus.BAD_REQUEST.value()));
             respuesta.setStatus(HttpStatus.BAD_REQUEST.getReasonPhrase());
             respuesta.setDescripcion("Error al registrar el cliente");
-            
-            // Si hay errores de validación, mostrarlos
+
             if (bindingResult.hasErrors()) {
                 bindingResult.getAllErrors().forEach(r -> resp = resp + r.getDefaultMessage() + "; ");
                 respuesta.setData(resp);
@@ -236,8 +225,108 @@ public class ClienteServiceImpl extends ResponseEntityExceptionHandler implement
             } else {
                 respuesta.setData(e.getMessage());
             }
-            
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
         }
     }
+
+    public ResponseEntity<?> findByMail(String mail) {
+        try {
+            String normalizedMail = mail == null ? null : mail.trim().toLowerCase();
+            Optional<Cliente> clienteOpt = clienteRepository.findByMail(normalizedMail);
+            if (clienteOpt.isPresent()) {
+                return ResponseEntity.ok(clienteOpt.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Cliente no encontrado con el mail: " + mail);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al buscar cliente por mail: " + e.getMessage());
+        }
+    }
+
+    public ResponseEntity<?> aplicarResetPassword(String token, String nuevaContrasenia) {
+        try {
+            Optional<Cliente> clienteOpt = clienteRepository.findByTokenRecuperacion(token);
+            if (clienteOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Token inválido o expirado");
+            }
+
+            Cliente cliente = clienteOpt.get();
+            cliente.setContrasenia(nuevaContrasenia);
+            cliente.setTokenRecuperacion(null); // ✅ invalidar token después de usarlo
+            clienteRepository.save(cliente);
+
+            return ResponseEntity.ok("Contraseña actualizada correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar la contraseña: " + e.getMessage());
+        }
+    }
+
+
+    public ResponseEntity<?> forgotPassword(String email) {
+        try {
+            String normalizedMail = email == null ? null : email.trim().toLowerCase();
+            Optional<Cliente> clienteOpt = clienteRepository.findByMail(normalizedMail);
+
+            if (clienteOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("No existe un cliente con el email: " + email);
+            }
+
+            Cliente cliente = clienteOpt.get();
+
+            String token = UUID.randomUUID().toString();
+            log.info("Token de recuperación generado para {}: {}", normalizedMail, token);
+
+            // ✅ Guardar el token en el cliente
+            cliente.setTokenRecuperacion(token);
+            clienteRepository.save(cliente); // ✅ Persistir en la base
+
+            String asunto = "Recuperación de contraseña";
+            String cuerpoHtml = "Hola " + cliente.getNombre() + ",<br><br>"
+                    + "Para recuperar tu contraseña, hacé clic en el siguiente enlace:<br>"
+                    + "<a href='http://localhost:8080/clientes/reset-password?token=" + token + "'>Recuperar contraseña</a><br><br>"
+                    + "Si no solicitaste esto, ignorá este mensaje.";
+
+            log.info("Preparando envío de correo a: {}", normalizedMail);
+            emailService.sendEmail(normalizedMail, asunto, cuerpoHtml);
+            log.info("Correo enviado (o en proceso) a: {}", normalizedMail);
+
+            return ResponseEntity.ok("Se envió un enlace de recuperación al correo: " + email);
+
+        } catch (Exception e) {
+            log.error("Error al enviar correo de recuperación: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al procesar la recuperación de contraseña: " + e.getMessage());
+        }
+    }
+
+    // 🔹 Método para testear envío de correo
+    public void testEmail(String to, String subject, String htmlBody) {
+        log.info("Enviando correo de prueba a: {}", to);
+        emailService.sendEmail(to, subject, htmlBody);
+        log.info("Correo de prueba enviado.");
+    }
+
+    public ResponseEntity<?> validarTokenResetPassword(String token) {
+        try {
+            Optional<Cliente> clienteOpt = clienteRepository.findByTokenRecuperacion(token);
+            if (clienteOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Token inválido o expirado");
+            }
+
+            Cliente cliente = clienteOpt.get();
+            return ResponseEntity.ok("Token válido para: " + cliente.getMail());
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al validar el token: " + e.getMessage());
+        }
+    }
+
 }

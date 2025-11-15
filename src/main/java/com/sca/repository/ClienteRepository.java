@@ -5,6 +5,8 @@ import org.springframework.stereotype.Repository;
 
 import com.sca.model.Cliente;
 
+import java.util.Optional; // ✅ Corrección: importar Optional
+
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
@@ -21,6 +23,9 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     // Busca cliente por documento (para validaciones adicionales)
     Cliente findByDocumento(String documento);
     
-    // Busca cliente por email (para validaciones adicionales)
-    Cliente findByMail(String mail);
+    // ✅ Corrección: busca cliente por email y permite verificar si existe
+    Optional<Cliente> findByMail(String mail);
+    
+    // ✅ Nuevo método: busca cliente por token de recuperación
+    Optional<Cliente> findByTokenRecuperacion(String tokenRecuperacion);
 }

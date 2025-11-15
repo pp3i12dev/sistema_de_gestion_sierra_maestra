@@ -834,7 +834,7 @@
                             <label class="form-label">Total Cervezas</label>
                             <input type="text" id="totalCervezas" class="form-control" readonly>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4"style="display: none;">
                             <label class="form-label">Total Accesorios</label>
                             <input type="text" id="totalAccesorios" class="form-control" readonly>
                         </div>
@@ -952,110 +952,119 @@
 
     <!-- MODAL PARA EDITAR PEDIDO -->
     <div class="modal fade modal-editar" id="modalEditarPedido" tabindex="-1" aria-labelledby="modalEditarPedidoLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalEditarPedidoLabel">
-                        <i class="bi bi-pencil-square me-2"></i>Editar Pedido
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formEditarPedido" autocomplete="off">
-                        <input type="hidden" id="editarPedidoId">
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Cerveza</label>
-                                <select id="editarCerveza" class="form-select"></select>
-                                <small class="barril-info">Precio por litro: <span id="editarCervezaPrecio">-</span></small>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Barril (disponible)</label>
-                                <select id="editarBarril" class="form-select"></select>
-                                <small class="barril-info">Litros: <span id="editarBarrilLitros">-</span></small>
-                            </div>
-
-                            <div class="col-md-2">
-                                <label class="form-label">Cantidad (barriles)</label>
-                                <input type="number" id="editarCantidad" class="form-control" min="1" value="1">
-                            </div>
-
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" id="editarBtnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6 d-flex align-items-center">
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" id="editarEnvio">
-                                    <label class="form-check-label">Requiere envío</label>
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalEditarPedidoLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Editar Pedido
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formEditarPedido" autocomplete="off">
+                            <input type="hidden" id="editarPedidoId">
+                            
+                            <!-- ✅ NUEVO: Campo para editar fecha de entrega -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha de Entrega *</label>
+                                    <input type="date" id="editarFechaEntrega" class="form-control" required>
+                                    <small class="text-muted">La fecha debe ser hoy o posterior</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Dirección de Entrega</label>
-                                <input type="text" id="editarDireccionEntrega" class="form-control" value="Sin envío" disabled>
-                            </div>
-                        </div>
 
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">Detalle del Pedido</label>
-                                <div class="table-responsive">
-                                    <table id="editarDetalleTable" class="table table-sm table-bordered">
-                                        <thead class="table-secondary">
-                                            <tr>
-                                                <th>Tipo</th>
-                                                <th>Nombre</th>
-                                                <th>Litros</th>
-                                                <th>Cantidad</th>
-                                                <th>Precio unit.</th>
-                                                <th>Subtotal</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Cerveza</label>
+                                    <select id="editarCerveza" class="form-select"></select>
+                                    <small class="barril-info">Precio por litro: <span id="editarCervezaPrecio">-</span></small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Barril (disponible)</label>
+                                    <select id="editarBarril" class="form-select"></select>
+                                    <small class="barril-info">Litros: <span id="editarBarrilLitros">-</span></small>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Cantidad (barriles)</label>
+                                    <input type="number" id="editarCantidad" class="form-control" min="1" value="1">
+                                </div>
+
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" id="editarBtnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Total Cervezas</label>
-                                <input type="text" id="editarTotalCervezas" class="form-control" readonly>
+                            <div class="row mb-3">
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="editarEnvio">
+                                        <label class="form-check-label">Requiere envío</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Dirección de Entrega</label>
+                                    <input type="text" id="editarDireccionEntrega" class="form-control" value="Sin envío" disabled>
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Total Accesorios</label>
-                                <input type="text" id="editarTotalAccesorios" class="form-control" readonly>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Total General</label>
-                                <input type="text" id="editarTotalGral" class="form-control" readonly>
-                            </div>
-                        </div>
 
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label">Nota</label>
-                                <textarea id="editarNota" class="form-control" rows="2"></textarea>
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Detalle del Pedido</label>
+                                    <div class="table-responsive">
+                                        <table id="editarDetalleTable" class="table table-sm table-bordered">
+                                            <thead class="table-secondary">
+                                                <tr>
+                                                    <th>Tipo</th>
+                                                    <th>Nombre</th>
+                                                    <th>Litros</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Precio unit.</th>
+                                                    <th>Subtotal</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="guardarEdicionPedido()">
-                        <i class="bi bi-check-circle me-2"></i>Guardar Cambios
-                    </button>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Total Cervezas</label>
+                                    <input type="text" id="editarTotalCervezas" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Total Accesorios</label>
+                                    <input type="text" id="editarTotalAccesorios" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Total General</label>
+                                    <input type="text" id="editarTotalGral" class="form-control" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Nota</label>
+                                    <textarea id="editarNota" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="guardarEdicionPedido()">
+                            <i class="bi bi-check-circle me-2"></i>Guardar Cambios
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- MODAL PARA EDITAR CLIENTE -->
     <div class="modal fade modal-editar" id="modalEditarCliente" tabindex="-1" aria-labelledby="modalEditarClienteLabel" aria-hidden="true">
@@ -1569,6 +1578,13 @@
             const itemsOrdenados = [...items].sort((a, b) => b.id - a.id);
 
             itemsOrdenados.forEach(p => {
+                console.log('🔍 DEBUG - Procesando pedido:', { 
+                    id: p.id, 
+                    barriles: p.barriles,
+                    cervezas: p.cervezas,
+                    accesorios: p.accesorios 
+                });
+
                 // ✅ NUEVO: Obtener metadata para mostrar información completa
                 const metadata = p.metadata ? JSON.parse(p.metadata) : {};
                 const costoEnvio = metadata.costoEnvio || 0;
@@ -1577,29 +1593,48 @@
                 let productosInfo = [];
                 let cantidadesInfo = [];
 
-                const barrilesPorCerveza = {};
+                // ✅ CORREGIDO: PROCESAR BARRILES AGRUPADOS COMO EN ASOCIADO
                 if (p.barriles && Array.isArray(p.barriles)) {
-                    p.barriles.forEach(barril => {
-                        const loteId = barril.loteId;
-                        if (!barrilesPorCerveza[loteId]) {
-                            barrilesPorCerveza[loteId] = 0;
-                        }
-                        barrilesPorCerveza[loteId]++;
-                    });
-                }
+                    const barrilesAgrupados = {};
 
-                // Cervezas
-                if (p.cervezas && Array.isArray(p.cervezas)) {
-                    p.cervezas.forEach(cerveza => {
-                        const cervezaId = cerveza.id;
-                        const cantidad = barrilesPorCerveza[cervezaId] || 0;
-                        
-                        if (cantidad > 0) {
-                            const nombre = cerveza.nombreCerveza || cerveza.nombre || `Cerveza ${cervezaId}`;
-                            productosInfo.push(nombre);
-                            cantidadesInfo.push(`${cantidad} barril(es)`);
+                    p.barriles.forEach(barril => {
+                        const barrilId = typeof barril === 'object' ? barril.id : barril;
+                        const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+                        if (barrilCompleto) {
+                            let cervezaNombre = 'Cerveza no especificada';
+                            const litros = barrilCompleto.litros || 0;
+
+                            // Obtener información desde el lote
+                            if (barrilCompleto.loteId) {
+                                const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                                if (lote && lote.cerveza) {
+                                    cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                                }
+                            }
+
+                            // Crear clave única
+                            const key = `${cervezaNombre}-${litros}`;
+
+                            if (!barrilesAgrupados[key]) {
+                                barrilesAgrupados[key] = {
+                                    cervezaNombre,
+                                    litros,
+                                    cantidad: 0
+                                };
+                            }
+
+                            barrilesAgrupados[key].cantidad++;
                         }
                     });
+
+                    // ✅ Generar información para mostrar
+                    Object.values(barrilesAgrupados).forEach(grupo => {
+                        productosInfo.push(`${grupo.cervezaNombre} (${grupo.litros}L)`);
+                        cantidadesInfo.push(`${grupo.cantidad} barril(es)`);
+                    });
+
+                    console.log('✅ Barriles agrupados:', barrilesAgrupados);
                 }
 
                 // ✅ MEJORADO: Accesorios con precios desde metadata
@@ -1624,6 +1659,17 @@
                     cantidadesInfo.push(`$${costoEnvio.toFixed(2)}`);
                 }
 
+                // ✅ NUEVO: Si no hay productos pero sí hay cervezas en el pedido, mostrar información básica
+                if (productosInfo.length === 0 && p.cervezas && Array.isArray(p.cervezas)) {
+                    p.cervezas.forEach(cerveza => {
+                        const nombre = cerveza.nombreCerveza || cerveza.nombre || `Cerveza ${cerveza.id}`;
+                        productosInfo.push(nombre);
+                        cantidadesInfo.push('Cantidad no especificada');
+                    });
+                }
+
+                console.log('📦 Productos finales:', { productosInfo, cantidadesInfo });
+
                 const estado = p.estado || 'Pendiente';
                 const estadoPago = p.estadoPago || 'Pendiente';
                 const direccionEnvio = p.direccionEntrega && p.direccionEntrega !== 'Sin envío' ? p.direccionEntrega : 'Sin envío';
@@ -1634,9 +1680,11 @@
                     <td class="nowrap">${p.id || ''}</td>
                     <td class="productos-lista">
                         ${productosInfo.map(prod => `<div class="producto-item">${prod}</div>`).join('')}
+                        ${productosInfo.length === 0 ? '<div class="producto-item text-muted">No hay productos</div>' : ''}
                     </td>
                     <td class="productos-lista">
                         ${cantidadesInfo.map(cant => `<div class="producto-item">${cant}</div>`).join('')}
+                        ${cantidadesInfo.length === 0 ? '<div class="producto-item text-muted">-</div>' : ''}
                     </td>
                     <td>
                         <span class="badge ${estado === 'Pendiente' ? 'bg-warning' : estado === 'Entregado' ? 'bg-success' : estado === 'Cancelado' ? 'bg-danger' : 'bg-secondary'} badge-estado">
@@ -1671,8 +1719,7 @@
                 `;
                 tbody.appendChild(tr);
             });
-        }
-        // ========== FUNCIÓN CANCELAR PEDIDO ==========
+        }        // ========== FUNCIÓN CANCELAR PEDIDO ==========
         async function cancelarPedido(pedidoId) {
             if (!confirm('¿Está seguro de que desea cancelar este pedido? Esta acción no se puede deshacer.')) {
                 return;
@@ -1744,16 +1791,12 @@
             const ticketContent = $('#ticketContent');
             if (!ticketContent) return;
 
-            const barrilesPorCerveza = {};
-            if (pedido.barriles && Array.isArray(pedido.barriles)) {
-                pedido.barriles.forEach(barril => {
-                    const loteId = barril.loteId;
-                    if (!barrilesPorCerveza[loteId]) {
-                        barrilesPorCerveza[loteId] = 0;
-                    }
-                    barrilesPorCerveza[loteId]++;
-                });
-            }
+            console.log('🔍 DEBUG - Generando ticket para pedido:', { 
+                id: pedido.id, 
+                barriles: pedido.barriles,
+                cervezas: pedido.cervezas,
+                accesorios: pedido.accesorios 
+            });
 
             // ✅ NUEVO: Obtener metadata con precios de accesorios y costo de envío
             const metadata = pedido.metadata ? JSON.parse(pedido.metadata) : {};
@@ -1763,24 +1806,61 @@
             let productosHTML = '';
             let subtotalTotal = 0;
 
-            // ✅ Cervezas (existente)
-            if (pedido.cervezas && Array.isArray(pedido.cervezas)) {
-                pedido.cervezas.forEach(cerveza => {
-                    const cantidad = barrilesPorCerveza[cerveza.id] || 0;
-                    if (cantidad > 0) {
-                        const litrosPorBarril = 25; // Asumiendo 25L por barril
-                        const precioPorLitro = cerveza.precioPorLitro || 0;
-                        const subtotal = cantidad * litrosPorBarril * precioPorLitro;
-                        subtotalTotal += subtotal;
+            // ✅ CORREGIDO: PROCESAR BARRILES AGRUPADOS COMO EN ASOCIADO
+            if (pedido.barriles && Array.isArray(pedido.barriles)) {
+                const barrilesAgrupados = {};
 
-                        productosHTML += `
-                            <div class="ticket-producto">
-                                <div>${cerveza.nombreCerveza} - ${cantidad} barril(es)</div>
-                                <div>$${subtotal.toFixed(2)}</div>
-                            </div>
-                        `;
+                pedido.barriles.forEach(barril => {
+                    const barrilId = typeof barril === 'object' ? barril.id : barril;
+                    const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+                    if (barrilCompleto) {
+                        let cervezaNombre = 'Cerveza no especificada';
+                        let precioPorLitro = 0;
+                        const litros = barrilCompleto.litros || 0;
+
+                        // Obtener información desde el lote
+                        if (barrilCompleto.loteId) {
+                            const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                            if (lote && lote.cerveza) {
+                                cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                                precioPorLitro = lote.cerveza.precioPorLitro || 0;
+                            }
+                        }
+
+                        // Crear clave única
+                        const key = `${cervezaNombre}-${litros}`;
+
+                        if (!barrilesAgrupados[key]) {
+                            barrilesAgrupados[key] = {
+                                cervezaNombre,
+                                litros,
+                                precioPorLitro,
+                                cantidad: 0
+                            };
+                        }
+
+                        barrilesAgrupados[key].cantidad++;
                     }
                 });
+
+                // ✅ Generar HTML con subtotal correcto por cantidad
+                Object.values(barrilesAgrupados).forEach(grupo => {
+                    const subtotal = grupo.cantidad * grupo.litros * grupo.precioPorLitro;
+                    subtotalTotal += subtotal;
+                    
+                    productosHTML += `
+                        <div class="ticket-producto">
+                            <div>
+                                <strong>${grupo.cervezaNombre}</strong><br>
+                                <small>${grupo.cantidad} barril(es) de ${grupo.litros}L - $${grupo.precioPorLitro}/L</small>
+                            </div>
+                            <div>$${subtotal.toFixed(2)}</div>
+                        </div>
+                    `;
+                });
+
+                console.log('✅ Barriles procesados en ticket:', barrilesAgrupados);
             }
 
             // ✅ CORREGIDO: Accesorios con precios desde metadata
@@ -1798,7 +1878,10 @@
 
                     productosHTML += `
                         <div class="ticket-producto">
-                            <div>${accesorioCompleto.nombre || 'Accesorio ' + accesorioId} - 1 unidad</div>
+                            <div>
+                                <strong>${accesorioCompleto.nombre || 'Accesorio ' + accesorioId}</strong><br>
+                                <small>1 unidad</small>
+                            </div>
                             <div>$${precio.toFixed(2)}</div>
                         </div>
                     `;
@@ -1809,11 +1892,24 @@
             if (costoEnvio > 0) {
                 productosHTML += `
                     <div class="ticket-producto">
-                        <div>Costo de envío</div>
+                        <div><strong>Costo de envío</strong></div>
                         <div>$${costoEnvio.toFixed(2)}</div>
                     </div>
                 `;
                 subtotalTotal += costoEnvio;
+            }
+
+            // ✅ NUEVO: Si no hay productos pero sí hay cervezas en el pedido, mostrar información básica
+            if (productosHTML === '' && pedido.cervezas && Array.isArray(pedido.cervezas)) {
+                pedido.cervezas.forEach(cerveza => {
+                    const nombre = cerveza.nombreCerveza || cerveza.nombre || `Cerveza ${cerveza.id}`;
+                    productosHTML += `
+                        <div class="ticket-producto">
+                            <div>${nombre}</div>
+                            <div>-</div>
+                        </div>
+                    `;
+                });
             }
 
             const nombreCliente = pedido.cliente ? 
@@ -1830,6 +1926,8 @@
             // ✅ Usar totalGral del pedido (que ya incluye accesorios y envío)
             const totalFinal = pedido.totalGral || subtotalTotal;
 
+            console.log('💰 Totales calculados:', { subtotalTotal, totalGral: pedido.totalGral, totalFinal });
+
             const ticketHTML = `
                 <div class="ticket-header">
                     <img src="/images/logo.jpg" alt="Sierra Maestra" class="ticket-logo">
@@ -1839,12 +1937,12 @@
 
                 <div class="ticket-section">
                     <div class="ticket-section-title">Nombre y cantidad de producto</div>
-                    ${productosHTML || '<div class="text-muted">No hay productos en este pedido</div>'}
+                    ${productosHTML || '<div class="text-muted text-center">No hay productos en este pedido</div>'}
                 </div>
 
                 <div class="ticket-total">
                     <div>Precio Total:</div>
-                    <div>$${totalFinal.toFixed(2)}</div>
+                    <div><strong>$${totalFinal.toFixed(2)}</strong></div>
                 </div>
 
                 <div class="ticket-section">
@@ -1857,12 +1955,36 @@
                     <div><strong>Cliente:</strong> ${nombreCliente}</div>
                     <div><strong>Fecha de pedido:</strong> ${fechaPedido}</div>
                     <div><strong>Fecha de entrega:</strong> ${fechaEntrega}</div>
-                    <div><strong>Estado:</strong> ${pedido.estado || 'Pendiente'}</div>
-                    <div><strong>Estado de pago:</strong> ${pedido.estadoPago || 'Pendiente'}</div>
+                    <div>
+                        <strong>Estado:</strong> 
+                        <span class="badge ${pedido.estado === 'Entregado' ? 'bg-success' : 
+                                        pedido.estado === 'Cancelado' ? 'bg-danger' : 'bg-warning'}">
+                            ${pedido.estado || 'Pendiente'}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Estado de pago:</strong> 
+                        <span class="badge ${pedido.estadoPago === 'Pagado' ? 'bg-success' : 'bg-warning'}">
+                            ${pedido.estadoPago || 'Pendiente'}
+                        </span>
+                    </div>
+                    ${pedido.nota ? `<div class="mt-2"><strong>Notas:</strong> ${pedido.nota}</div>` : ''}
+                </div>
+
+                <div class="text-center mt-4 text-muted">
+                    <small>¡Gracias por su compra! 🍻</small>
                 </div>
             `;
 
             ticketContent.innerHTML = ticketHTML;
+
+            // ✅ Verificar si el logo se cargó correctamente
+            setTimeout(() => {
+                const logo = ticketContent.querySelector('.ticket-logo');
+                if (logo && logo.naturalHeight === 0) {
+                    console.log('⚠️ Logo no se pudo cargar, mostrando texto alternativo');
+                }
+            }, 100);
         }
         // ========== GENERACIÓN DE PDF ==========
         async function descargarTicketPDF() {
@@ -1960,83 +2082,138 @@
 
         // ========== EDICIÓN DE PEDIDO ==========
         function cargarDatosEnModalEdicion(pedido) {
-            document.getElementById('editarPedidoId').value = pedido.id;
-            document.getElementById('editarNota').value = pedido.nota || '';
+        console.log('🔄 Cargando datos del pedido:', pedido);
+        
+        document.getElementById('editarPedidoId').value = pedido.id;
+        document.getElementById('editarNota').value = pedido.nota || '';
 
-            const tieneEnvio = pedido.direccionEntrega && pedido.direccionEntrega !== 'Sin envío';
-            document.getElementById('editarEnvio').checked = tieneEnvio;
-            document.getElementById('editarDireccionEntrega').value = pedido.direccionEntrega || 'Sin envío';
-            document.getElementById('editarDireccionEntrega').disabled = !tieneEnvio;
-
-            cargarDetalleEdicion(pedido);
-            calcularTotalesEdicion();
-            configurarEventosEdicion();
+        // ✅ Cargar fecha de entrega
+        const fechaEntregaInput = document.getElementById('editarFechaEntrega');
+        if (fechaEntregaInput) {
+            const fechaFormateada = formatDateToISO(pedido.fechaEntrega);
+            if (fechaFormateada) {
+                fechaEntregaInput.value = fechaFormateada.split('T')[0];
+            }
+            
+            // Establecer fecha mínima como hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaEntregaInput.min = hoy;
         }
+
+        const tieneEnvio = pedido.direccionEntrega && pedido.direccionEntrega !== 'Sin envío';
+        document.getElementById('editarEnvio').checked = tieneEnvio;
+        document.getElementById('editarDireccionEntrega').value = pedido.direccionEntrega || 'Sin envío';
+        document.getElementById('editarDireccionEntrega').disabled = !tieneEnvio;
+
+        // ✅ CORREGIDO: Cargar detalle del pedido
+        cargarDetalleEdicion(pedido);
+        calcularTotalesEdicion();
+        configurarEventosEdicion();
+        
+        console.log('✅ Datos cargados correctamente');
+    }
 
         function cargarDetalleEdicion(pedido) {
             const tbody = document.querySelector('#editarDetalleTable tbody');
             tbody.innerHTML = '';
 
-            const barrilesPorCerveza = {};
-            if (pedido.barriles && Array.isArray(pedido.barriles)) {
-                pedido.barriles.forEach(barril => {
-                    const loteId = barril.loteId;
-                    if (!barrilesPorCerveza[loteId]) {
-                        barrilesPorCerveza[loteId] = 0;
-                    }
-                    barrilesPorCerveza[loteId]++;
-                });
-            }
+            console.log('📦 Cargando detalle del pedido:', {
+                barriles: pedido.barriles,
+                cervezas: pedido.cervezas,
+                accesorios: pedido.accesorios
+            });
 
-            if (pedido.cervezas && Array.isArray(pedido.cervezas)) {
-                pedido.cervezas.forEach(cerveza => {
-                    const cantidad = barrilesPorCerveza[cerveza.id] || 0;
-                    if (cantidad > 0) {
-                        const litrosPorBarril = 25;
-                        const precioPorLitro = cerveza.precioPorLitro || 0;
-                        const subtotal = cantidad * litrosPorBarril * precioPorLitro;
+            // ✅ CORREGIDO: Obtener metadata con precios
+            const metadata = pedido.metadata ? JSON.parse(pedido.metadata) : {};
+            const preciosAccesorios = metadata.accesoriosPrecios || {};
+
+            // ✅ CORREGIDO: Procesar BARRILES individualmente (no agrupados)
+            if (pedido.barriles && Array.isArray(pedido.barriles)) {
+                console.log('🛢️ Procesando', pedido.barriles.length, 'barriles');
+                
+                pedido.barriles.forEach(barril => {
+                    const barrilId = typeof barril === 'object' ? barril.id : barril;
+                    const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+                    if (barrilCompleto) {
+                        let cervezaNombre = 'Cerveza no especificada';
+                        let precioPorLitro = 0;
+                        const litros = barrilCompleto.litros || 0;
+
+                        // Obtener información desde el lote
+                        if (barrilCompleto.loteId) {
+                            const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                            if (lote && lote.cerveza) {
+                                cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                                precioPorLitro = lote.cerveza.precioPorLitro || 0;
+                            }
+                        }
+
+                        const subtotal = litros * precioPorLitro;
 
                         const tr = document.createElement('tr');
-                        tr.dataset.tipo = 'cerveza';
-                        tr.dataset.id = cerveza.id;
-                        tr.dataset.litros = litrosPorBarril;
+                        tr.dataset.tipo = 'barril'; // ✅ Tipo correcto: barril
+                        tr.dataset.id = barrilId; // ✅ ID del barril
+                        tr.dataset.litros = litros;
                         tr.innerHTML = `
-                            <td>Cerveza</td>
-                            <td>${cerveza.nombreCerveza} (${litrosPorBarril}L)</td>
-                            <td class="litros">${litrosPorBarril || ''}</td>
-                            <td class="qty">${cantidad}</td>
-                            <td class="unit">${precioPorLitro || 0}</td>
-                            <td class="subtotal">${subtotal}</td>
-                            <td class="nowrap">
-                                <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    }
-                });
-            }
-
-            if (pedido.accesorios && Array.isArray(pedido.accesorios)) {
-                pedido.accesorios.forEach(accesorio => {
-                    const precio = parseFloat(accesorio.precio) || 0;
-                    const subtotal = precio;
-
-                    const tr = document.createElement('tr');
-                        tr.dataset.tipo = 'accesorio';
-                        tr.dataset.id = accesorio.id;
-                        tr.innerHTML = `
-                            <td>Accesorio</td>
-                            <td>${accesorio.nombre} ${accesorio.notas ? '- ' + accesorio.notas : ''}</td>
-                            <td class="litros">-</td>
+                            <td>Barril</td>
+                            <td>${cervezaNombre} - Barril #${barrilId} (${litros}L)</td>
+                            <td class="litros">${litros}</td>
                             <td class="qty">1</td>
-                            <td class="unit">${precio.toFixed(2)}</td>
+                            <td class="unit">${precioPorLitro}</td>
                             <td class="subtotal">${subtotal.toFixed(2)}</td>
                             <td class="nowrap">
                                 <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
+                        
+                        console.log('✅ Barril agregado:', barrilId, cervezaNombre);
+                    }
                 });
+            }
+
+            // ✅ CORREGIDO: Procesar accesorios con precios desde metadata
+            if (pedido.accesorios && Array.isArray(pedido.accesorios)) {
+                console.log('🎯 Procesando', pedido.accesorios.length, 'accesorios');
+                
+                pedido.accesorios.forEach(accesorio => {
+                    const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
+                    const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
+                    
+                    // Usar precio desde metadata si existe, sino el precio base
+                    const precio = preciosAccesorios[accesorioId] != null 
+                        ? parseFloat(preciosAccesorios[accesorioId])
+                        : (accesorioCompleto.precio || 0);
+
+                    const subtotal = precio;
+
+                    const tr = document.createElement('tr');
+                    tr.dataset.tipo = 'accesorio';
+                    tr.dataset.id = accesorioId;
+                    tr.innerHTML = `
+                        <td>Accesorio</td>
+                        <td>${accesorioCompleto.nombre || 'Accesorio ' + accesorioId} ${accesorioCompleto.notas ? '- ' + accesorioCompleto.notas : ''}</td>
+                        <td class="litros">-</td>
+                        <td class="qty">1</td>
+                        <td class="unit">${precio.toFixed(2)}</td>
+                        <td class="subtotal">${subtotal.toFixed(2)}</td>
+                        <td class="nowrap">
+                            <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    
+                    console.log('✅ Accesorio agregado:', accesorioCompleto.nombre);
+                });
+            }
+
+            // ✅ Si no hay productos, mostrar mensaje
+            if (tbody.children.length === 0) {
+                console.warn('⚠️ No se cargaron productos en el detalle');
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay productos en este pedido</td></tr>';
+            } else {
+                console.log('✅ Total productos cargados:', tbody.children.length, '(Barriles:', pedido.barriles?.length || 0, 'Accesorios:', pedido.accesorios?.length || 0, ')');
             }
         }
 
@@ -2238,21 +2415,49 @@
         }
 
         function calcularTotalesEdicion() {
-            let totalCervezas = 0, totalAccesorios = 0;
+            let totalCervezas = 0;
+            let totalAccesorios = 0;
+            
             const filas = document.querySelectorAll('#editarDetalleTable tbody tr');
+            console.log('💰 Calculando totales para', filas.length, 'filas');
+            
             filas.forEach(tr => {
                 const tipo = tr.dataset.tipo;
-                const subtotal = Number(tr.querySelector('.subtotal').textContent || 0);
-                if (tipo === 'cerveza') totalCervezas += subtotal;
-                else totalAccesorios += subtotal;
+                
+                // ✅ CORREGIDO: Extraer subtotal correctamente
+                const subtotalCell = tr.querySelector('.subtotal');
+                let subtotal = 0;
+                
+                if (subtotalCell) {
+                    const text = subtotalCell.textContent.trim();
+                    // Eliminar símbolo $, espacios, y parsear
+                    const cleanText = text.replace(/[$\s]/g, '');
+                    subtotal = parseFloat(cleanText) || 0;
+                    console.log('📊 Fila', tipo, '- Subtotal:', subtotal);
+                }
+
+                if (tipo === 'barril' || tipo === 'cerveza') {
+                    totalCervezas += subtotal;
+                } else if (tipo === 'accesorio') {
+                    totalAccesorios += subtotal;
+                }
             });
+
             const totalGeneral = Math.round((totalCervezas + totalAccesorios + Number.EPSILON) * 100) / 100;
-            document.getElementById('editarTotalCervezas').value = totalCervezas !== 0 ? ('$' + totalCervezas) : '';
-            document.getElementById('editarTotalAccesorios').value = totalAccesorios !== 0 ? ('$' + totalAccesorios) : '';
-            document.getElementById('editarTotalGral').value = totalGeneral !== 0 ? ('$' + totalGeneral) : '';
+
+            // ✅ Mostrar con formato
+            document.getElementById('editarTotalCervezas').value = totalCervezas > 0 ? ('$' + totalCervezas.toFixed(2)) : '';
+            document.getElementById('editarTotalAccesorios').value = totalAccesorios > 0 ? ('$' + totalAccesorios.toFixed(2)) : '';
+            document.getElementById('editarTotalGral').value = totalGeneral > 0 ? ('$' + totalGeneral.toFixed(2)) : '';
+
+            console.log('💰 Totales calculados:', {
+                cervezas: totalCervezas,
+                accesorios: totalAccesorios,
+                general: totalGeneral
+            });
+
             return totalGeneral;
         }
-
         // ========== FUNCIÓN GUARDAR EDICIÓN CORREGIDA ==========
         async function guardarEdicionPedido() {
             const pedidoId = document.getElementById('editarPedidoId').value;
@@ -2264,6 +2469,22 @@
             try {
                 console.log('🔍 Iniciando guardarEdicionPedido...');
                 console.log('📋 Pedido ID:', pedidoId);
+
+                // ✅ NUEVO: Validar fecha de entrega
+                const fechaEntregaInput = document.getElementById('editarFechaEntrega').value;
+                if (!fechaEntregaInput) {
+                    mensaje('La fecha de entrega es obligatoria', 'error');
+                    return;
+                }
+
+                const fechaEntrega = new Date(fechaEntregaInput + 'T12:00:00').getTime();
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                if (fechaEntrega < hoy.getTime()) {
+                    mensaje('La fecha de entrega no puede ser anterior a la fecha actual', 'error');
+                    return;
+                }
 
                 // Validar que haya al menos un producto en el detalle
                 const filasDetalle = document.querySelectorAll('#editarDetalleTable tbody tr');
@@ -2291,57 +2512,73 @@
                     throw new Error('Cliente no logueado');
                 }
 
-                // PAYLOAD SIMPLIFICADO - EVITAR REFERENCIAS CIRCULARES
+                // ✅ CORREGIDO: Procesar productos del detalle
+                const accesoriosPayload = [];
+                const barrilesPayload = [];
+                const cervezasMap = new Map(); // Para agrupar cervezas por ID
+
+                console.log('🔄 Procesando filas del detalle...');
+                
+                filasDetalle.forEach(tr => {
+                    const tipo = tr.dataset.tipo;
+                    const id = tr.dataset.id;
+
+                    if (tipo === 'barril') {
+                        // ✅ Procesar barriles individualmente
+                        const barrilId = parseInt(id);
+                        barrilesPayload.push({ id: barrilId });
+                        console.log('✅ Barril agregado al payload:', barrilId);
+
+                        // ✅ También agregar la cerveza asociada al barril
+                        const barrilCompleto = barrilesList.find(b => b.id == barrilId);
+                        if (barrilCompleto && barrilCompleto.loteId) {
+                            const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                            if (lote && lote.cerveza) {
+                                const cervezaId = lote.cerveza.id;
+                                if (!cervezasMap.has(cervezaId)) {
+                                    cervezasMap.set(cervezaId, { id: cervezaId });
+                                }
+                                console.log('✅ Cerveza asociada al barril:', cervezaId);
+                            }
+                        }
+
+                    } else if (tipo === 'accesorio') {
+                        // ✅ Procesar accesorios
+                        const accesorioId = parseInt(id);
+                        accesoriosPayload.push({ id: accesorioId });
+                        console.log('✅ Accesorio agregado al payload:', accesorioId);
+                    }
+                });
+
+                // Convertir mapa de cervezas a array
+                const cervezasPayload = Array.from(cervezasMap.values());
+
+                console.log('📦 Payload final:', {
+                    cervezas: cervezasPayload,
+                    barriles: barrilesPayload,
+                    accesorios: accesoriosPayload
+                });
+
+                // PAYLOAD SIMPLIFICADO
                 const payload = {
                     id: parseInt(pedidoId),
                     fechaPedido: pedidoOriginal.fechaPedido || Date.now(),
-                    fechaEntrega: pedidoOriginal.fechaEntrega || Date.now() + (7 * 24 * 60 * 60 * 1000),
+                    fechaEntrega: fechaEntrega, // ✅ Fecha editada
                     envio: envio,
                     direccionEntrega: direccionEntrega,
                     estado: pedidoOriginal.estado || "Pendiente",
                     estadoPago: pedidoOriginal.estadoPago || "Pendiente",
                     totalGral: totalGral,
                     nota: nota,
-                    // Solo IDs para evitar referencias circulares
+                    // ✅ CORREGIDO: Arrays con los productos
                     cliente: { id: clienteLogueado.id },
                     usuario: { id: 1 },
-                    // Arrays simplificados
-                    accesorios: [],
-                    cervezas: [],
-                    barriles: []
+                    accesorios: accesoriosPayload,
+                    cervezas: cervezasPayload,
+                    barriles: barrilesPayload
                 };
 
-                // Procesar filas del detalle - SOLO IDs
-                filasDetalle.forEach(tr => {
-                    const tipo = tr.dataset.tipo;
-                    const id = parseInt(tr.dataset.id);
-
-                    if (tipo === 'cerveza') {
-                        // Solo agregar ID de cerveza
-                        if (!payload.cervezas.some(c => c.id === id)) {
-                            payload.cervezas.push({ id: id });
-                        }
-
-                        // Procesar barriles para esta cerveza
-                        const litros = parseInt(tr.dataset.litros);
-                        const cantidad = parseInt(tr.querySelector('.qty').textContent);
-                        
-                        const barrilesCerveza = obtenerBarrilesPorCerveza(id)
-                            .filter(b => b.litros == litros)
-                            .slice(0, cantidad);
-
-                        barrilesCerveza.forEach(barril => {
-                            payload.barriles.push({ id: barril.id });
-                        });
-
-                    } else if (tipo === 'accesorio') {
-                        // Solo agregar ID de accesorio
-                        payload.accesorios.push({ id: id });
-                    }
-                });
-
-                console.log('📦 Payload simplificado para updatePedido:', payload);
-                console.log('🚀 Enviando PUT a:', `${API}/updatePedido`);
+                console.log('📤 Payload completo para updatePedido:', payload);
 
                 // Realizar la petición PUT
                 const res = await fetchJSON(`${API}/updatePedido`, {
@@ -2384,7 +2621,6 @@
                 mensaje('❌ Error al actualizar pedido: ' + error.message, 'error');
             }
         }
-
         // ========== EDICIÓN DE CLIENTE ==========
         async function cargarDatosClienteEnModal(cliente) {
             try {
