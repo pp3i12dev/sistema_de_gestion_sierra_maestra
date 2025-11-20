@@ -1,56 +1,373 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
-    <div th:if="${#lists.isEmpty(items)}">No hay sueldos básicos.</div>
-    <div th:each="s : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/sueldos-basicos/view/{id}(id=${s.id})}, data-view-target='#sueldos-basicos-form'" style="cursor:pointer" role="button" tabindex="0">
+
+<head>
+  <meta charset="utf-8">
+  <title>Sueldos Básicos</title>
+</head>
+
+<body>
+  <!-- SCRIPTS GLOBALES -->
+  <script>
+    // Cargar lista al iniciar (sin HTMX)
+    document.addEventListener('DOMContentLoaded', function () {
+      fetch('/sueldos-basicos/list')
+        .then(response => response.text())
+        .then(html => {
+          const cont = document.querySelector('#sueldos-basicos-list');
+          if (cont) cont.innerHTML = html;
+        })
+        .catch(error => console.error('Error al cargar lista:', error));
+    });
+
+    // Abrir formulario vacío (Nuevo) sin HTMX
+    function nuevoSueldo() {
+      fetch('/sueldos-basicos/form')
+        .then(r => r.text())
+        .then(html => {
+          const cont = document.querySelector('#sueldos-basicos-form');
+          if (!cont) return;
+          cont.innerHTML = html;
+
+          // Asegurar que el form apunte a save (POST)
+          const form = cont.querySelector('form');
+          if (form) {
+            form.setAttribute('action', '/sueldos-basicos/save');
+            form.setAttribute('method', 'post');
+          }
+
+          const titulo = cont.querySelector('h4');
+          const boton = cont.querySelector('button[type="submit"]');
+          if (titulo) titulo.textContent = 'Nuevo Sueldo Básico';
+          if (boton) boton.textContent = 'Guardar';
+        })
+        .catch(err => console.error('Error al cargar formulario nuevo:', err));
+    }
+
+    // Editar sueldo SIN HTMX
+    // Editar sueldo SIN HTMX (CORREGIDO)
+    function editarSueldo(id) {
+      console.log("Editando sueldo:", id);
+
+      // 1. Cargar el formulario correcto (EXISTE)
+      fetch('/sueldos-basicos/form')
+        .then(r => r.text())
+        .then(html => {
+          const cont = document.querySelector('#sueldos-basicos-form');
+          cont.innerHTML = html;
+
+          // 2. Traer datos del sueldo
+          return fetch('/getByIdSueldoBasico/' + id);
+        })
+        .then(r => r.json())
+        .then(data => {
+
+          if (!data || data.codigo !== "200" || !data.data) {
+            console.error("No se encontró el sueldo:", data);
+            return;
+          }
+
+          const s = data.data.value || data.data;
+
+          const cont = document.querySelector('#sueldos-basicos-form');
+
+          // Inputs
+          cont.querySelector('input[name="id"]').value = s.id;
+          cont.querySelector('input[name="sueldo_basico"]').value = s.sueldo_basico;
+
+          if (s.categoria)
+            cont.querySelector('select[name="categoria.id"]').value = s.categoria.id;
+
+          if (s.porcentajeMes)
+            cont.querySelector('select[name="porcentajeMes.id"]').value = s.porcentajeMes.id;
+
+          // Cambiar acción del form a UPDATE
+          const form = cont.querySelector('form');
+          form.setAttribute('action', '/updateSueldoBasico');
+          form.setAttribute('method', 'put');
+
+          // Cambiar títulos
+          cont.querySelector('h4').textContent = "Editar Sueldo Básico";
+          cont.querySelector('button[type="submit"]').textContent = "Actualizar";
+
+        })
+        .catch(err => console.error("Error al editar:", err));
+    }
+
+    // Enviar formulario (interceptar submit) y refrescar lista sin HTMX
+    document.addEventListener('submit', function (e) {
+      const form = e.target.closest('#sueldos-basicos-form form');
+      if (!form) return;
+
+      e.preventDefault();
+
+      const action = form.getAttribute('action') || '/sueldos-basicos/save';
+      const method = (form.getAttribute('method') || 'post').toUpperCase();
+
+      // Construir FormData y convertir a objeto
+      const fd = new FormData(form);
+      const payload = {};
+      fd.forEach((value, key) => {
+        // Convertir números si aplica
+        if (key === 'sueldo_basico') payload[key] = parseFloat(value);
+        else if (key === 'categoria.id' || key === 'porcentajeMes.id' || key === 'id') payload[key] = Number(value);
+        else payload[key] = value;
+      });
+
+      // Adaptar a JSON del backend
+      const body = {
+        id: payload.id || 0,
+        sueldo_basico: payload.sueldo_basico,
+        categoria: payload['categoria.id'] ? { id: payload['categoria.id'] } : null,
+        porcentajeMes: payload['porcentajeMes.id'] ? { id: payload['porcentajeMes.id'] } : null
+      };
+
+      fetch(action, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(body)
+      })
+        .then(r => r.json().catch(() => ({})))
+        .then(res => {
+          // Feedback
+          const ok =
+            res &&
+            (res.codigo === '200' || res.codigo === '201' || /ok/i.test(res.status) || res.status === 'success');
+
+          const successEl = document.getElementById('success-message');
+          const errorEl = document.getElementById('error-message');
+          const successText = document.getElementById('success-text');
+          const errorText = document.getElementById('error-text');
+
+          if (ok) {
+            if (successEl && successText) {
+              successText.textContent = res.descripcion || 'Operación exitosa';
+              successEl.style.display = 'block';
+              setTimeout(() => (successEl.style.display = 'none'), 4000);
+            }
+            // Refrescar lista
+            fetch('/sueldos-basicos/list')
+              .then(rr => rr.text())
+              .then(html => {
+                const cont = document.querySelector('#sueldos-basicos-list');
+                if (cont) cont.innerHTML = html;
+                // Limpiar formulario
+                const formCont = document.querySelector('#sueldos-basicos-form');
+                if (formCont) formCont.innerHTML = '';
+              });
+          } else {
+            if (errorEl && errorText) {
+              const msg = res.descripcion || res.message || 'Error en la operación';
+              errorText.textContent = msg;
+              errorEl.style.display = 'block';
+              setTimeout(() => (errorEl.style.display = 'none'), 6000);
+            }
+          }
+        })
+        .catch(err => {
+          const errorEl = document.getElementById('error-message');
+          const errorText = document.getElementById('error-text');
+          if (errorEl && errorText) {
+            errorText.textContent = 'Error de conexión: ' + err.message;
+            errorEl.style.display = 'block';
+            setTimeout(() => (errorEl.style.display = 'none'), 6000);
+          }
+        });
+    });
+
+    // Eliminar sin HTMX (si querés quitar HTMX del botón)
+    function eliminarSueldo(id) {
+      if (!confirm('¿Estás seguro de eliminar este sueldo básico?')) return;
+      fetch('/deleteSueldo/' + id, { method: 'DELETE', headers: { 'Accept': 'application/json' } })
+        .then(r => r.json().catch(() => ({})))
+        .then(res => {
+          const ok = res && (res.codigo === '200' || /ok/i.test(res.status));
+          if (ok) {
+            fetch('/sueldos-basicos/list')
+              .then(rr => rr.text())
+              .then(html => {
+                const cont = document.querySelector('#sueldos-basicos-list');
+                if (cont) cont.innerHTML = html;
+              });
+          } else {
+            alert('No se pudo eliminar: ' + (res.descripcion || res.message || 'Error'));
+          }
+        })
+        .catch(err => alert('Error de conexión: ' + err.message));
+    }
+  </script>
+
+  <!-- Fragmento para mensajes de éxito/error -->
+  <div th:fragment="messages">
+    <div id="success-message" class="alert alert-success alert-dismissible fade show" role="alert" style="display: none;">
+      <span id="success-text"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div id="error-message" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
+      <span id="error-text"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  </div>
+
+  <!-- Fragmento para lista de sueldos básicos -->
+  <div th:fragment="lista(items)">
+    <div th:if="${#lists.isEmpty(items)}" class="alert alert-info">
+      No hay sueldos básicos.
+    </div>
+
+    <div th:each="s : ${items}" class="card mb-2 p-3">
       <div class="d-flex justify-content-between align-items-center">
         <div>
-          <strong th:text="${s.id}">ID</strong>
-          <div class="muted" th:text="${s.sueldo_basico}">Monto</div>
+          <strong>ID: <span th:text="${s.id}"></span></strong>
+          <div class="text-muted">Monto: $<span th:text="${#numbers.formatDecimal(s.sueldo_basico, 0, 'DEFAULT', 2, 'DEFAULT')}"></span></div>
+          <div th:if="${s.categoria}" class="text-muted">
+            Categoría: <span th:text="${s.categoria.nombre}"></span>
+          </div>
+          <div th:if="${s.porcentajeMes}" class="text-muted">
+            Porcentaje Mes: <span th:text="${s.porcentajeMes.porcentaje_aumento}"></span>%
+          </div>
         </div>
         <div>
-          <button class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/sueldos-basicos/view/{id}(id=${s.id})}" hx-target="#sueldos-basicos-form" hx-swap="innerHTML" title="Ver" onclick="event.stopPropagation()"><i class="bi bi-eye-fill"></i></button>
-          <button class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/sueldos-basicos/{id}(id=${s.id})}" hx-target="#sueldos-basicos-form" hx-swap="innerHTML" title="Editar" onclick="event.stopPropagation()"><i class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteSueldo/{id}(id=${s.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/sueldos-basicos/list','#sueldos-basicos-list')"><i class="bi bi-trash-fill"></i></button>
+          <!-- BOTÓN EDITAR (sin HTMX) -->
+          <button class="btn btn-sm btn-outline-primary me-1"
+                  th:onclick="'editarSueldo(' + ${s.id} + ')'"
+                  title="Editar">
+            <i class="bi bi-pencil-fill"></i> Editar
+          </button>
+
+          <!-- BOTÓN ELIMINAR (con HTMX, como ya lo tenías) -->
+          <button class="btn btn-sm btn-outline-danger"
+                  th:attr="hx-delete=@{/deleteSueldo/{id}(id=${s.id})}"
+                  hx-confirm="¿Estás seguro de eliminar este sueldo básico?"
+                  hx-target="#sueldos-basicos-list"
+                  hx-swap="innerHTML"
+                  title="Eliminar">
+            <i class="bi bi-trash-fill"></i> Eliminar
+          </button>
+
+          <!-- Si querés eliminar SIN HTMX, usa este en vez del de arriba:
+          <button class="btn btn-sm btn-outline-danger"
+                  th:onclick="'eliminarSueldo(' + ${s.id} + ')'"
+                  title="Eliminar">
+            <i class="bi bi-trash-fill"></i> Eliminar
+          </button>
+          -->
         </div>
       </div>
     </div>
   </div>
 
-  <div th:fragment="form">
-    <form th:action="@{/sueldos-basicos/save}" th:object="${sueldo}" hx-post="/sueldos-basicos/save" hx-target="#sueldos-basicos-list" hx-swap="innerHTML">
-      <input type="hidden" th:field="*{id}" />
-      <div class="mb-2">
-  <label>Monto</label>
-  <input class="form-control" th:field="*{sueldo_basico}" />
+  <!-- Fragmento para formulario de sueldo básico -->
+  <div th:fragment="form(sueldo, categorias, porcentajes)">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 th:text="${sueldo?.id != null} ? 'Editar Sueldo Básico' : 'Nuevo Sueldo Básico'"></h4>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary" onclick="nuevoSueldo()">Nuevo</button>
+          <button type="button" class="btn btn-outline-primary"
+                  onclick="fetch('/sueldos-basicos/list').then(r=>r.text()).then(html=>{document.querySelector('#sueldos-basicos-list').innerHTML=html;})">
+            Recargar lista
+          </button>
+        </div>
       </div>
-      <div class="mb-2">
-        <label>Categoría</label>
-        <select class="form-select" th:field="*{categoria}" name="categoria.id">
-          <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nombre}"></option>
-        </select>
-      </div>
-      <div class="mb-2">
-        <label>Porcentaje Mes</label>
-        <select class="form-select" th:field="*{porcentajeMes}" name="porcentajeMes.id">
-          <option th:each="p : ${porcentajes}" th:value="${p.id}" th:text="${p.porcentaje_aumento} + ' - ' + ${p.mes.nombre} + ' ' + ${p.ano}"></option>
-        </select>
-      </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Guardar</button>
-        <button type="button" class="btn btn-secondary" hx-get="/sueldos-basicos/list" hx-target="#sueldos-basicos-list" hx-swap="innerHTML">Cancelar</button>
-      </div>
-    </form>
+
+      <form th:action="@{/sueldos-basicos/save}" th:object="${sueldo}" method="post">
+        <input type="hidden" th:field="*{id}" th:if="${sueldo != null}" />
+        <input type="hidden" name="id" value="0" th:unless="${sueldo != null}" />
+
+        <div class="mb-3">
+          <label class="form-label">Monto</label>
+          <input type="number" step="0.01" class="form-control"
+                 th:field="*{sueldo_basico}" th:if="${sueldo != null}"
+                 placeholder="Ingrese el monto del sueldo básico" required />
+          <input type="number" step="0.01" class="form-control"
+                 name="sueldo_basico" th:unless="${sueldo != null}"
+                 placeholder="Ingrese el monto del sueldo básico" required />
+          <div class="form-text">Ingrese el monto del sueldo básico</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Categoría</label>
+          <select class="form-select" th:field="*{categoria}" required th:if="${sueldo != null}">
+            <option value="">Seleccione una categoría</option>
+            <option th:each="c : ${categorias}"
+                    th:value="${c.id}" th:text="${c.nombre}"
+                    th:selected="${sueldo?.categoria?.id == c.id}">
+            </option>
+          </select>
+          <select class="form-select" name="categoria.id" required th:unless="${sueldo != null}">
+            <option value="">Seleccione una categoría</option>
+            <option th:each="c : ${categorias}"
+                    th:value="${c.id}" th:text="${c.nombre}">
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Porcentaje Mes</label>
+          <select class="form-select" th:field="*{porcentajeMes}" required th:if="${sueldo != null}">
+            <option value="">Seleccione un porcentaje mes</option>
+            <option th:each="p : ${porcentajes}"
+                    th:value="${p.id}"
+                    th:text="${p.porcentaje_aumento} + '% - ' + ${p.mes?.nombre} + ' ' + ${p.ano}"
+                    th:selected="${sueldo?.porcentajeMes?.id == p.id}">
+            </option>
+          </select>
+          <select class="form-select" name="porcentajeMes.id" required th:unless="${sueldo != null}">
+            <option value="">Seleccione un porcentaje mes</option>
+            <option th:each="p : ${porcentajes}"
+                    th:value="${p.id}"
+                    th:text="${p.porcentaje_aumento} + '% - ' + ${p.mes?.nombre} + ' ' + ${p.ano}">
+            </option>
+          </select>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <span th:text="${sueldo?.id != null} ? 'Actualizar' : 'Guardar'"></span>
+          </button>
+          <button type="button" class="btn btn-secondary"
+                  onclick="document.querySelector('#sueldos-basicos-form').innerHTML='';">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
-  <div th:fragment="view">
+  <!-- Fragmento para vista de detalle -->
+  <div th:fragment="view(sueldo)">
     <div class="card p-3">
-      <h6>Detalle Sueldo Básico</h6>
-      <div><strong>Id:</strong> <span th:text="${sueldo.id}">-</span></div>
-  <div><strong>Monto:</strong> <span th:text="${sueldo.sueldo_basico}">-</span></div>
-      <div class="d-flex justify-content-end mt-2">
-        <button class="btn btn-sm btn-secondary" hx-get="/sueldos-basicos/list" hx-target="#sueldos-basicos-list" hx-swap="innerHTML">Cerrar</button>
+      <h4>Detalle Sueldo Básico</h4>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="mb-2">
+            <strong>ID:</strong> <span th:text="${sueldo.id}">-</span>
+          </div>
+          <div class="mb-2">
+            <strong>Monto:</strong> $<span th:text="${#numbers.formatDecimal(sueldo.sueldo_basico, 0, 'DEFAULT', 2, 'DEFAULT')}">-</span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="mb-2" th:if="${sueldo.categoria}">
+            <strong>Categoría:</strong> <span th:text="${sueldo.categoria.nombre}">-</span>
+          </div>
+          <div class="mb-2" th:if="${sueldo.porcentajeMes}">
+            <strong>Porcentaje Mes:</strong> <span th:text="${sueldo.porcentajeMes.porcentaje_aumento}">-</span>%
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-secondary"
+                onclick="document.querySelector('#sueldos-basicos-list').innerHTML=''; fetch('/sueldos-basicos/list').then(r=>r.text()).then(html=>{document.querySelector('#sueldos-basicos-list').innerHTML=html;});">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>
+
+</body>
 </html>

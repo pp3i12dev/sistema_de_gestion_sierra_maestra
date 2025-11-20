@@ -1,54 +1,269 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
-    <div th:if="${#lists.isEmpty(items)}">No hay porcentajes.</div>
-    <div th:each="p : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/porcentajes-mes/view/{id}(id=${p.id})}, data-view-target='#porcentajes-mes-form'" style="cursor:pointer" role="button" tabindex="0">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <strong th:text="${p.id}">ID</strong>
-          <div class="muted" th:text="${p.porcentaje_aumento}">Valor</div>
-        </div>
-        <div>
-          <button class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/porcentajes-mes/view/{id}(id=${p.id})}" hx-target="#porcentajes-mes-form" hx-swap="innerHTML" title="Ver" onclick="event.stopPropagation()"><i class="bi bi-eye-fill"></i></button>
-          <button class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/porcentajes-mes/{id}(id=${p.id})}" hx-target="#porcentajes-mes-form" hx-swap="innerHTML" title="Editar" onclick="event.stopPropagation()"><i class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deletePorcentaje/{id}(id=${p.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/porcentajes-mes/list','#porcentajes-mes-list')"><i class="bi bi-trash-fill"></i></button>
+  <body>
+    <!-- FRAGMENTO LISTA -->
+    <div th:fragment="lista">
+      <!-- Mostrar errores -->
+      <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+      
+      <div th:if="${#lists.isEmpty(items)}" class="alert alert-info">
+        No hay porcentajes configurados.
+      </div>
+      
+      <div th:each="p : ${items}" class="card mb-2 p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong th:text="'ID: ' + ${p.id}"></strong>
+            <div class="text-muted" th:text="'Valor: ' + ${p.porcentaje_aumento} + '%'"></div>
+            <div th:if="${p.mes}" class="text-muted" 
+                 th:text="'Mes: ' + ${p.mes.nombre} + ' ' + ${p.ano}"></div>
+            <div th:unless="${p.mes}" class="text-muted">Mes no asignado</div>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline-primary me-1" 
+                    th:attr="hx-get='/porcentajes-mes/view/' + ${p.id}"
+                    hx-target="#porcentajes-mes-form" 
+                    hx-swap="innerHTML"
+                    onclick="event.stopPropagation()">
+              <i class="bi bi-eye-fill"></i> Ver
+            </button>
+            <button class="btn btn-sm btn-outline-secondary me-1" 
+                    th:attr="hx-get='/porcentajes-mes/' + ${p.id}"
+                    hx-target="#porcentajes-mes-form" 
+                    hx-swap="innerHTML"
+                    onclick="event.stopPropagation()">
+              <i class="bi bi-pencil-fill"></i> Editar
+            </button>
+            <button class="btn btn-sm btn-outline-danger" 
+                    th:onclick="'eliminarPorcentaje(event, ' + ${p.id} + ')'"
+                    title="Eliminar">
+              <i class="bi bi-trash-fill"></i> Eliminar
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div th:fragment="form">
-    <form th:action="@{/porcentajes-mes/save}" th:object="${porcentaje}" hx-post="/porcentajes-mes/save" hx-target="#porcentajes-mes-list" hx-swap="innerHTML">
-      <input type="hidden" th:field="*{id}" />
-      <div class="mb-2">
-  <label>Valor</label>
-  <input class="form-control" th:field="*{porcentaje_aumento}" />
+    <!-- FRAGMENTO FORMULARIO -->
+    <div th:fragment="form">
+      <div class="card p-3">
+        <h5 th:text="${porcentaje.id != null and porcentaje.id > 0} ? 'Editar Porcentaje' : 'Nuevo Porcentaje'">
+          Nuevo Porcentaje
+        </h5>
+        
+        <!-- Mostrar errores -->
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        
+        <form id="porcentajeForm">
+          <input type="hidden" id="porcentajeId" th:value="${porcentaje.id}" />
+          
+          <div class="mb-3">
+            <label class="form-label">Porcentaje de Aumento (%)</label>
+            <input type="number" step="0.01" class="form-control" 
+                   id="porcentajeAumento" 
+                   th:value="${porcentaje.porcentaje_aumento}"
+                   placeholder="Ej: 5.5" required />
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Mes</label>
+            <select class="form-select" id="mesSelect" required>
+              <option value="">Seleccionar mes</option>
+              <option th:each="m : ${meses}" 
+                      th:value="${m.id}" 
+                      th:text="${m.nombre}"
+                      th:selected="${porcentaje.mes != null and porcentaje.mes.id == m.id}">
+              </option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Año</label>
+            <input type="number" class="form-control" id="anoInput"
+                   th:value="${porcentaje.ano}"
+                   min="2020" max="2030" 
+                   placeholder="Ej: 2024" required />
+          </div>
+          
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" id="btnGuardar" onclick="guardarPorcentaje()">
+              <span th:text="${porcentaje.id != null and porcentaje.id > 0} ? 'Actualizar' : 'Guardar'">Guardar</span>
+            </button>
+            <button type="button" class="btn btn-secondary" 
+                    hx-get="/porcentajes-mes/list" 
+                    hx-target="#porcentajes-mes-list" 
+                    hx-swap="innerHTML">
+              Cancelar
+            </button>
+          </div>
+        </form>
       </div>
-      <div class="mb-2">
-        <label>Mes</label>
-        <select class="form-select" th:field="*{mes}" name="mes.id">
-          <option th:each="m : ${meses}" th:value="${m.id}" th:text="${m.nombre}"></option>
-        </select>
-      </div>
-      <div class="mb-2">
-        <label>Año</label>
-        <input class="form-control" th:field="*{ano}" type="number" />
-      </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Guardar</button>
-        <button type="button" class="btn btn-secondary" hx-get="/porcentajes-mes/list" hx-target="#porcentajes-mes-list" hx-swap="innerHTML">Cancelar</button>
-      </div>
-    </form>
-  </div>
 
-  <div th:fragment="view">
-    <div class="card p-3">
-      <h6>Detalle Porcentaje</h6>
-      <div><strong>Id:</strong> <span th:text="${porcentaje.id}">-</span></div>
-  <div><strong>Valor:</strong> <span th:text="${porcentaje.porcentaje_aumento}">-</span></div>
-      <div class="d-flex justify-content-end mt-2">
-        <button class="btn btn-sm btn-secondary" hx-get="/porcentajes-mes/list" hx-target="#porcentajes-mes-list" hx-swap="innerHTML">Cerrar</button>
+      <!-- SCRIPT EMBEBIDO PARA DEBUG -->
+      <script>
+        console.log('=== DEBUG: Fragmento form cargado ===');
+        console.log('Porcentaje ID:', document.getElementById('porcentajeId').value);
+        console.log('Botón guardar existe:', document.getElementById('btnGuardar'));
+        
+        // Agregar event listener adicional para debug
+        document.getElementById('btnGuardar').addEventListener('click', function() {
+          console.log('=== CLICK EN BOTÓN GUARDAR (event listener) ===');
+          guardarPorcentaje();
+        });
+        
+        function guardarPorcentaje() {
+          console.log('=== FUNCIÓN guardarPorcentaje EJECUTADA ===');
+          
+          const porcentajeId = document.getElementById('porcentajeId').value;
+          const porcentajeAumento = document.getElementById('porcentajeAumento').value;
+          const mesId = document.getElementById('mesSelect').value;
+          const ano = document.getElementById('anoInput').value;
+          
+          console.log('Datos capturados:', {
+            id: porcentajeId,
+            porcentajeAumento: porcentajeAumento,
+            mesId: mesId,
+            ano: ano
+          });
+          
+          // Validar campos
+          if (!porcentajeAumento || !mesId || !ano) {
+            console.log('Validación fallida - campos vacíos');
+            alert('Por favor complete todos los campos');
+            return;
+          }
+          
+          console.log('Validación pasada - creando JSON');
+          
+          // Crear objeto JSON para enviar
+          const porcentajeData = {
+            porcentaje_aumento: parseFloat(porcentajeAumento),
+            ano: parseInt(ano),
+            mes: {
+              id: parseInt(mesId)
+            }
+          };
+          
+          // Si es edición, agregar el ID
+          if (porcentajeId && porcentajeId > 0) {
+            porcentajeData.id = parseInt(porcentajeId);
+          }
+          
+          // Determinar endpoint y método
+          const url = porcentajeId && porcentajeId > 0 ? '/updatePorcentajeMes' : '/addPorcentajeMes';
+          const method = porcentajeId && porcentajeId > 0 ? 'PUT' : 'POST';
+          
+          console.log('Enviando datos:', porcentajeData);
+          console.log('URL:', url, 'Method:', method);
+          
+          // Enviar petición al controller REST
+          fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(porcentajeData)
+          })
+          .then(response => {
+            console.log('Response status:', response.status, response.statusText);
+            if (!response.ok) {
+              throw new Error('Error en la respuesta del servidor: ' + response.status);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Success response:', data);
+            // Recargar la lista después de guardar
+            htmx.ajax('GET', '/porcentajes-mes/list', '#porcentajes-mes-list');
+            // Limpiar el formulario
+            document.getElementById('porcentajes-mes-form').innerHTML = '';
+            
+            // Mostrar mensaje de éxito
+            if (data.codigo === '200') {
+              alert(porcentajeId && porcentajeId > 0 ? 'Porcentaje actualizado correctamente' : 'Porcentaje guardado correctamente');
+            } else {
+              alert('Error: ' + (data.descripcion || 'Error desconocido'));
+            }
+          })
+          .catch((error) => {
+            console.error('Error completo:', error);
+            alert('Error al guardar: ' + error.message);
+          });
+        }
+
+        function eliminarPorcentaje(event, id) {
+          // Prevenir que el evento se propague y cause comportamientos no deseados
+          if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+          }
+          
+          console.log('=== ELIMINAR PORCENTAJE ===');
+          console.log('ID a eliminar:', id);
+          
+          if (confirm('¿Está seguro de eliminar este porcentaje?')) {
+            console.log('Enviando DELETE a: /deletePorcentajeMes/' + id);
+            
+            fetch('/deletePorcentajeMes/' + id, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            })
+            .then(response => {
+              console.log('Response status:', response.status);
+              if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor: ' + response.status);
+              }
+              return response.json();
+            })
+            .then(data => {
+              console.log('Eliminación exitosa:', data);
+              // Recargar lista después de eliminar
+              htmx.ajax('GET', '/porcentajes-mes/list', '#porcentajes-mes-list');
+              
+              // Mostrar mensaje de éxito
+              if (data.codigo === '200') {
+                alert('Porcentaje eliminado correctamente');
+              } else {
+                alert('Error: ' + (data.descripcion || 'Error desconocido'));
+              }
+            })
+            .catch(error => {
+              console.error('Error completo al eliminar:', error);
+              alert('Error al eliminar: ' + error.message);
+            });
+          } else {
+            console.log('Eliminación cancelada por el usuario');
+          }
+        }
+      </script>
+    </div>
+
+    <!-- FRAGMENTO VISTA -->
+    <div th:fragment="view">
+      <div class="card p-3">
+        <h5>Detalle del Porcentaje</h5>
+        
+        <!-- Mostrar errores -->
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        
+        <div class="mb-2"><strong>ID:</strong> <span th:text="${porcentaje.id}">-</span></div>
+        <div class="mb-2"><strong>Porcentaje:</strong> <span th:text="${porcentaje.porcentaje_aumento} + '%'">-</span></div>
+        <div class="mb-2" th:if="${porcentaje.mes}">
+          <strong>Mes:</strong> <span th:text="${porcentaje.mes.nombre}">-</span>
+        </div>
+        <div class="mb-2"><strong>Año:</strong> <span th:text="${porcentaje.ano}">-</span></div>
+        
+        <div class="d-flex justify-content-end mt-3">
+          <button class="btn btn-sm btn-secondary" 
+                  hx-get="/porcentajes-mes/list" 
+                  hx-target="#porcentajes-mes-list" 
+                  hx-swap="innerHTML">
+            Cerrar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </body>
 </html>

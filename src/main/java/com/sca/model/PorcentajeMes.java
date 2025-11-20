@@ -7,12 +7,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
 @Getter
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -22,13 +22,13 @@ import lombok.ToString;
 public class PorcentajeMes {
     
     @Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @NotBlank(message = "El porcentaje_aumento no puede estar en blanco")
-	@Column(name="porcentaje_aumento")
-	@NotNull
-    private double porcentaje_aumento;
+    // CORREGIDO: Solo @NotNull, sin @NotBlank
+    @NotNull(message = "El porcentaje_aumento no puede ser nulo")
+    @Column(name="porcentaje_aumento")
+    private Double porcentaje_aumento;  // Cambiado a Double
 
     @NotNull
     @OneToOne
@@ -43,12 +43,12 @@ public class PorcentajeMes {
     }
 
     public PorcentajeMes(long id,
-			@NotBlank(message = "El porcentaje_aumento no puede estar en blanco") @NotNull double porcentaje_aumento,
-			@NotNull Mes mes, @NotNull int ano) {
-		super();
-		this.id = id;
-		this.porcentaje_aumento = porcentaje_aumento;
-		this.mes = mes;
-		this.ano = ano;
-	} 
+            @NotNull Double porcentaje_aumento,  // Cambiado a Double
+            @NotNull Mes mes, @NotNull int ano) {
+        super();
+        this.id = id;
+        this.porcentaje_aumento = porcentaje_aumento;
+        this.mes = mes;
+        this.ano = ano;
+    } 
 }
