@@ -2205,7 +2205,21 @@ function renderPedidosTable(items) {
                 <div class="pedido-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Pedido #${p.id}</h5>
-                        <span class="badge ${estadoBadgeClass} badge-estado">${p.estado || 'Pendiente'}</span>
+                        <!-- ✅ DROPDOWN PARA CAMBIAR ESTADO RÁPIDAMENTE -->
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm ${getEstadoBadgeClass(p.estado)} dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                ${p.estado || 'Pendiente'}
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="cambiarEstadoPedido(${p.id}, 'Pendiente')">Pendiente</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="cambiarEstadoPedido(${p.id}, 'Confirmado')">Confirmado</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="cambiarEstadoPedido(${p.id}, 'En preparación')">En preparación</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="cambiarEstadoPedido(${p.id}, 'En camino')">En camino</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="cambiarEstadoPedido(${p.id}, 'Entregado')">Entregado</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="cambiarEstadoPedido(${p.id}, 'Cancelado')">Cancelado</a></li>
+                            </ul>
+                        </div>
                     </div>
                     <small class="text-warning">${fechaP} - ${fechaE || 'Sin fecha entrega'}</small>
                 </div>
@@ -4489,6 +4503,119 @@ function detectarCambiosProductos(original) {
     
     return cambios.length > 0 ? cambios.join('; ') : null;
 }
+
+// ✅ FUNCIÓN PARA COLORES DE BOTONES DE ESTADO
+function getEstadoBadgeClass(estado) {
+    switch(estado) {
+        case 'Pendiente': return 'btn-warning';
+        case 'Confirmado': return 'btn-info text-dark';
+        case 'En preparación': return 'btn-primary';
+        case 'En camino': return 'btn-secondary';
+        case 'Entregado': return 'btn-success';
+        case 'Cancelado': return 'btn-danger';
+        default: return 'btn-warning';
+    }
+}
+
+// ✅ FUNCIÓN PARA CAMBIAR ESTADO RÁPIDAMENTE
+async function cambiarEstadoPedido(pedidoId, nuevoEstado) {
+    try {
+        console.log(`🔄 Cambiando estado del pedido ${pedidoId} a: ${nuevoEstado}`);
+        
+        // Obtener el pedido actual primero
+        const res = await fetchJSON(`${API}/getByIdPedido/${pedidoId}`);
+        const pedido = (res && res.data) ? res.data : res;
+        
+        if (!pedido) {
+            mensaje('No se pudo obtener el pedido', 'error');
+            return;
+        }
+
+        // ✅ CAPTURAR USUARIO LOGUEADO PARA EL HISTORIAL
+        const usuarioLogueado = obtenerUsuarioLogueadoActual();
+        
+        // ✅ ACTUALIZAR METADATA CON HISTORIAL
+        let metadataObj = {};
+        if (pedido.metadata) {
+            try {
+                metadataObj = JSON.parse(pedido.metadata);
+            } catch (e) {
+                console.error('Error parseando metadata existente:', e);
+                metadataObj = {};
+            }
+        }
+
+        // ✅ AGREGAR ENTRADA AL HISTORIAL
+        const entradaHistorial = {
+            fecha: new Date().toISOString(),
+            usuario: usuarioLogueado,
+            accion: 'CAMBIO_ESTADO',
+            detalles: 'Estado del pedido actualizado',
+            cambios: `Estado: ${pedido.estado} → ${nuevoEstado}`
+        };
+
+        if (!metadataObj.historial) {
+            metadataObj.historial = [];
+        }
+        metadataObj.historial.unshift(entradaHistorial);
+        if (metadataObj.historial.length > 50) {
+            metadataObj.historial = metadataObj.historial.slice(0, 50);
+        }
+
+        // ✅ PREPARAR PAYLOAD PARA ACTUALIZAR
+        const payload = {
+            id: Number(pedidoId),
+            fechaPedido: pedido.fechaPedido,
+            fechaEntrega: pedido.fechaEntrega,
+            direccionEntrega: pedido.direccionEntrega,
+            estado: nuevoEstado,
+            estadoPago: pedido.estadoPago,
+            envio: pedido.envio,
+            accesorios: pedido.accesorios || [],
+            cervezas: pedido.cervezas || [],
+            barriles: pedido.barriles || [],
+            usuario: pedido.usuario,
+            cliente: pedido.cliente,
+            totalGral: pedido.totalGral,
+            nota: pedido.nota || '',
+            metadata: JSON.stringify(metadataObj)
+        };
+
+        console.log('📤 Actualizando estado del pedido:', payload);
+
+        const updateRes = await fetch(`${API}/updatePedido`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await updateRes.json();
+        const ok = result && (
+            result.codigo === '200' ||
+            result.status === 'success' ||
+            /ok/i.test(result.status)
+        );
+
+        if (ok) {
+            mensaje(`✅ Estado cambiado a: ${nuevoEstado}`, 'success');
+            
+            // ✅ ACTUALIZAR LA VISTA INMEDIATAMENTE
+            await loadAll();
+            
+        } else {
+            mensaje('❌ Error al cambiar el estado: ' + (result.descripcion || result.message || ''), 'error');
+        }
+
+    } catch (error) {
+        console.error('❌ Error cambiando estado:', error);
+        mensaje('❌ Error al cambiar el estado: ' + error.message, 'error');
+    }
+}
+
+
 
 // ========== INICIALIZACIÓN ==========
 document.addEventListener('DOMContentLoaded', async () => {
