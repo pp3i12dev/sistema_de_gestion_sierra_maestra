@@ -23,4 +23,9 @@ public class ClienteViewController {
     public String registroPage() {
         return "registro-cliente"; // busca registro-cliente.html en src/main/resources/templates/
     }
+
+    @GetMapping("/listado-clientes")
+    public String listadoclientes() {
+        return "listado-clientes"; // busca listado-clientes.html en src/main/resources/templates/
+    }
 }
