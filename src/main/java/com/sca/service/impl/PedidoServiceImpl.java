@@ -17,10 +17,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.sca.model.Pedido;
 import com.sca.model.Respuesta;
+import com.sca.model.HistorialCambio;
 import com.sca.repository.PedidoRepository;
 import com.sca.service.PedidoService;
 import com.sca.service.BarrilService;
 import com.sca.service.AccesorioService;
+import com.sca.service.HistorialService;
 
 @Service
 public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements PedidoService {
@@ -36,8 +38,64 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
     @Autowired
     private AccesorioService accesorioService;
 
+    // ✅ NUEVA DEPENDENCIA AGREGADA
+    @Autowired
+    private HistorialService historialService;
+
     private Respuesta respuesta;
     private String resp = "";
+
+    // ✅ MÉTODO PARA REGISTRAR CAMBIOS EN HISTORIAL
+    private void registrarCambio(Pedido pedido, String accion, String detalles, String usuario) {
+        try {
+            HistorialCambio cambio = new HistorialCambio(usuario, accion, detalles);
+            String nuevoHistorial = historialService.agregarEntradaHistorial(
+                pedido.getHistorialCambios(), cambio);
+            pedido.setHistorialCambios(nuevoHistorial);
+        } catch (Exception e) {
+            log.error("Error registrando cambio en historial: {}", e.getMessage());
+        }
+    }
+
+    // ✅ MÉTODO PARA REGISTRAR CAMBIOS CON DETALLES ESPECÍFICOS
+    private void registrarCambioConDetalles(Pedido pedido, String accion, String detalles, String cambiosEspecificos, String usuario) {
+        try {
+            HistorialCambio cambio = new HistorialCambio(usuario, accion, detalles, cambiosEspecificos);
+            String nuevoHistorial = historialService.agregarEntradaHistorial(
+                pedido.getHistorialCambios(), cambio);
+            pedido.setHistorialCambios(nuevoHistorial);
+        } catch (Exception e) {
+            log.error("Error registrando cambio en historial: {}", e.getMessage());
+        }
+    }
+
+    // ✅ MÉTODO PARA DETECTAR CAMBIOS ESPECÍFICOS
+    private String detectarCambios(Pedido original, Pedido nuevo) {
+        StringBuilder cambios = new StringBuilder();
+        
+        // Cambio de estado
+        if (original.getEstado() != null && nuevo.getEstado() != null && 
+            !original.getEstado().equals(nuevo.getEstado())) {
+            cambios.append("Estado: ").append(original.getEstado())
+                   .append(" → ").append(nuevo.getEstado()).append("; ");
+        }
+        
+        // Cambio en estado de pago
+        if (original.getEstadoPago() != null && nuevo.getEstadoPago() != null &&
+            !original.getEstadoPago().equals(nuevo.getEstadoPago())) {
+            cambios.append("Pago: ").append(original.getEstadoPago())
+                   .append(" → ").append(nuevo.getEstadoPago()).append("; ");
+        }
+        
+        // Cambio en total
+        if (original.getTotalGral() != null && nuevo.getTotalGral() != null &&
+            !original.getTotalGral().equals(nuevo.getTotalGral())) {
+            cambios.append("Total: $").append(original.getTotalGral())
+                   .append(" → $").append(nuevo.getTotalGral()).append("; ");
+        }
+        
+        return cambios.toString();
+    }
 
     @ExceptionHandler(BindException.class)
     @Override
@@ -45,6 +103,9 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
         respuesta = new Respuesta();
         try {
             pedido.setId(null); // ✅ Forzar creación de nuevo pedido
+
+            // ✅ REGISTRAR CREACIÓN EN HISTORIAL
+            registrarCambio(pedido, "CREACIÓN", "Pedido creado inicialmente", "Sistema");
 
             Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
@@ -139,6 +200,19 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
     public ResponseEntity<Object> update(Pedido pedido, BindingResult bindingResult) throws BindException {
         respuesta = new Respuesta();
         try {
+            // ✅ Obtener pedido original para comparar
+            Pedido pedidoOriginal = pedidoRepository.findById(pedido.getId()).orElse(null);
+            
+            String cambiosDetectados = "";
+            if (pedidoOriginal != null) {
+                // ✅ DETECTAR CAMBIOS Y REGISTRARLOS
+                cambiosDetectados = detectarCambios(pedidoOriginal, pedido);
+                if (!cambiosDetectados.isEmpty()) {
+                    registrarCambioConDetalles(pedido, "ACTUALIZACIÓN", 
+                        "Pedido modificado", cambiosDetectados, "Usuario");
+                }
+            }
+
             Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
             if (pedidoGuardado.getBarriles() != null && !pedidoGuardado.getBarriles().isEmpty()) {
@@ -197,6 +271,10 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
             Pedido pedido = pedidoRepository.findById(id).orElse(null);
             if (pedido != null) {
                 if ("Pendiente".equalsIgnoreCase(pedido.getEstado())) {
+                    // ✅ REGISTRAR CANCELACIÓN EN HISTORIAL
+                    registrarCambio(pedido, "CANCELACIÓN", 
+                        "Pedido cancelado y recursos liberados", "Sistema");
+                    
                     pedido.setEstado("Cancelado");
                     pedidoRepository.save(pedido);
 
@@ -249,6 +327,11 @@ public class PedidoServiceImpl extends ResponseEntityExceptionHandler implements
                 respuesta.setData(null);
                 return respuesta;
             }
+
+            // ✅ REGISTRAR CAMBIO DE ESTADO EN HISTORIAL
+            String cambioEstado = "Estado: " + pedido.getEstado() + " → " + estado;
+            registrarCambioConDetalles(pedido, "CAMBIO_ESTADO", 
+                "Estado del pedido actualizado", cambioEstado, "Usuario");
 
             // Actualizar estado
             pedido.setEstado(estado);

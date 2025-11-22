@@ -97,8 +97,12 @@ public class Pedido {
     @Column(name = "nota", columnDefinition = "TEXT")
     private String nota;
 
-    // ✅ ÚNICO CAMBIO NECESARIO:
+    // ✅ METADATA EXISTENTE - NO MODIFICAR
     @Column(name = "metadata", columnDefinition = "TEXT")
     private String metadata; // ← guarda precios personalizados de accesorios
+
+    // ✅ NUEVA COLUMNA PARA HISTORIAL - AGREGADA AL FINAL
+    @Column(name = "historial_cambios", columnDefinition = "TEXT")
+    private String historialCambios;
 
 }

@@ -2293,6 +2293,10 @@ function renderPedidosTable(items) {
                         <button class="btn btn-sm btn-info" data-action="ticket" data-id="${p.id}">
                             <i class="bi bi-receipt"></i> Ticket
                         </button>
+                        <button class="btn btn-sm text-white" style="background-color: #D4A76A; border: none;" data-action="historial" data-id="${p.id}">
+                            <i class="bi bi-clock-history"></i> Historial
+                        </button>
+                        </button>
                         <button class="btn btn-sm btn-secondary" data-action="cancel" data-id="${p.id}">
                             <i class="bi bi-x-circle"></i> Cancelar
                         </button>
@@ -2774,6 +2778,34 @@ async function submitFormHandler(e) {
                 pedido.accesorios || []
             );
 
+            // ✅ AGREGAR HISTORIAL DE CANCELACIÓN AL METADATA
+            let metadataObj = {};
+            if (pedido.metadata) {
+                try {
+                    metadataObj = JSON.parse(pedido.metadata);
+                } catch (e) {
+                    console.error('Error parseando metadata existente:', e);
+                    metadataObj = {};
+                }
+            }
+
+            const usuarioLogueado = obtenerUsuarioLogueadoActual();
+            const entradaCancelacion = {
+                fecha: new Date().toISOString(),
+                usuario: usuarioLogueado,
+                accion: 'CANCELACIÓN',
+                detalles: 'Pedido cancelado y recursos liberados',
+                cambios: 'Estado: ' + pedido.estado + ' → Cancelado'
+            };
+
+            if (!metadataObj.historial) {
+                metadataObj.historial = [];
+            }
+            metadataObj.historial.unshift(entradaCancelacion);
+            if (metadataObj.historial.length > 50) {
+                metadataObj.historial = metadataObj.historial.slice(0, 50);
+            }
+
             const payload = {
                 id: Number(pedidoId),
                 estado: 'Cancelado',
@@ -2788,7 +2820,8 @@ async function submitFormHandler(e) {
                 usuario: pedido.usuario,
                 cliente: pedido.cliente,
                 totalGral: pedido.totalGral,
-                nota: pedido.nota
+                nota: pedido.nota,
+                metadata: JSON.stringify(metadataObj) // ✅ INCLUIR METADATA CON HISTORIAL
             };
 
             const res = await fetch(`${API}/updatePedido`, {
@@ -2904,12 +2937,44 @@ async function submitFormHandler(e) {
         const fechaPedidoMillis = new Date(fechaP + 'T12:00:00').getTime();
         const fechaEntregaMillis = fechaE ? new Date(fechaE + 'T12:00:00').getTime() : null;
 
-        // ✅ OBTENER COSTO DE ENVÍO Y AGREGAR AL METADATA
+        // ✅ OBTENER COSTO DE ENVÍO Y AGREGAR AL METADATA CON HISTORIAL
         const costoEnvio = parseInt($('#costoEnvio').value) || 0;
-        const metadataObj = {
-            accesoriosPrecios: accesoriosPrecios,
-            costoEnvio: costoEnvio
+        const usuarioLogueado = obtenerUsuarioLogueadoActual();
+
+        // ✅ CARGAR METADATA EXISTENTE SI HAY
+        let metadataObj = {};
+        if (!isNew && window.pedidoOriginalEdit && window.pedidoOriginalEdit.metadata) {
+            try {
+                metadataObj = JSON.parse(window.pedidoOriginalEdit.metadata);
+            } catch (e) {
+                console.error('Error parseando metadata existente:', e);
+                metadataObj = {};
+            }
+        }
+
+        // ✅ AGREGAR/MANTENER LOS DATOS EXISTENTES
+        metadataObj.accesoriosPrecios = accesoriosPrecios;
+        metadataObj.costoEnvio = costoEnvio;
+
+        // ✅ AGREGAR NUEVA ENTRADA AL HISTORIAL
+        const nuevaEntradaHistorial = {
+            fecha: new Date().toISOString(),
+            usuario: usuarioLogueado,
+            accion: isNew ? 'CREACIÓN' : 'ACTUALIZACIÓN',
+            detalles: isNew ? 'Pedido creado inicialmente' : 'Pedido modificado',
+            cambios: !isNew ? detectarCambiosFrontend(window.pedidoOriginalEdit, total, estadoSeleccionado) : 'Pedido nuevo creado'
         };
+
+        // ✅ INICIALIZAR O AGREGAR AL HISTORIAL EXISTENTE
+        if (!metadataObj.historial) {
+            metadataObj.historial = [];
+        }
+        metadataObj.historial.unshift(nuevaEntradaHistorial); // Agregar al inicio
+
+        // ✅ LIMITAR A ÚLTIMOS 50 CAMBIOS
+        if (metadataObj.historial.length > 50) {
+            metadataObj.historial = metadataObj.historial.slice(0, 50);
+        }
 
         let payload;
         if (isNew) {
@@ -2927,10 +2992,10 @@ async function submitFormHandler(e) {
                 cliente: { id: Number(clienteId) },
                 totalGral: total,
                 nota: notaValor,
-                metadata: JSON.stringify(metadataObj) // ✅ AGREGAR METADATA ACTUALIZADO
+                metadata: JSON.stringify(metadataObj) // ✅ AGREGAR METADATA CON HISTORIAL
             };
         } else {
-            // ✅ EDICIÓN: también incluye metadata actualizado
+            // ✅ EDICIÓN: también incluye metadata actualizado con historial
             payload = {
                 id: pedidoId,
                 fechaPedido: fechaPedidoMillis,
@@ -2946,7 +3011,7 @@ async function submitFormHandler(e) {
                 cliente: { id: Number(clienteId) },
                 totalGral: total,
                 nota: notaValor,
-                metadata: JSON.stringify(metadataObj) // ✅ CLAVE: guardar precios editados y costo de envío
+                metadata: JSON.stringify(metadataObj) // ✅ CLAVE: guardar precios editados, costo de envío E HISTORIAL
             };
         }
 
@@ -2954,6 +3019,7 @@ async function submitFormHandler(e) {
         const method = isNew ? 'POST' : 'PUT';
 
         console.log('📤 Payload final:', payload);
+        console.log('📋 Historial agregado:', nuevaEntradaHistorial);
         console.log(`📊 Cervezas: ${cervezasPayload.length} | Barriles: ${barrilesPayload.length} | Accesorios: ${accesoriosSeleccionados.length}`);
 
         const res = await fetch(url, {
@@ -3067,13 +3133,18 @@ function pedidosTableClickHandler(e) {
     
     console.log(`🖱️ Botón clickeado: ${action} - ID: ${id}`);
     
+    // ✅ NUEVA ACCIÓN AGREGADA
+    if (action === 'historial') {
+        mostrarHistorialPedido(id);
+        return;
+    }
+    
     if (action === 'edit') loadPedidoIntoForm(id);
     else if (action === 'ticket') verDetallesTicket(id);
     else if (action === 'cancel') cancelPedido(id);
     else if (action === 'delete') deletePedido(id);
 }
 
-// En la función attachListeners, cambia esto:
 const pedidosContainer = $('#pedidosCardsContainer'); 
 if (pedidosContainer) {
     pedidosContainer.addEventListener('click', pedidosTableClickHandler);
@@ -4103,6 +4174,320 @@ function imprimirTicket() {
     </html>
   `);
   ventana.document.close();
+}
+
+// ========== FUNCIÓN PARA MOSTRAR HISTORIAL ==========
+// ========== FUNCIÓN PARA MOSTRAR HISTORIAL CON FONDO BLANCO ==========
+async function mostrarHistorialPedido(pedidoId) {
+    try {
+        console.log(`📋 Cargando historial completo del pedido ${pedidoId}...`);
+        
+        const res = await fetchJSON(`${API}/getByIdPedido/${pedidoId}`);
+        const pedido = (res && res.data) ? res.data : res;
+        
+        if (!pedido) {
+            mensaje('No se encontró el pedido solicitado', 'error');
+            return;
+        }
+        
+        let historial = [];
+        if (pedido.metadata) {
+            try {
+                const metadata = JSON.parse(pedido.metadata);
+                historial = metadata.historial || [];
+                console.log('📋 Historial cargado desde metadata:', historial);
+            } catch (e) {
+                console.error('Error parseando metadata para historial:', e);
+            }
+        }
+        
+        // Crear HTML del historial CON FONDO BLANCO
+        let historialHTML = `
+            <div class="card border">
+                <div class="card-header bg-light text-dark border-bottom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Historial Completo - Pedido #${pedidoId}
+                    </h5>
+                    <small class="text-muted">Total de cambios: ${historial.length}</small>
+                </div>
+                <div class="card-body bg-white" style="max-height: 500px; overflow-y: auto;">
+        `;
+        
+        if (!historial || historial.length === 0) {
+            historialHTML += `
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                    <p>No hay historial de cambios registrado para este pedido</p>
+                </div>
+            `;
+        } else {
+            historial.forEach((cambio, index) => {
+                // Mostrar fecha y hora completas
+                const fecha = new Date(cambio.fecha).toLocaleString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                const esReciente = index === 0 ? 'bg-light bg-opacity-50' : '';
+                
+                historialHTML += `
+                    <div class="mb-3 p-3 border rounded ${esReciente}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-${getBadgeColor(cambio.accion)} me-2">
+                                    ${cambio.accion}
+                                </span>
+                                ${index === 0 ? '<span class="badge bg-success ms-2">MÁS RECIENTE</span>' : ''}
+                            </div>
+                            <small class="text-muted"><strong>${fecha}</strong></small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-2">
+                                    <strong><i class="bi bi-person me-1"></i>Usuario:</strong> 
+                                    <span class="text-primary">${cambio.usuario || 'Sistema'}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-2">
+                                    <strong><i class="bi bi-info-circle me-1"></i>Acción:</strong> 
+                                    ${cambio.detalles || 'Sin detalles'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${cambio.cambios ? `
+                        <div class="mb-2 p-2 bg-light rounded border">
+                            <strong><i class="bi bi-arrow-left-right me-1"></i>Cambios detectados:</strong> 
+                            <div class="mt-1 text-dark">${cambio.cambios}</div>
+                        </div>
+                        ` : ''}
+                        
+                        <hr class="my-2">
+                    </div>
+                `;
+            });
+        }
+        
+        historialHTML += `
+                </div>
+            </div>
+        `;
+        
+        // Mostrar en modal CON FONDO BLANCO
+        const modalHTML = `
+            <div class="modal fade" id="modalHistorialPedido" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-light text-dark border-bottom">
+                            <h5 class="modal-title">
+                                <i class="bi bi-clock-history me-2"></i>
+                                Historial Completo - Pedido #${pedidoId}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            ${historialHTML}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal anterior si existe
+        const modalAnterior = document.getElementById('modalHistorialPedido');
+        if (modalAnterior) {
+            modalAnterior.remove();
+        }
+        
+        // Agregar nuevo modal al DOM
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = modalHTML;
+        document.body.appendChild(modalDiv);
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('modalHistorialPedido'));
+        modal.show();
+        
+        // Limpiar después de cerrar
+        modalDiv.addEventListener('hidden.bs.modal', () => {
+            setTimeout(() => {
+                if (document.body.contains(modalDiv)) {
+                    document.body.removeChild(modalDiv);
+                }
+            }, 500);
+        });
+        
+    } catch (error) {
+        console.error('Error cargando historial:', error);
+        mensaje('Error al cargar el historial: ' + error.message, 'error');
+    }
+}
+
+// ✅ FUNCIÓN AUXILIAR PARA COLORES DE BADGES
+function getBadgeColor(accion) {
+    switch(accion) {
+        case 'CREACIÓN': return 'success';
+        case 'ACTUALIZACIÓN': return 'primary';
+        case 'CANCELACIÓN': return 'danger';
+        case 'CAMBIO_ESTADO': return 'info';
+        default: return 'secondary';
+    }
+}
+
+// ========== FUNCIÓN PARA OBTENER USUARIO LOGUEADO ACTUAL ==========
+function obtenerUsuarioLogueadoActual() {
+    try {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+        if (usuario) {
+            // Si tiene nombre y apellido, usarlos
+            if (usuario.nombre && usuario.apellido) {
+                return `${usuario.nombre} ${usuario.apellido}`.trim();
+            }
+            // Si tiene legajo
+            if (usuario.legajo) {
+                return `Legajo ${usuario.legajo}`;
+            }
+            // Si solo tiene nombre
+            if (usuario.nombre) {
+                return usuario.nombre;
+            }
+        }
+        return 'Usuario';
+    } catch (error) {
+        console.error('Error obteniendo usuario logueado:', error);
+        return 'Sistema';
+    }
+}
+
+// ✅ FUNCIÓN PARA OBTENER USUARIO LOGUEADO ACTUAL
+function obtenerUsuarioLogueadoActual() {
+    try {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+        if (usuario) {
+            // Si tiene nombre y apellido, usarlos
+            if (usuario.nombre && usuario.apellido) {
+                return `${usuario.nombre} ${usuario.apellido}`.trim();
+            }
+            // Si tiene legajo
+            if (usuario.legajo) {
+                return `Legajo ${usuario.legajo}`;
+            }
+            // Si solo tiene nombre
+            if (usuario.nombre) {
+                return usuario.nombre;
+            }
+        }
+        return 'Usuario';
+    } catch (error) {
+        console.error('Error obteniendo usuario logueado:', error);
+        return 'Sistema';
+    }
+}
+
+// ========== FUNCIÓN CORREGIDA PARA DETECTAR CAMBIOS EN EL FRONTEND ==========
+function detectarCambiosFrontend(original, nuevoTotal, nuevoEstado) {
+    const cambios = [];
+    
+    console.log('🔍 Comparando cambios:', {
+        estadoOriginal: original.estado,
+        estadoNuevo: nuevoEstado,
+        totalOriginal: original.totalGral,
+        totalNuevo: nuevoTotal,
+        fechaOriginal: original.fechaEntrega ? formatDateFromMillis(original.fechaEntrega) : 'null',
+        fechaNueva: $('#fechaEntrega').value
+    });
+
+    // 1. Cambio de estado
+    if (original.estado !== nuevoEstado) {
+        cambios.push(`Estado: ${original.estado} → ${nuevoEstado}`);
+    }
+    
+    // 2. Cambio en estado de pago
+    const pagoOriginal = original.estadoPago || 'Pendiente';
+    const pagoNuevo = $('#estadoPago').checked ? 'Pagado' : 'Pendiente';
+    if (pagoOriginal !== pagoNuevo) {
+        cambios.push(`Pago: ${pagoOriginal} → ${pagoNuevo}`);
+    }
+    
+    // 3. Cambio en total (usar tolerancia para números decimales)
+    const totalOriginalNum = Number(original.totalGral) || 0;
+    const totalNuevoNum = Number(nuevoTotal) || 0;
+    if (Math.abs(totalOriginalNum - totalNuevoNum) > 0.01) { // Tolerancia de 1 centavo
+        cambios.push(`Total: $${totalOriginalNum} → $${totalNuevoNum}`);
+    }
+    
+    // 4. Cambio en fecha de entrega (comparar correctamente)
+    const fechaEntregaInput = $('#fechaEntrega').value;
+    if (original.fechaEntrega && fechaEntregaInput) {
+        // Convertir fecha original (millis) a formato YYYY-MM-DD para comparar
+        const fechaOriginalDate = new Date(Number(original.fechaEntrega));
+        const fechaOriginalFormatted = fechaOriginalDate.toISOString().split('T')[0];
+        
+        if (fechaOriginalFormatted !== fechaEntregaInput) {
+            cambios.push(`Fecha entrega: ${formatDateFromMillis(original.fechaEntrega)} → ${fechaEntregaInput}`);
+        }
+    } else if ((!original.fechaEntrega && fechaEntregaInput) || (original.fechaEntrega && !fechaEntregaInput)) {
+        // Caso: una tiene fecha y la otra no
+        cambios.push(`Fecha entrega modificada`);
+    }
+    
+    // 5. Detectar cambios en productos
+    const cambiosProductos = detectarCambiosProductos(original);
+    if (cambiosProductos) {
+        cambios.push(cambiosProductos);
+    }
+    
+    console.log('✅ Cambios finales detectados:', cambios);
+    return cambios.length > 0 ? cambios.join('; ') : 'Modificaciones menores';
+}
+
+// ========== FUNCIÓN PARA DETECTAR CAMBIOS EN PRODUCTOS ==========
+function detectarCambiosProductos(original) {
+    const cambios = [];
+    
+    // Contar barriles actuales en el formulario
+    const filasBarriles = $$('#detalleTable tbody tr[data-tipo="barril"], #detalleTable tbody tr[data-tipo="cerveza"]');
+    const barrilesActuales = filasBarriles.length;
+    const barrilesOriginales = original.barriles ? original.barriles.length : 0;
+    
+    console.log('🍺 Barriles:', {
+        originales: barrilesOriginales,
+        actuales: barrilesActuales,
+        filas: filasBarriles.length
+    });
+    
+    if (barrilesActuales !== barrilesOriginales) {
+        cambios.push(`Barriles: ${barrilesOriginales} → ${barrilesActuales}`);
+    }
+    
+    // Contar accesorios actuales en el formulario
+    const filasAccesorios = $$('#detalleTable tbody tr[data-tipo="accesorio"]');
+    const accesoriosActuales = filasAccesorios.length;
+    const accesoriosOriginales = original.accesorios ? original.accesorios.length : 0;
+    
+    console.log('🎯 Accesorios:', {
+        originales: accesoriosOriginales,
+        actuales: accesoriosActuales,
+        filas: filasAccesorios.length
+    });
+    
+    if (accesoriosActuales !== accesoriosOriginales) {
+        cambios.push(`Accesorios: ${accesoriosOriginales} → ${accesoriosActuales}`);
+    }
+    
+    return cambios.length > 0 ? cambios.join('; ') : null;
 }
 
 // ========== INICIALIZACIÓN ==========
