@@ -13,9 +13,9 @@ public class ClienteViewController {
     }
 
     // Mapea la URL /clientela para mostrar la vista clientela.html
-    @GetMapping("/clientela")
+    @GetMapping("/inventario")
     public String clientelaPage() {
-        return "clientela"; // busca clientela.html en src/main/resources/templates/
+        return "inventario"; // busca inventario.html en src/main/resources/templates/
     }
     
     // Mapea la URL /registro para mostrar la página de registro de clientes
