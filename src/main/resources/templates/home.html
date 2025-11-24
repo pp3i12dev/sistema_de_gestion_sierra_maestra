@@ -100,6 +100,12 @@
                     <i class="bi bi-tools me-2"></i>Accesorios
                   </a>
                 </li>
+                <!-- Gestión de códigos QR para barriles y maduradores -->
+                <li class="list-group-item">
+                  <a th:href="@{/qr}" class="text-decoration-none">
+                    <i class="bi bi-qr-code me-2"></i>Códigos QR
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
@@ -170,6 +176,8 @@
                 </a>
                 <!-- Acceso rápido a gestión de cervezas -->
                 <a th:href="@{/cervezas}" class="btn btn-outline-info d-flex align-items-center"><i class="bi bi-droplet me-2"></i>Cervezas</a>
+                <!-- Acceso rápido a gestión de códigos QR -->
+                <a th:href="@{/qr}" class="btn btn-outline-dark d-flex align-items-center"><i class="bi bi-qr-code me-2"></i>Códigos QR</a>
               </div>
             </div>
           </div>
