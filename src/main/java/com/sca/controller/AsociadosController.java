@@ -28,7 +28,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
+// IMPORTACIONES NUEVAS
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
+import java.util.ArrayList;
+
 @RestController
+@Controller // ← ANOTACIÓN NUEVA para soportar formularios HTML
 @Api(tags = "Asociados")
 @CrossOrigin(origins = "*", methods= {RequestMethod.GET,RequestMethod.POST,RequestMethod.PUT,RequestMethod.DELETE})
 @Slf4j
@@ -38,6 +46,10 @@ public class AsociadosController {
 	
 	@Autowired
 	AsociadosServiceImpl asociadosServiceImpl;
+	
+	// =============================================
+	// ✅ MÉTODOS EXISTENTES - NO MODIFICADOS
+	// =============================================
 	
 	@PostMapping(value = "/addAsociados", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Agrega un Asociados", notes = "Esta operación agrega un Asociados a la base de datos")
@@ -83,5 +95,45 @@ public class AsociadosController {
 			System.out.println(e.getMessage());
 		}
 		return null;
+	}
+	
+	// =============================================
+	// 🆕 MÉTODOS NUEVOS PARA FORMULARIOS HTML
+	// NO AFECTAN LOS MÉTODOS EXISTENTES
+	// =============================================
+	
+	/**
+	 * Maneja el guardado desde formularios HTML (Thymeleaf)
+	 * Este método es NUEVO y trabaja con application/x-www-form-urlencoded
+	 */
+	@PostMapping(value = "/asociados/save", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+	public String saveAsociadoFromForm(
+			@ModelAttribute Asociados asociado,
+			@RequestParam(value = "permisos", required = false) List<String> permisos,
+			@RequestParam(value = "categoriaIds", required = false) List<Long> categoriaIds,
+			BindingResult bindingResult) {
+		
+		try {
+			// Procesar permisos - esto es NUEVO
+			if (permisos != null) {
+				asociado.setPermisosList(permisos);
+			} else {
+				asociado.setPermisosList(new ArrayList<>());
+			}
+			
+			// Usar el servicio existente para guardar
+			ResponseEntity<Object> response = asociadosServiceImpl.save(asociado, bindingResult);
+			
+			if (response.getStatusCode().is2xxSuccessful()) {
+				// Redirigir al listado (usando HTMX)
+				return "redirect:/asociados?success=true";
+			} else {
+				return "redirect:/asociados?error=true";
+			}
+			
+		} catch (Exception e) {
+			log.error("Error al guardar asociado desde formulario", e);
+			return "redirect:/asociados?error=true";
+		}
 	}
 }

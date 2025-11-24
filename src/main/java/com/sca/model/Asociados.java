@@ -29,6 +29,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+// Importaciones adicionales para manejar JSON
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Getter
 @Setter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -104,6 +108,11 @@ public class Asociados {
     @JsonIgnore
     private List<AsociadosCondicion> condiciones = new ArrayList<>();
     
+    // === NUEVO CAMPO PARA PERMISOS ===
+    @Column(name = "permisos", columnDefinition = "JSON")
+    private String permisos;
+    // =================================
+    
     public Asociados() {
     }
 
@@ -132,5 +141,61 @@ public class Asociados {
         this.categorias = categorias;
         this.activo = activo;
         this.telefono = telefono;
+    }
+    
+    // === MÉTODOS HELPER PARA MANEJAR PERMISOS ===
+    
+    /**
+     * Convierte el JSON de permisos a una Lista de Strings
+     */
+    public List<String> getPermisosList() {
+        if (this.permisos == null || this.permisos.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(this.permisos, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Convierte una Lista de Strings a JSON y la guarda en permisos
+     */
+    public void setPermisosList(List<String> permisosList) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            this.permisos = mapper.writeValueAsString(permisosList);
+        } catch (Exception e) {
+            this.permisos = "[]";
+        }
+    }
+    
+    /**
+     * Verifica si el asociado tiene un permiso específico
+     */
+    public boolean tienePermiso(String permiso) {
+        return getPermisosList().contains(permiso);
+    }
+    
+    /**
+     * Agrega un permiso a la lista (sin duplicados)
+     */
+    public void agregarPermiso(String permiso) {
+        List<String> permisosActuales = getPermisosList();
+        if (!permisosActuales.contains(permiso)) {
+            permisosActuales.add(permiso);
+            setPermisosList(permisosActuales);
+        }
+    }
+    
+    /**
+     * Remueve un permiso de la lista
+     */
+    public void removerPermiso(String permiso) {
+        List<String> permisosActuales = getPermisosList();
+        permisosActuales.remove(permiso);
+        setPermisosList(permisosActuales);
     }
 }
