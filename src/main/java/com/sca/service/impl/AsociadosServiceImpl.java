@@ -1,7 +1,5 @@
 package com.sca.service.impl;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,8 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AsociadosServiceImpl extends ResponseEntityExceptionHandler implements AsociadosService {
 
-	// Logger log = LoggerFactory.getLogger(String.class);
-	
 	@Autowired
 	AsociadosRepository asociadosRepository;
 
@@ -32,7 +28,6 @@ public class AsociadosServiceImpl extends ResponseEntityExceptionHandler impleme
 
 	String resp = "";
 
-	//El ExceptionHandler me sirve para recuperar o en viar el status del error del pedido
 	@ExceptionHandler(BindException.class)
 	@Override
 	public ResponseEntity<Object> save(Asociados asociados, BindingResult bindingResult) throws BindException {
@@ -121,6 +116,16 @@ public class AsociadosServiceImpl extends ResponseEntityExceptionHandler impleme
 	public ResponseEntity<Object> update(Asociados asociados, BindingResult bindingResult) throws BindException {
 		respuesta = new Respuesta();
 		try {
+			// ✅ CORRECCIÓN: MANTENER CONTRASEÑA ACTUAL SI VIENE VACÍA
+			if (asociados.getId() > 0) {
+				Asociados asociadoExistente = asociadosRepository.findById(asociados.getId()).orElse(null);
+				if (asociadoExistente != null && 
+					(asociados.getContrasenia() == null || asociados.getContrasenia().trim().isEmpty())) {
+					// Mantener la contraseña actual si no se envió nueva
+					asociados.setContrasenia(asociadoExistente.getContrasenia());
+				}
+			}
+			
 			respuesta.setCodigo("200");
 			respuesta.setStatus("Ok");
 			respuesta.setDescripcion("Se modificaron los datos del asociado");

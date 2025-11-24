@@ -17,137 +17,102 @@
     </div>
   </div>
 
-<div th:fragment="form">
-  <form th:action="@{/asociados/save}" th:object="${asociado}"
-        hx-post="/asociados/save" hx-target="#asociados-list" hx-swap="innerHTML">
-    <input type="hidden" th:field="*{id}" />
+  <div th:fragment="form">
+    <form th:action="@{/asociados/save}" th:object="${asociado}"
+          hx-post="/asociados/save" hx-target="#asociados-list" hx-swap="innerHTML">
+      
+      <input type="hidden" th:field="*{id}" />
 
-    <div class="mb-2">
-      <label>Legajo</label>
-      <input class="form-control" th:field="*{legajo}" required />
-    </div>
-
-    <div class="row">
-      <div class="col-md-6 mb-2">
-        <label>Nombre</label>
-        <input class="form-control" th:field="*{nombre}" required />
-      </div>
-      <div class="col-md-6 mb-2">
-        <label>Apellido</label>
-        <input class="form-control" th:field="*{apellido}" required />
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-6 mb-2">
-        <label>Documento</label>
-        <input class="form-control"
-               th:field="*{documento}"
-               pattern="^[0-9]{1,8}$"
-               title="Debe contener solo números (máx. 8 dígitos)"
-               maxlength="8"
-               required />
-      </div>
-
-      <div class="col-md-6 mb-2">
-        <label>Email</label>
-        <input type="email"
-               class="form-control"
-               th:field="*{email}"
-               required
-               title="Ingrese un correo válido (ej: usuario@dominio.com)" />
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-6 mb-2">
-        <label>Teléfono</label>
-        <input class="form-control"
-               th:field="*{telefono}"
-               pattern="^\([0-9]{2,4}\)\s[0-9]{3,4}-[0-9]{3,4}$"
-               title="Formato requerido: (221) 421-2121 o (011) 1111-1111"
-               placeholder="(221) 421-2121"
-               required />
-      </div>
-
-      <div class="col-md-6 mb-2">
-        <label>Contraseña</label>
-        <input type="password"
-               class="form-control"
-               th:field="*{contrasenia}"
-               minlength="6"
-               placeholder="Mínimo 6 caracteres"
-               required />
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-6 mb-2">
-        <label>Activo</label>
-        <select class="form-select" th:field="*{activo}">
-          <option th:value="1" th:text="'Sí'"></option>
-          <option th:value="0" th:text="'No'"></option>
+      <!-- DESPLEGABLE DE ROLES -->
+      <div class="mb-2">
+        <label>Rol</label>
+        <select class="form-select" th:field="*{rol}" required>
+          <option value="">-- Seleccione un rol --</option>
+          <option value="administrador">Administrador</option>
+          <option value="asociado">Asociado</option>
+          <option value="cliente">Cliente</option>
         </select>
       </div>
 
-      <div class="col-md-6 mb-2">
-        <label>Firma</label>
-        <select class="form-select" name="id_firma" th:field="*{id_firma}">
-          <option th:each="f : ${firmas}" th:value="${f.id}" th:text="${f.nombre}"></option>
+      <div class="mb-2">
+        <label>Legajo</label>
+        <input class="form-control" th:field="*{legajo}" required />
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label>Nombre</label>
+          <input class="form-control" th:field="*{nombre}" required />
+        </div>
+        <div class="col-md-6 mb-2">
+          <label>Apellido</label>
+          <input class="form-control" th:field="*{apellido}" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label>Documento</label>
+          <input class="form-control" th:field="*{documento}" required />
+        </div>
+
+        <div class="col-md-6 mb-2">
+          <label>Email</label>
+          <input type="email" class="form-control" th:field="*{email}" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label>Teléfono</label>
+          <input class="form-control" th:field="*{telefono}" required />
+        </div>
+
+        <div class="col-md-6 mb-2">
+          <label>Contraseña</label>
+          <input type="password" class="form-control" th:field="*{contrasenia}" 
+                 th:attr="placeholder=${asociado.id != null} ? 'Dejar vacío para mantener actual' : 'Requerida'" />
+          <small class="form-text text-muted" th:if="${asociado.id != null}">
+            Dejar vacío para mantener la contraseña actual
+          </small>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label>Activo</label>
+          <select class="form-select" th:field="*{activo}">
+            <option th:value="1" th:text="'Sí'"></option>
+            <option th:value="0" th:text="'No'"></option>
+          </select>
+        </div>
+
+        <div class="col-md-6 mb-2">
+          <label>Firma</label>
+          <select class="form-select" name="id_firma" th:field="*{id_firma}">
+            <option th:each="f : ${firmas}" th:value="${f.id}" th:text="${f.nombre}"></option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label>Categorías</label>
+        <select class="form-select" name="categoriaIds" multiple>
+          <option th:each="c : ${categorias}"
+                  th:value="${c.id}"
+                  th:text="${c.nombre}"
+                  th:selected="${asociado.categorias != null ? asociado.categorias.contains(c) : false}">
+          </option>
         </select>
       </div>
-    </div>
 
-    <div class="mb-2">
-      <label>Categorías</label>
-      <select class="form-select" name="categoriaIds" multiple>
-        <option th:each="c : ${categorias}"
-                th:value="${c.id}"
-                th:text="${c.nombre}"
-                th:selected="${asociado.categorias != null ? asociado.categorias.contains(c) : false}">
-        </option>
-      </select>
-    </div>
-
-    <div class="d-flex gap-2">
-      <button class="btn btn-primary" type="submit">Guardar</button>
-      <button type="button" class="btn btn-secondary"
-              hx-get="/asociados/list" hx-target="#asociados-list" hx-swap="innerHTML">Cancelar</button>
-    </div>
-  </form>
-
-  <!-- script: engancha validación tanto en carga inicial como cuando htmx trae el formulario -->
-  <script>
-    // Para el caso en el que htmx reemplace el fragmento:
-    document.addEventListener('htmx:afterSwap', (evt) => {
-      // si el objetivo del swap fue '#asociado-form', re-ligamos validación
-      if (evt.detail && evt.detail.target && evt.detail.target.id === 'asociado-form') {
-        const form = evt.detail.target.querySelector('form');
-        if (form) attachClientValidation(form);
-      }
-    });
-
-    // También para la carga inicial de la página (si el formulario ya está presente)
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.querySelector('#asociado-form form');
-      if (form) attachClientValidation(form);
-    });
-
-    function attachClientValidation(form) {
-      // Evitamos adjuntar el mismo listener varias veces
-      if (form._hasValidation) return;
-      form._hasValidation = true;
-
-      form.addEventListener('submit', (e) => {
-        if (!form.checkValidity()) {
-          e.preventDefault();
-          e.stopPropagation();
-          form.reportValidity();
-        }
-      });
-    }
-  </script>
-</div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary"
+                hx-get="/asociados/list" hx-target="#asociados-list" hx-swap="innerHTML">Cancelar</button>
+      </div>
+    </form>
+  </div>
 
   <div th:fragment="view">
     <div class="card p-3">
@@ -158,6 +123,7 @@
       <div><strong>Apellido:</strong> <span th:text="${asociado.apellido}">-</span></div>
       <div><strong>Documento:</strong> <span th:text="${asociado.documento}">-</span></div>
       <div><strong>Email:</strong> <span th:text="${asociado.email}">-</span></div>
+      <div><strong>Rol:</strong> <span th:text="${asociado.rol}">-</span></div>
       <div><strong>Teléfono:</strong> <span th:text="${asociado.telefono}">-</span></div>
       <div><strong>Activo:</strong> <span th:text="${asociado.activo == 1 ? 'Sí' : 'No'}">-</span></div>
       <div><strong>Contraseña:</strong> <span>••••••</span></div>
