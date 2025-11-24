@@ -36,6 +36,9 @@ public class Madurador {
     @Column(name = "notas")
     private String notas;
 
+    @Column(name = "codigo_qr", unique = true)
+    private String codigoQR;
+
     // Relación ManyToOne con Lote
     @ManyToOne
     @JoinColumn(name = "lote_id")  // Crea la columna lote_id en la tabla Madurador para asociar maduradores con un lote

@@ -1,0 +1,344 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::content})">
+  <section th:fragment="content">
+    <div class="card p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="m-0">Gestión de Códigos QR</h2>
+        <div>
+          <button class="btn btn-outline-primary" onclick="location.reload()">Actualizar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs para Barriles y Maduradores -->
+    <ul class="nav nav-tabs mb-3" id="qrTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="barriles-tab" data-bs-toggle="tab" data-bs-target="#barriles-content" type="button" role="tab">
+          Barriles
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="maduradores-tab" data-bs-toggle="tab" data-bs-target="#maduradores-content" type="button" role="tab">
+          Maduradores
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="qrTabsContent">
+      <!-- TAB BARRILES -->
+      <div class="tab-pane fade show active" id="barriles-content" role="tabpanel">
+        <div class="card p-3 mb-3">
+          <h5>Seleccionar Barril</h5>
+          <div class="row align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">ID del Barril</label>
+              <input type="number" id="barrilId" class="form-control" placeholder="Ingrese ID del barril">
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-primary" onclick="buscarBarril()">Buscar</button>
+              <button class="btn btn-success" onclick="generarQRBarril()">Generar QR</button>
+              <button class="btn btn-info" onclick="visualizarQRBarril()">Ver QR Existente</button>
+            </div>
+          </div>
+          <div id="info-barril" class="mt-3"></div>
+        </div>
+
+        <!-- Resultado QR Barril -->
+        <div id="resultado-qr-barril" class="mt-3"></div>
+      </div>
+
+      <!-- TAB MADURADORES -->
+      <div class="tab-pane fade" id="maduradores-content" role="tabpanel">
+        <div class="card p-3 mb-3">
+          <h5>Seleccionar Madurador</h5>
+          <div class="row align-items-end">
+            <div class="col-md-4">
+              <label class="form-label">ID del Madurador</label>
+              <input type="number" id="maduradorId" class="form-control" placeholder="Ingrese ID del madurador">
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-primary" onclick="buscarMadurador()">Buscar</button>
+              <button class="btn btn-success" onclick="generarQRMadurador()">Generar QR</button>
+              <button class="btn btn-info" onclick="visualizarQRMadurador()">Ver QR Existente</button>
+            </div>
+          </div>
+          <div id="info-madurador" class="mt-3"></div>
+        </div>
+
+        <!-- Resultado QR Madurador -->
+        <div id="resultado-qr-madurador" class="mt-3"></div>
+      </div>
+    </div>
+
+    <!-- Modal para visualizar y descargar QR -->
+    <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="qrModalLabel">Código QR Generado</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <div id="qr-info" class="mb-3"></div>
+            <img id="qr-imagen" src="" alt="Código QR" class="img-fluid border" style="max-width: 300px;">
+            <div class="mt-3">
+              <p class="fw-bold">Código: <span id="qr-codigo"></span></p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary" onclick="imprimirQR()">
+              <i class="bi bi-printer"></i> Imprimir
+            </button>
+            <button type="button" class="btn btn-success" id="btn-descargar-qr">
+              <i class="bi bi-download"></i> Descargar PNG
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let qrActual = null;
+
+      // === FUNCIONES PARA BARRILES ===
+      
+      function buscarBarril() {
+        const id = document.getElementById('barrilId').value.trim();
+        if (!id) {
+          mostrarAlerta('info-barril', 'Por favor ingrese un ID', 'warning');
+          return;
+        }
+
+        fetch(`/getByIdBarril/${id}`)
+          .then(response => response.json())
+          .then(res => {
+            const barril = res && res.data ? res.data : null;
+            if (!barril) {
+              mostrarAlerta('info-barril', 'Barril no encontrado', 'warning');
+              return;
+            }
+
+            const html = `
+              <div class="alert alert-info">
+                <h6>Información del Barril</h6>
+                <div><strong>ID:</strong> ${barril.id}</div>
+                <div><strong>Litros:</strong> ${barril.litros}</div>
+                <div><strong>Estado:</strong> ${barril.estado}</div>
+                <div><strong>Notas:</strong> ${barril.notas || 'N/A'}</div>
+                <div><strong>Código QR:</strong> ${barril.codigoQR || 'Sin asignar'}</div>
+              </div>
+            `;
+            document.getElementById('info-barril').innerHTML = html;
+          })
+          .catch(err => {
+            mostrarAlerta('info-barril', 'Error al buscar barril: ' + err.message, 'danger');
+          });
+      }
+
+      function generarQRBarril() {
+        const id = document.getElementById('barrilId').value.trim();
+        if (!id) {
+          mostrarAlerta('resultado-qr-barril', 'Por favor ingrese un ID', 'warning');
+          return;
+        }
+
+        fetch(`/qr/barril/${id}/generar`, { method: 'POST' })
+          .then(response => response.json())
+          .then(respuesta => {
+            if (respuesta.codigo === '200') {
+              const datos = respuesta.dato;
+              qrActual = {
+                tipo: 'barril',
+                id: id,
+                codigo: datos.codigoQR,
+                imagenBase64: datos.imagenBase64
+              };
+              mostrarModalQR(datos.codigoQR, datos.imagenBase64, 'BARRIL', id);
+              mostrarAlerta('resultado-qr-barril', 'Código QR generado exitosamente', 'success');
+              buscarBarril(); // Actualizar info
+            } else {
+              mostrarAlerta('resultado-qr-barril', respuesta.descripcion, 'danger');
+            }
+          })
+          .catch(err => {
+            mostrarAlerta('resultado-qr-barril', 'Error al generar QR: ' + err.message, 'danger');
+          });
+      }
+
+      function visualizarQRBarril() {
+        const id = document.getElementById('barrilId').value.trim();
+        if (!id) {
+          mostrarAlerta('resultado-qr-barril', 'Por favor ingrese un ID', 'warning');
+          return;
+        }
+
+        fetch(`/qr/barril/${id}`)
+          .then(response => response.json())
+          .then(respuesta => {
+            if (respuesta.codigo === '200') {
+              const datos = respuesta.dato;
+              qrActual = {
+                tipo: 'barril',
+                id: id,
+                codigo: datos.codigoQR,
+                imagenBase64: datos.imagenBase64
+              };
+              mostrarModalQR(datos.codigoQR, datos.imagenBase64, 'BARRIL', id);
+            } else {
+              mostrarAlerta('resultado-qr-barril', respuesta.descripcion, 'warning');
+            }
+          })
+          .catch(err => {
+            mostrarAlerta('resultado-qr-barril', 'Error al obtener QR: ' + err.message, 'danger');
+          });
+      }
+
+      // === FUNCIONES PARA MADURADORES ===
+      
+      function buscarMadurador() {
+        const id = document.getElementById('maduradorId').value.trim();
+        if (!id) {
+          mostrarAlerta('info-madurador', 'Por favor ingrese un ID', 'warning');
+          return;
+        }
+
+        fetch(`/getByIdMadurador/${id}`)
+          .then(response => response.json())
+          .then(res => {
+            const madurador = res && res.data ? res.data : null;
+            if (!madurador) {
+              mostrarAlerta('info-madurador', 'Madurador no encontrado', 'warning');
+              return;
+            }
+
+            const html = `
+              <div class="alert alert-info">
+                <h6>Información del Madurador</h6>
+                <div><strong>ID:</strong> ${madurador.id}</div>
+                <div><strong>Litros:</strong> ${madurador.litros}</div>
+                <div><strong>Estado:</strong> ${madurador.estado}</div>
+                <div><strong>Notas:</strong> ${madurador.notas || 'N/A'}</div>
+                <div><strong>Código QR:</strong> ${madurador.codigoQR || 'Sin asignar'}</div>
+              </div>
+            `;
+            document.getElementById('info-madurador').innerHTML = html;
+          })
+          .catch(err => {
+            mostrarAlerta('info-madurador', 'Error al buscar madurador: ' + err.message, 'danger');
+          });
+      }
+
+      function generarQRMadurador() {
+        const id = document.getElementById('maduradorId').value.trim();
+        if (!id) {
+          mostrarAlerta('resultado-qr-madurador', 'Por favor ingrese un ID', 'warning');
+          return;
+        }
+
+        fetch(`/qr/madurador/${id}/generar`, { method: 'POST' })
+          .then(response => response.json())
+          .then(respuesta => {
+            if (respuesta.codigo === '200') {
+              const datos = respuesta.dato;
+              qrActual = {
+                tipo: 'madurador',
+                id: id,
+                codigo: datos.codigoQR,
+                imagenBase64: datos.imagenBase64
+              };
+              mostrarModalQR(datos.codigoQR, datos.imagenBase64, 'MADURADOR', id);
+              mostrarAlerta('resultado-qr-madurador', 'Código QR generado exitosamente', 'success');
+              buscarMadurador(); // Actualizar info
+            } else {
+              mostrarAlerta('resultado-qr-madurador', respuesta.descripcion, 'danger');
+            }
+          })
+          .catch(err => {
+            mostrarAlerta('resultado-qr-madurador', 'Error al generar QR: ' + err.message, 'danger');
+          });
+      }
+
+      function visualizarQRMadurador() {
+        const id = document.getElementById('maduradorId').value.trim();
+        if (!id) {
+          mostrarAlerta('resultado-qr-madurador', 'Por favor ingrese un ID', 'warning');
+          return;
+        }
+
+        fetch(`/qr/madurador/${id}`)
+          .then(response => response.json())
+          .then(respuesta => {
+            if (respuesta.codigo === '200') {
+              const datos = respuesta.dato;
+              qrActual = {
+                tipo: 'madurador',
+                id: id,
+                codigo: datos.codigoQR,
+                imagenBase64: datos.imagenBase64
+              };
+              mostrarModalQR(datos.codigoQR, datos.imagenBase64, 'MADURADOR', id);
+            } else {
+              mostrarAlerta('resultado-qr-madurador', respuesta.descripcion, 'warning');
+            }
+          })
+          .catch(err => {
+            mostrarAlerta('resultado-qr-madurador', 'Error al obtener QR: ' + err.message, 'danger');
+          });
+      }
+
+      // === FUNCIONES AUXILIARES ===
+      
+      function mostrarModalQR(codigo, imagenBase64, tipo, id) {
+        document.getElementById('qr-info').innerHTML = `<strong>${tipo} #${id}</strong>`;
+        document.getElementById('qr-codigo').textContent = codigo;
+        document.getElementById('qr-imagen').src = 'data:image/png;base64,' + imagenBase64;
+        
+        // Configurar botón de descarga
+        const btnDescargar = document.getElementById('btn-descargar-qr');
+        btnDescargar.onclick = () => descargarQR(tipo.toLowerCase(), id);
+        
+        const modal = new bootstrap.Modal(document.getElementById('qrModal'));
+        modal.show();
+      }
+
+      function descargarQR(tipo, id) {
+        const url = `/qr/${tipo}/${id}/imagen`;
+        window.open(url, '_blank');
+      }
+
+      function imprimirQR() {
+        const imgSrc = document.getElementById('qr-imagen').src;
+        const codigo = document.getElementById('qr-codigo').textContent;
+        const info = document.getElementById('qr-info').textContent;
+        
+        const ventanaImpresion = window.open('', '', 'height=600,width=800');
+        ventanaImpresion.document.write('<html><head><title>Imprimir QR</title>');
+        ventanaImpresion.document.write('<style>');
+        ventanaImpresion.document.write('body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }');
+        ventanaImpresion.document.write('img { max-width: 400px; border: 2px solid #000; margin: 20px 0; }');
+        ventanaImpresion.document.write('h3 { margin: 10px 0; }');
+        ventanaImpresion.document.write('</style></head><body>');
+        ventanaImpresion.document.write('<h2>Sierra Maestra - Código QR</h2>');
+        ventanaImpresion.document.write('<h3>' + info + '</h3>');
+        ventanaImpresion.document.write('<img src="' + imgSrc + '">');
+        ventanaImpresion.document.write('<p><strong>Código:</strong> ' + codigo + '</p>');
+        ventanaImpresion.document.write('</body></html>');
+        ventanaImpresion.document.close();
+        ventanaImpresion.print();
+      }
+
+      function mostrarAlerta(elementoId, mensaje, tipo) {
+        const html = `<div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+          ${mensaje}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>`;
+        document.getElementById(elementoId).innerHTML = html;
+        
+        setTimeout(() => {
+          document.getElementById(elementoId).innerHTML = '';
+        }, 5000);
+      }
+    </script>
+  </section>
+</html>

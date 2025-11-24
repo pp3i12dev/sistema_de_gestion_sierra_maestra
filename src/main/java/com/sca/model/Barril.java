@@ -44,6 +44,9 @@ public class Barril {
     @Column(name = "timestamp_reserva")
     private LocalDateTime timestampReserva;
 
+    @Column(name = "codigo_qr", unique = true)
+    private String codigoQR;
+
     @ManyToOne
     @JoinColumn(name = "lote_id")
     @JsonBackReference
