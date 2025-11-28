@@ -113,7 +113,7 @@ public class QRCodeController {
             }
 
             @SuppressWarnings("unchecked")
-            Map<String, Object> datos = (Map<String, Object>) respuesta.getDato();
+            Map<String, Object> datos = (Map<String, Object>) respuesta.getData();
             String imagenBase64 = (String) datos.get("imagenBase64");
             String codigoQR = (String) datos.get("codigoQR");
             
@@ -143,7 +143,7 @@ public class QRCodeController {
             }
 
             @SuppressWarnings("unchecked")
-            Map<String, Object> datos = (Map<String, Object>) respuesta.getDato();
+            Map<String, Object> datos = (Map<String, Object>) respuesta.getData();
             String imagenBase64 = (String) datos.get("imagenBase64");
             
             byte[] imagenBytes = java.util.Base64.getDecoder().decode(imagenBase64);

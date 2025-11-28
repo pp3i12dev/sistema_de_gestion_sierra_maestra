@@ -46,14 +46,14 @@ public class QRCodeServiceImpl implements QRCodeService {
             Optional<Barril> barrilOpt = barrilRepository.findById(barrilId);
             
             if (!barrilOpt.isPresent()) {
-                return new Respuesta("404", "Barril no encontrado", null);
+                return new Respuesta("404", "404", "Barril no encontrado", null);
             }
 
             Barril barril = barrilOpt.get();
 
             // Validar que no tenga ya un QR activo
             if (barril.getCodigoQR() != null && !barril.getCodigoQR().isEmpty()) {
-                return new Respuesta("400", "El barril ya tiene un código QR asignado: " + barril.getCodigoQR(), null);
+                return new Respuesta("400", "400", "El barril ya tiene un código QR asignado: " + barril.getCodigoQR(), null);
             }
 
             // Generar código QR único
@@ -73,10 +73,10 @@ public class QRCodeServiceImpl implements QRCodeService {
             datos.put("tipo", "BARRIL");
             datos.put("id", barrilId);
 
-            return new Respuesta("200", "Código QR generado exitosamente", datos);
+            return new Respuesta("200", "200", "Código QR generado exitosamente", datos);
 
         } catch (Exception e) {
-            return new Respuesta("500", "Error al generar código QR: " + e.getMessage(), null);
+            return new Respuesta("500", "500", "Error al generar código QR: " + e.getMessage(), null);
         }
     }
 
@@ -87,14 +87,14 @@ public class QRCodeServiceImpl implements QRCodeService {
             Optional<Madurador> maduradorOpt = maduradorRepository.findById(maduradorId);
             
             if (!maduradorOpt.isPresent()) {
-                return new Respuesta("404", "Madurador no encontrado", null);
+                return new Respuesta("404", "404", "Madurador no encontrado", null);
             }
 
             Madurador madurador = maduradorOpt.get();
 
             // Validar que no tenga ya un QR activo
             if (madurador.getCodigoQR() != null && !madurador.getCodigoQR().isEmpty()) {
-                return new Respuesta("400", "El madurador ya tiene un código QR asignado: " + madurador.getCodigoQR(), null);
+                return new Respuesta("400", "400", "El madurador ya tiene un código QR asignado: " + madurador.getCodigoQR(), null);
             }
 
             // Generar código QR único
@@ -114,10 +114,10 @@ public class QRCodeServiceImpl implements QRCodeService {
             datos.put("tipo", "MADURADOR");
             datos.put("id", maduradorId);
 
-            return new Respuesta("200", "Código QR generado exitosamente", datos);
+            return new Respuesta("200", "200", "Código QR generado exitosamente", datos);
 
         } catch (Exception e) {
-            return new Respuesta("500", "Error al generar código QR: " + e.getMessage(), null);
+            return new Respuesta("500", "500", "Error al generar código QR: " + e.getMessage(), null);
         }
     }
 
@@ -127,13 +127,13 @@ public class QRCodeServiceImpl implements QRCodeService {
             Optional<Barril> barrilOpt = barrilRepository.findById(barrilId);
             
             if (!barrilOpt.isPresent()) {
-                return new Respuesta("404", "Barril no encontrado", null);
+                return new Respuesta("404", "404", "Barril no encontrado", null);
             }
 
             Barril barril = barrilOpt.get();
 
             if (barril.getCodigoQR() == null || barril.getCodigoQR().isEmpty()) {
-                return new Respuesta("404", "El barril no tiene código QR asignado", null);
+                return new Respuesta("404", "404", "El barril no tiene código QR asignado", null);
             }
 
             // Generar imagen del QR existente
@@ -146,10 +146,10 @@ public class QRCodeServiceImpl implements QRCodeService {
             datos.put("tipo", "BARRIL");
             datos.put("id", barrilId);
 
-            return new Respuesta("200", "Código QR obtenido exitosamente", datos);
+            return new Respuesta("200", "200", "Código QR obtenido exitosamente", datos);
 
         } catch (Exception e) {
-            return new Respuesta("500", "Error al obtener código QR: " + e.getMessage(), null);
+            return new Respuesta("500", "500", "Error al obtener código QR: " + e.getMessage(), null);
         }
     }
 
@@ -159,13 +159,13 @@ public class QRCodeServiceImpl implements QRCodeService {
             Optional<Madurador> maduradorOpt = maduradorRepository.findById(maduradorId);
             
             if (!maduradorOpt.isPresent()) {
-                return new Respuesta("404", "Madurador no encontrado", null);
+                return new Respuesta("404", "404", "Madurador no encontrado", null);
             }
 
             Madurador madurador = maduradorOpt.get();
 
             if (madurador.getCodigoQR() == null || madurador.getCodigoQR().isEmpty()) {
-                return new Respuesta("404", "El madurador no tiene código QR asignado", null);
+                return new Respuesta("404", "404", "El madurador no tiene código QR asignado", null);
             }
 
             // Generar imagen del QR existente
@@ -178,10 +178,10 @@ public class QRCodeServiceImpl implements QRCodeService {
             datos.put("tipo", "MADURADOR");
             datos.put("id", maduradorId);
 
-            return new Respuesta("200", "Código QR obtenido exitosamente", datos);
+            return new Respuesta("200", "200", "Código QR obtenido exitosamente", datos);
 
         } catch (Exception e) {
-            return new Respuesta("500", "Error al obtener código QR: " + e.getMessage(), null);
+            return new Respuesta("500", "500", "Error al obtener código QR: " + e.getMessage(), null);
         }
     }
 
