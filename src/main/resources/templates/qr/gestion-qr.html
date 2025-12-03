@@ -147,7 +147,7 @@
           .then(response => response.json())
           .then(respuesta => {
             if (respuesta.codigo === '200') {
-              const datos = respuesta.dato;
+              const datos = respuesta.data;
               qrActual = {
                 tipo: 'barril',
                 id: id,
@@ -177,7 +177,7 @@
           .then(response => response.json())
           .then(respuesta => {
             if (respuesta.codigo === '200') {
-              const datos = respuesta.dato;
+              const datos = respuesta.data;
               qrActual = {
                 tipo: 'barril',
                 id: id,
@@ -240,7 +240,7 @@
           .then(response => response.json())
           .then(respuesta => {
             if (respuesta.codigo === '200') {
-              const datos = respuesta.dato;
+              const datos = respuesta.data;
               qrActual = {
                 tipo: 'madurador',
                 id: id,
@@ -270,7 +270,7 @@
           .then(response => response.json())
           .then(respuesta => {
             if (respuesta.codigo === '200') {
-              const datos = respuesta.dato;
+              const datos = respuesta.data;
               qrActual = {
                 tipo: 'madurador',
                 id: id,
