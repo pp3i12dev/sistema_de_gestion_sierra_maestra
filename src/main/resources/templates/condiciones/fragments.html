@@ -1,0 +1,28 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="lista">
+    <div th:if="${#lists.isEmpty(items)}">No hay condiciones.</div>
+    <div th:each="c : ${items}" class="card mb-2 p-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${c.id}">ID</strong>
+          <div class="muted" th:text="${c.descripcion}">Descripcion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/condiciones/save}" th:object="${condicion}" hx-post="/condiciones/save" hx-target="#condiciones-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label>Descripción</label>
+        <input class="form-control" th:field="*{descripcion}" />
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" onclick="htmx.ajax('GET','/condiciones/list','#condiciones-list')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</html>

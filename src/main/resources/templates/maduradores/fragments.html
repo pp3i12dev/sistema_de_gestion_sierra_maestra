@@ -1,0 +1,68 @@
+  <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
+    <div th:if="${#lists.isEmpty(items)}">No hay maduradores.</div>
+  <div th:each="m : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/maduradores/view/{id}(id=${m.id})}, data-view-target='#madurador-form'" style="cursor:pointer" role="button" tabindex="0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${m.id}">ID</strong>
+          <div class="muted" th:text="${m.notas}">Notas</div>
+        </div>
+        <div>
+          <span class="muted me-3" th:text="${m.estado}">Estado</span>
+          <button class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/maduradores/view/{id}(id=${m.id})}" hx-target="#madurador-form" hx-swap="innerHTML" title="Ver" onclick="event.stopPropagation()"><i class="bi bi-eye-fill"></i></button>
+          <button class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/maduradores/{id}(id=${m.id})}" hx-target="#madurador-form" hx-swap="innerHTML" title="Editar" onclick="event.stopPropagation()"><i class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteMadurador/{id}(id=${m.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/maduradores/list','#maduradores-list')"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/maduradores/save}" th:object="${madurador}" hx-post="/maduradores/save" hx-target="#maduradores-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2 row">
+        <div class="col">
+          <label>Litros</label>
+          <input class="form-control" type="number" th:field="*{litros}" min="0" required />
+        </div>
+        <div class="col">
+          <label>Estado</label>
+          <select class="form-select" th:field="*{estado}" required>
+            <option value="">Seleccione...</option>
+            <option value="Activo">Activo</option>
+            <option value="Cargado">Cargado</option>
+            <option value="Sucio">Sucio</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-2">
+        <label>Notas</label>
+        <input class="form-control" th:field="*{notas}" />
+      </div>
+      <div class="mb-2">
+        <label>Lote</label>
+        <select class="form-select" th:field="*{lote.id}">
+          <option th:each="l : ${lotes}" th:value="${l.id}" th:text="${l.cerveza != null ? l.cerveza.nombreCerveza : 'Lote ' + l.id}">Lote</option>
+        </select>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" hx-get="/maduradores/list" hx-target="#maduradores-list" hx-swap="innerHTML">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <div th:fragment="view">
+    <div class="card p-3">
+      <h6>Detalle Madurador</h6>
+      <div><strong>Id:</strong> <span th:text="${madurador.id}">-</span></div>
+      <div><strong>Litros:</strong> <span th:text="${madurador.litros}">-</span></div>
+      <div><strong>Estado:</strong> <span th:text="${madurador.estado}">-</span></div>
+      <div><strong>Notas:</strong> <span th:text="${madurador.notas}">-</span></div>
+      <div><strong>Lote:</strong> <span th:text="${madurador.lote != null ? madurador.lote.id : '-'}">-</span></div>
+      <div class="d-flex justify-content-end mt-2">
+        <button class="btn btn-sm btn-secondary" hx-get="/maduradores/list" hx-target="#maduradores-list" hx-swap="innerHTML">Cerrar</button>
+      </div>
+    </div>
+  </div>

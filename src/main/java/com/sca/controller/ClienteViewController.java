@@ -1,0 +1,31 @@
+package com.sca.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+public class ClienteViewController {
+
+    // Mapea la URL /cliente-dashboard para mostrar el dashboard del cliente
+    @GetMapping("/cliente-dashboard")
+    public String clienteDashboardPage() {
+        return "cliente-dashboard"; // busca cliente-dashboard.html en src/main/resources/templates/
+    }
+
+    // Mapea la URL /clientela para mostrar la vista clientela.html
+    @GetMapping("/inventario")
+    public String clientelaPage() {
+        return "inventario"; // busca inventario.html en src/main/resources/templates/
+    }
+    
+    // Mapea la URL /registro para mostrar la página de registro de clientes
+    @GetMapping("/registro")
+    public String registroPage() {
+        return "registro-cliente"; // busca registro-cliente.html en src/main/resources/templates/
+    }
+
+    @GetMapping("/listado-clientes")
+    public String listadoclientes() {
+        return "listado-clientes"; // busca listado-clientes.html en src/main/resources/templates/
+    }
+}

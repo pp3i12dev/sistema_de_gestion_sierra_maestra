@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:fragment="layout (content)">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title th:text="${title}">Sierra Maestra</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
+  <!-- Flatpickr datepicker CSS (for Argentine DD/MM/YYYY calendar UI) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <script src="https://unpkg.com/htmx.org@1.9.2" onerror="this.onerror=null;var s=document.createElement('script');s.src='/js/htmx.local.js';document.head.appendChild(s);"></script>
+  <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body class="p-3">
+  <div class="container">
+      <header class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center">
+          <a class="navbar-brand me-3 fw-bold text-decoration-none" th:href="@{/}">Sierra Maestra</a>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item"><a th:href="@{/}">Inicio</a></li>
+              <li class="breadcrumb-item active" th:text="${title}" aria-current="page">Sección</li>
+            </ol>
+          </nav>
+        </div>
+      </header>
+
+      <!-- Insert the fragment passed by child templates (only if provided) -->
+      <div th:if="${content != null}" th:insert="${content}"></div>
+      <div th:unless="${content != null}">
+        <div class="card p-4">
+          <h2>Bienvenido al sistema de gestión de Sierra Maestra</h2>
+          <p class="muted">Use la navegación para abrir Pedidos o Lotes.</p>
+    </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Fallback: if HTMX failed to load in the client, provide a minimal handler
+    // so buttons with hx-get and forms with hx-post still work.
+    (function(){
+      if (window.htmx) return; // nothing to do when htmx exists
+
+      // handle hx-get buttons/links
+      document.addEventListener('click', function(ev){
+        var btn = ev.target.closest && ev.target.closest('[hx-get]');
+        if (!btn) return;
+        try { ev.preventDefault(); } catch(e){}
+        var url = btn.getAttribute('hx-get');
+        var targetSelector = btn.getAttribute('hx-target');
+        var swap = btn.getAttribute('hx-swap') || 'innerHTML';
+        var target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (!url || !target) return;
+        fetch(url, { credentials: 'same-origin' })
+          .then(function(r){ return r.text(); })
+          .then(function(html){ target.innerHTML = html; })
+          .catch(function(){ /* swallow errors in fallback */ });
+      }, true);
+
+      // handle forms with hx-post
+      document.addEventListener('submit', function(ev){
+        var form = ev.target;
+        if (!form || !form.hasAttribute('hx-post')) return;
+        try { ev.preventDefault(); } catch(e){}
+        var url = form.getAttribute('hx-post') || form.getAttribute('action');
+        var targetSelector = form.getAttribute('hx-target');
+        var target = targetSelector ? document.querySelector(targetSelector) : null;
+        var formData = new FormData(form);
+        if (!url) return;
+        fetch(url, { method: 'POST', body: formData, credentials: 'same-origin' })
+          .then(function(r){ return r.text(); })
+          .then(function(html){ if (target) target.innerHTML = html; })
+          .catch(function(){ /* ignore fallback errors */ });
+      }, true);
+    })();
+  </script>
+  <script>
+    // Global custom validation messages (Spanish) — intercept browser native messages
+    // We attach a capturing 'invalid' listener and set a Spanish message via setCustomValidity.
+    // This replaces the browser's built-in English alerts with our Spanish text.
+    try {
+      document.addEventListener('DOMContentLoaded', function(){
+        // Use capture=true so we catch the invalid event before the browser shows its bubble
+        document.addEventListener('invalid', function(ev){
+          try {
+            var el = ev.target;
+            if (!el || !(el instanceof HTMLElement)) return;
+            // Only consider form controls
+            if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) return;
+
+            // If a previous custom message exists, keep it cleared
+            var msg = '';
+            if (el.validity.valueMissing) {
+              msg = 'Este campo es obligatorio.';
+            } else if (el.validity.typeMismatch) {
+              // give a clearer message for email fields
+              try {
+                if (el.type && el.type.toLowerCase() === 'email') {
+                  msg = 'Introduzca una dirección de correo válida (por ejemplo usuario@dominio.com). Asegúrese de incluir "@".';
+                } else {
+                  msg = 'Introduzca un valor válido.';
+                }
+              } catch(e) {
+                msg = 'Introduzca un valor válido.';
+              }
+            } else if (el.validity.rangeUnderflow) {
+              msg = 'El valor debe ser mayor o igual que ' + (el.min || '0') + '.';
+            } else if (el.validity.rangeOverflow) {
+              msg = 'El valor debe ser menor o igual que ' + (el.max || '') + '.';
+            } else if (el.validity.stepMismatch) {
+              msg = 'El valor no cumple el paso permitido.';
+            } else if (el.validity.patternMismatch) {
+              // if pattern provided, prefer title attribute as hint
+              msg = el.getAttribute('title') || 'Formato no válido.';
+            } else {
+              msg = 'Valor inválido.';
+            }
+            // set custom message so the browser shows our Spanish text
+            try { el.setCustomValidity(msg); } catch(e){}
+          } catch(err){ /* ignore */ }
+        }, true);
+
+        // Clear any custom message as the user types or changes the control
+        document.addEventListener('input', function(e){ try { var el = e.target; if (el && el.setCustomValidity) el.setCustomValidity(''); } catch(err){} }, true);
+        document.addEventListener('change', function(e){ try { var el = e.target; if (el && el.setCustomValidity) el.setCustomValidity(''); } catch(err){} }, true);
+      });
+    } catch(err) { console.error('install custom validation messages failed', err); }
+  </script>
+  <script>
+    // Debug helpers: only active for local dev (localhost / 127.0.0.1)
+    try {
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        if (window.htmx && typeof htmx.logAll === 'function') {
+          console.info('HTMX present — enabling detailed logs');
+          htmx.logAll();
+        } else {
+          console.info('HTMX not present in page');
+        }
+
+        document.addEventListener('click', function(e){
+          var btn = e.target.closest && e.target.closest('[hx-get],[hx-post]');
+          if (btn) {
+            console.debug('DEBUG: click on element with HTMX attr', btn.getAttribute('hx-get') || btn.getAttribute('hx-post'), btn);
+          }
+        }, true);
+
+        document.addEventListener('submit', function(e){
+          var form = e.target;
+          if (form && form.hasAttribute('hx-post')) {
+            console.debug('DEBUG: form submit (hx-post)', form.getAttribute('hx-post'), form);
+          }
+        }, true);
+      }
+    } catch (err) {
+      console.error('Debug helper error', err);
+    }
+  </script>
+  <script>
+    // HTMX event tracing to help debug swap/requests in the browser
+    try {
+      if (window.htmx) {
+        ['htmx:beforeRequest','htmx:afterSwap','htmx:afterRequest','htmx:responseError'].forEach(function(ev){
+          document.addEventListener(ev, function(e){
+            try {
+              var d = e && e.detail ? e.detail : {};
+              if (ev === 'htmx:afterSwap' && d.target) {
+                try {
+                  var content = (d.target && d.target.innerHTML) || '';
+                  console.info('[htmx] afterSwap target=', d.target.id || d.target, 'status=', d.xhr && d.xhr.status, 'len=', content.length, 'preview=', content.substr(0,200));
+                  // visual flash removed (was noisy during rapid development)
+                } catch(e){ console.info('[htmx] afterSwap target=', d.target.id || d.target, 'status=', d.xhr && d.xhr.status); }
+              } else if (ev === 'htmx:beforeRequest') {
+                console.info('[htmx] beforeRequest ->', d.path || d.verb || d.target || (d.xhr && d.xhr.responseURL) || d);
+              } else if (ev === 'htmx:afterRequest') {
+                console.info('[htmx] afterRequest', d.xhr && d.xhr.status, d.xhr && d.xhr.responseURL);
+              } else if (ev === 'htmx:responseError') {
+                console.error('[htmx] responseError', d.xhr && d.xhr.status, d.xhr && d.xhr.responseText);
+              }
+            } catch (err) { console.error('htmx debug listener error', err); }
+          }, false);
+        });
+      }
+    } catch(e) { console.error('htmx debug install failed', e); }
+  </script>
+  <script>
+    // Clear matching form when a list is swapped/updated. Works for multiple
+    // resource types and covers both htmx swaps and the local fetch fallback.
+    (function(){
+      try {
+  var resources = ['cervezas','pedidos','lotes','barriles','clientes','maduradores','accesorios','categorias','asociados','meses','porcentajes-mes','sueldos-basicos','asistencias','asistencias-total'];
+
+  // explicit mapping to correctly derive the associated form id for each list
+        var formMap = {
+          'cervezas': 'cerveza-form',
+          'pedidos': 'pedido-form',
+          'lotes': 'lote-form',
+          'barriles': 'barril-form',
+          'clientes': 'cliente-form',
+          'maduradores': 'madurador-form',
+          'accesorios': 'accesorio-form',
+          'categorias': 'categoria-form',
+          'asociados': 'asociado-form',
+          'meses': 'meses-form',
+          'porcentajes-mes': 'porcentajes-mes-form',
+          'sueldos-basicos': 'sueldos-basicos-form',
+          'asistencias': 'asistencia-form',
+          'asistencias-total': 'asistencias-total-form'
+        };
+
+        resources.forEach(function(r){
+          var listEl = document.querySelector('#' + r + '-list');
+          if (!listEl) return;
+          var observer = new MutationObserver(function(mutations){
+            try {
+              var formId = formMap[r];
+              var formEl = document.querySelector('#' + formId);
+              if (formEl) formEl.innerHTML = '';
+            } catch (err) { /* ignore */ }
+          });
+          observer.observe(listEl, { childList: true, subtree: false });
+        });
+      } catch (err) { console.error('list observers failed', err); }
+    })();
+
+    // Centralized handling for delete endpoints: when a delete request completes
+    // successfully, fetch the matching list and swap it in.
+    try {
+      if (window.htmx) {
+        document.addEventListener('htmx:afterRequest', function(e){
+          try {
+            var d = e && e.detail ? e.detail : {};
+            var url = (d.xhr && d.xhr.responseURL) ? d.xhr.responseURL : '';
+            if (!url || !(d.xhr && d.xhr.status === 200)) return;
+
+            var deleteMap = {
+              '/deleteCerveza': 'cervezas',
+              '/deletePedido': 'pedidos',
+              '/deleteLote': 'lotes',
+              '/deleteBarril': 'barriles',
+              '/deleteCliente': 'clientes',
+              '/deleteCategoria': 'categorias',
+              '/deleteAccesorio': 'accesorios',
+              '/deleteAsociados': 'asociados',
+              '/deleteMes': 'meses',
+              '/deletePorcentaje': 'porcentajes-mes',
+              '/deleteSueldo': 'sueldos-basicos',
+              '/deleteAsistencia': 'asistencias',
+              '/deleteAsistenciaTotal': 'asistencias-total'
+            };
+
+            Object.keys(deleteMap).forEach(function(prefix){
+              if (url.indexOf(prefix) !== -1) {
+                var resource = deleteMap[prefix];
+                var target = document.querySelector('#' + resource + '-list');
+                if (target) {
+                  try { htmx.ajax('GET', '/' + resource + '/list', {target: target}); } catch(err){
+                    // fallback to direct fetch when htmx.ajax signature differs
+                    fetch('/' + resource + '/list', { credentials: 'same-origin' })
+                      .then(function(r){ return r.text(); })
+                      .then(function(html){ target.innerHTML = html; })
+                      .catch(function(){ /* swallow */ });
+                  }
+                }
+              }
+            });
+          } catch(err) { /* ignore */ }
+        }, false);
+      }
+    } catch(err) { console.error('delete handler install failed', err); }
+  </script>
+  <!-- Flatpickr datepicker includes and init (Argentine DD/MM/YYYY) -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  <script>
+    try {
+      document.addEventListener('DOMContentLoaded', function(){
+        if (window.flatpickr) {
+          // initialize any existing inputs
+          try {
+            flatpickr('.date-arg', {
+              dateFormat: 'd/m/Y',
+              allowInput: true,
+              clickOpens: true,
+              locale: 'es'
+            });
+          } catch (e) { console.warn('flatpickr init partial failed', e); }
+          // helper to initialize elements inside a container (for HTMX swaps)
+          window.__initFlatpickrFor = function(container){
+            try {
+              if (!window.flatpickr) return;
+              var root = container || document;
+              var els = root.querySelectorAll && root.querySelectorAll('.date-arg') || [];
+              els.forEach(function(el){
+                // avoid double-init: flatpickr attaches _flatpickr property
+                if (!el._flatpickr) {
+                  flatpickr(el, { dateFormat: 'd/m/Y', allowInput: true, clickOpens: true, locale: 'es' });
+                }
+              });
+            } catch(err) { console.error('initFlatpickrFor failed', err); }
+          };
+          // init for existing document
+          window.__initFlatpickrFor(document);
+              // helper specific for pedidos: ensure fechaEntrega >= fechaPedido
+              window.__initPedidoDateConstraintsFor = function(container){
+                try {
+                  var root = container || document;
+                  var fPed = root.querySelector && root.querySelector('#fechaPedido');
+                  var fEnt = root.querySelector && root.querySelector('#fechaEntrega');
+                  if (!fPed || !fEnt) return;
+
+                  var fpPed = fPed._flatpickr;
+                  var fpEnt = fEnt._flatpickr;
+
+                  function parseDateStringToDate(s){
+                    try {
+                      // flatpickr uses d/m/Y; prefer fp instance parse if available
+                      if (fpPed && typeof fpPed.parseDate === 'function') return fpPed.parseDate(s, 'd/m/Y');
+                      if (window.flatpickr && typeof flatpickr.parseDate === 'function') return flatpickr.parseDate(s, 'd/m/Y');
+                      // fallback: attempt ISO parse (not ideal)
+                      var parts = s.split('/'); if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]);
+                    } catch(err){}
+                    return null;
+                  }
+
+                  function updateMin(){
+                    try {
+                      if (fpPed || fpEnt) {
+                        var dPed = fpPed && fpPed.selectedDates && fpPed.selectedDates[0] ? fpPed.selectedDates[0] : parseDateStringToDate(fPed.value);
+                        if (fpEnt) {
+                          fpEnt.set('minDate', dPed || null);
+                          var sel = fpEnt.selectedDates && fpEnt.selectedDates[0];
+                          if (sel && dPed && sel < dPed) {
+                            fpEnt.setDate(dPed, true);
+                            // optionally: brief visual hint could be added here
+                          }
+                        } else {
+                          if (dPed) {
+                            // set native min in yyyy-mm-dd format expected by type=date (but we use text inputs)
+                            var iso = dPed.toISOString().slice(0,10);
+                            fEnt.min = iso;
+                            if (fEnt.value && fEnt.value < iso) fEnt.value = iso;
+                          } else {
+                            fEnt.removeAttribute('min');
+                          }
+                        }
+                      } else {
+                        // no flatpickr instances, use native min attribute
+                        var v = fPed.value || '';
+                        if (v) {
+                          fEnt.min = v;
+                          if (fEnt.value && fEnt.value < v) fEnt.value = v;
+                        } else {
+                          fEnt.removeAttribute('min');
+                        }
+                      }
+                    } catch(err) { /* ignore */ }
+                  }
+
+                  // attach handlers
+                  if (fpPed) {
+                    try { fpPed.config.onChange.push(updateMin); } catch(e) { fPed.addEventListener('change', updateMin); }
+                  } else {
+                    try { fPed.addEventListener('change', updateMin); fPed.addEventListener('input', updateMin); } catch(e){}
+                  }
+                  // also update when entrega is directly manipulated (to keep consistency)
+                  if (fpEnt) {
+                    try { fpEnt.config.onChange.push(function(){ /* nothing for now */ }); } catch(e){}
+                  }
+
+                  // run once initially
+                  updateMin();
+                } catch(err) { console.error('initPedidoDateConstraintsFor failed', err); }
+              };
+              // helper specific for lotes: enforce relations between dates
+              window.__initLoteDatepickersFor = function(container){
+                try {
+                  var root = container || document;
+                  var fCoc = root.querySelector('#fechaCocina');
+                  var fMad = root.querySelector('#fechaCargaMadurador');
+                  var fVen = root.querySelector('#fechaVencimiento');
+                  if (!fCoc) return;
+                  // initialize pickers if not already
+                  if (fCoc && !fCoc._flatpickr) flatpickr(fCoc, { dateFormat: 'd/m/Y', allowInput:true, locale:'es' });
+                  if (fMad && !fMad._flatpickr) flatpickr(fMad, { dateFormat: 'd/m/Y', allowInput:true, locale:'es' });
+                  if (fVen && !fVen._flatpickr) flatpickr(fVen, { dateFormat: 'd/m/Y', allowInput:true, locale:'es' });
+
+                  var fc = fCoc._flatpickr;
+                  var fm = fMad && fMad._flatpickr;
+                  var fv = fVen && fVen._flatpickr;
+
+                  function parseFPDate(fp){ return (fp && fp.selectedDates && fp.selectedDates[0]) ? fp.selectedDates[0] : null; }
+
+                  function updateLimits(){
+                    var dC = parseFPDate(fc);
+                    if (fm) {
+                      fm.set('minDate', dC || null);
+                    }
+                    if (fv) {
+                      fv.set('minDate', dC || null);
+                    }
+                  }
+
+                  // attach change handlers
+                  if (fc) fc.config.onChange.push(updateLimits);
+                  if (fm) fm.config.onChange.push(function(){ /* nothing for now */ });
+                  if (fv) fv.config.onChange.push(function(){ /* nothing for now */ });
+
+                  // run once to set initial limits
+                  updateLimits();
+                } catch(err){ console.error('initLoteDatepickersFor failed', err); }
+              };
+        }
+      });
+    } catch (err) { console.error('flatpickr init failed', err); }
+  </script>
+  <script>
+  // Attach flatpickr to dynamic content inserted by HTMX
+    try {
+      document.addEventListener('htmx:afterSwap', function(evt){
+        try {
+          var detail = evt && evt.detail;
+          var target = detail && detail.target;
+          if (window.__initFlatpickrFor && target) {
+            window.__initFlatpickrFor(target);
+          }
+            // initialize lote-specific pickers when the lote form is swapped in
+            try {
+              if (window.__initPedidoDateConstraintsFor && target && (target.id === 'pedido-form' || (target.querySelector && target.querySelector('#fechaPedido')))) {
+                window.__initPedidoDateConstraintsFor(target);
+              }
+              if (window.__initLoteDatepickersFor && target && (target.id === 'lote-form' || (target.querySelector && target.querySelector('#fechaCocina')))) {
+                window.__initLoteDatepickersFor(target);
+              }
+            } catch(err) { /* ignore */ }
+        } catch(e) { /* ignore */ }
+      }, false);
+
+      // MutationObserver fallback: watch for added nodes with class 'date-arg'
+      var mo = new MutationObserver(function(muts){
+        muts.forEach(function(m){
+          m.addedNodes && Array.prototype.forEach.call(m.addedNodes, function(n){
+            try {
+              if (n.nodeType !== 1) return;
+              if (n.classList && n.classList.contains('date-arg')) {
+                if (window.__initFlatpickrFor) window.__initFlatpickrFor(n);
+              }
+              var inner = n.querySelectorAll && n.querySelectorAll('.date-arg') || [];
+              inner.forEach(function(el){ if (window.__initFlatpickrFor) window.__initFlatpickrFor(el); });
+            } catch(err) { /* swallow */ }
+          });
+        });
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    } catch(err) { console.error('flatpickr dynamic attach failed', err); }
+  </script>
+  <script>
+    // Delegated click handler: make cards with data-view-url clickable and load via HTMX or fetch
+    (function(){
+      function handleCardClick(e){
+        try{
+          var card = e.target.closest && e.target.closest('[data-view-url]');
+          if (!card) return;
+          // ignore clicks on interactive controls inside the card
+          if (e.target.closest) {
+            var ctl = e.target.closest('button, input, select, textarea');
+            if (ctl) return;
+            var anc = e.target.closest('a');
+            if (anc) {
+              // allow anchors without href or hx-* attributes (used as stretched-link)
+              if (anc.hasAttribute('href') || anc.hasAttribute('hx-get') || anc.hasAttribute('hx-post')) return;
+            }
+          }
+          var url = card.getAttribute('data-view-url');
+          var targetSel = card.getAttribute('data-view-target');
+          console.debug('[card-click] card=', card, 'url=', url, 'targetSel=', targetSel, 'event target=', e.target);
+          if (!url || !targetSel) return;
+          var target = document.querySelector(targetSel);
+          if (!target) { console.debug('[card-click] target not found for', targetSel); return; }
+          e.preventDefault();
+          if (window.htmx && typeof htmx !== 'undefined') {
+            try {
+              // prefer passing selector to htmx so it can find the target itself
+              htmx.ajax('GET', url, {target: targetSel});
+              console.debug('[card-click] htmx.ajax invoked', url, targetSel);
+              return;
+            } catch(err) {
+              console.debug('[card-click] htmx.ajax failed', err);
+              // fallthrough to fetch
+            }
+          }
+          // fetch fallback
+          fetch(url, { credentials: 'same-origin' })
+            .then(function(r){
+              console.debug('[card-click] fetch response', r.status, url);
+              return r.text();
+            })
+            .then(function(html){ target.innerHTML = html; console.debug('[card-click] swapped html into', targetSel); })
+            .catch(function(err){ console.debug('[card-click] fetch failed', err); });
+        }catch(err){ console.debug('[card-click] handler error', err); }
+      }
+      document.addEventListener('click', handleCardClick, true);
+    })();
+  </script>
+
+  <!-- Stock alerts (top-right) -->
+  <div id="stock-alerts" style="position:fixed; top:1rem; right:1rem; z-index:1050;"></div>
+  <script>
+    // Function to display a bootstrap toast
+    function showStockAlert(message, type='warning') {
+      const container = document.getElementById('stock-alerts');
+      const id = 'alert-' + Date.now();
+      const html = `<div id="${id}" class="toast align-items-center text-bg-${type} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+      var el = document.getElementById(id);
+      var toast = new bootstrap.Toast(el, { delay: 8000 });
+      toast.show();
+      // remove after hidden
+      el.addEventListener('hidden.bs.toast', ()=> el.remove());
+    }
+
+    // Poll the server every 60 seconds for low-stock items and show alerts
+    // Comentado temporalmente hasta que se implemente el endpoint /api/stock/low
+    /*
+    async function pollStockAlerts(){
+      try {
+        const res = await fetch('/api/stock/low');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length>0) {
+          data.forEach(item => {
+            showStockAlert('Stock bajo: ' + item.nombre + ' (qty: ' + item.cantidad + ')');
+          });
+        }
+      } catch(e){
+        // ignore
+      }
+    }
+    // initial poll and interval
+    document.addEventListener('DOMContentLoaded', ()=>{
+      pollStockAlerts();
+      setInterval(pollStockAlerts, 60000);
+    });
+    */
+  </script>
+
+</body>
+</html>

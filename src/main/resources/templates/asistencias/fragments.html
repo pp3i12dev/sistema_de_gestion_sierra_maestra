@@ -1,0 +1,32 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="lista">
+    <div th:if="${#lists.isEmpty(items)}">No hay asistencias.</div>
+    <div th:each="a : ${items}" class="card mb-2 p-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${a.id}">ID</strong>
+          <div class="muted" th:text="${a.fecha}">Fecha</div>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-outline-secondary me-1" hx-get="/asistencias/${a.id}" hx-target="#asistencia-form" hx-swap="innerHTML"><i class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-sm btn-outline-danger" hx-delete="/deleteAsistencia/${a.id}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/asistencias/list','#asistencias-list')"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/asistencias/save}" th:object="${asistencia}" hx-post="/asistencias/save" hx-target="#asistencias-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label>Fecha</label>
+        <input class="form-control" type="date" th:field="*{fecha}" />
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" onclick="htmx.ajax('GET','/asistencias/list','#asistencias-list')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</html>

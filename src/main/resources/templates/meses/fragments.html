@@ -1,0 +1,44 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
+    <div th:if="${#lists.isEmpty(items)}">No hay meses.</div>
+    <div th:each="m : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/meses/view/{id}(id=${m.id})}, data-view-target='#meses-form'" style="cursor:pointer" role="button" tabindex="0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${m.id}">ID</strong>
+          <div class="muted" th:text="${m.nombre}">Nombre</div>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/meses/view/{id}(id=${m.id})}" hx-target="#meses-form" hx-swap="innerHTML" title="Ver" onclick="event.stopPropagation()"><i class="bi bi-eye-fill"></i></button>
+          <button class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/meses/{id}(id=${m.id})}" hx-target="#meses-form" hx-swap="innerHTML" title="Editar" onclick="event.stopPropagation()"><i class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteMes/{id}(id=${m.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/meses/list','#meses-list')"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/meses/save}" th:object="${mes}" hx-post="/meses/save" hx-target="#meses-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label>Nombre</label>
+        <input class="form-control" th:field="*{nombre}" />
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" hx-get="/meses/list" hx-target="#meses-list" hx-swap="innerHTML">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <div th:fragment="view">
+    <div class="card p-3">
+      <h6>Detalle Mes</h6>
+      <div><strong>Id:</strong> <span th:text="${mes.id}">-</span></div>
+      <div><strong>Nombre:</strong> <span th:text="${mes.nombre}">-</span></div>
+      <div class="d-flex justify-content-end mt-2">
+        <button class="btn btn-sm btn-secondary" hx-get="/meses/list" hx-target="#meses-list" hx-swap="innerHTML">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</html>

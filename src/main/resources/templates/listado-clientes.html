@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clientes - Sierra Maestra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .cliente-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #0d6efd;
+        }
+        .cliente-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .estado-activo { border-left-color: #198754; }
+        .estado-inactivo { border-left-color: #6c757d; }
+        .search-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .badge-estado { font-size: 0.75em; }
+        .table-responsive { max-height: 600px; }
+        .table th { position: sticky; top: 0; background: white; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi-people-fill me-2"></i>
+                Gestión de Clientes - Sierra Maestra
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="bi-house me-1"></i>Inicio
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h1><i class="bi-people-fill me-2"></i>Clientes Registrados</h1>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-primary fs-6" id="contadorClientes">Cargando...</span>
+                        <button class="btn btn-success" onclick="mostrarModalNuevoCliente()">
+                            <i class="bi-person-plus me-1"></i>Nuevo Cliente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Búsqueda -->
+        <div class="search-box">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Buscar por nombre, apellido, email o documento</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar clientes..." id="busquedaClientes" onkeyup="buscarClientes()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="buscarClientes()">
+                            <i class="bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select class="form-select" id="filtroEstado" onchange="buscarClientes()">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
+                        <i class="bi-arrow-clockwise me-1"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Clientes -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>DNI</th>
+                        <th>Dirección</th>
+                        <th>Fecha Nacimiento</th>
+                        <th>CUIT</th>
+                        <th>Legajo</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaClientes">
+                    <tr>
+                        <td colspan="12" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando clientes...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Cargando datos reales de clientes...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para Nuevo/Editar Cliente -->
+    <div class="modal fade" id="modalCliente" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitulo">Nuevo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCliente">
+                        <input type="hidden" id="clienteId">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="nombre" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apellido *</label>
+                                <input type="text" class="form-control" id="apellido" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="mail" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="telefono">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">DNI *</label>
+                                <input type="text" class="form-control" id="documento" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha Nacimiento</label>
+                                <input type="date" class="form-control" id="fecha_nacimiento">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="direccion">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">CUIT</label>
+                                <input type="text" class="form-control" id="cuit">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contraseña *</label>
+                                <input type="password" class="form-control" id="contrasenia" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="activo">
+                                    <option value="true">Activo</option>
+                                    <option value="false">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarCliente()">Guardar Cliente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variables globales
+        let todosLosClientes = [];
+        let clientesFiltrados = [];
+        let modalCliente = null;
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            modalCliente = new bootstrap.Modal(document.getElementById('modalCliente'));
+            cargarClientesReales();
+        });
+
+        // ========== FUNCIONES DE API ==========
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const defaultOptions = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                };
+
+                if (options.body) {
+                    defaultOptions.body = JSON.stringify(options.body);
+                }
+
+                const response = await fetch(endpoint, defaultOptions);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+
+            } catch (error) {
+                console.error(`Error en ${endpoint}:`, error);
+                mostrarNotificacion(`Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // ========== CARGAR CLIENTES REALES ==========
+        async function cargarClientesReales() {
+            try {
+                mostrarLoading(true);
+                
+                // Llama a tu endpoint real de clientes
+                const response = await fetch('/getAllCliente');
+                
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+                const resultado = await response.json();
+                
+                // Ajusta según la estructura de tu respuesta real
+                if (resultado.codigo === '200' || resultado.codigo === 200) {
+                    todosLosClientes = resultado.data || resultado;
+                } else {
+                    todosLosClientes = resultado;
+                }
+
+                // Asegurarse de que es un array
+                if (!Array.isArray(todosLosClientes)) {
+                    console.warn('La respuesta no es un array:', todosLosClientes);
+                    todosLosClientes = [];
+                }
+
+                clientesFiltrados = [...todosLosClientes];
+                actualizarContador();
+                mostrarClientesEnTabla();
+                mostrarNotificacion(`${todosLosClientes.length} clientes cargados desde la base de datos`, 'success');
+                
+            } catch (error) {
+                console.error('Error cargando clientes reales:', error);
+                mostrarNotificacion('Error cargando clientes: ' + error.message, 'error');
+                document.getElementById('tablaClientes').innerHTML = `
+                    <tr>
+                        <td colspan="12" class="text-center text-danger py-4">
+                            <i class="bi-exclamation-triangle fs-1"></i>
+                            <p class="mt-2">Error al cargar los clientes: ${error.message}</p>
+                            <button class="btn btn-primary mt-2" onclick="cargarClientesReales()">
+                                Reintentar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                mostrarLoading(false);
+            }
+        }
+
+        function mostrarLoading(mostrar) {
+            if (mostrar) {
+                document.getElementById('tablaClientes').innerHTML = `
+                    <tr>
+                        <td colspan="12" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando clientes reales...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Conectando con la base de datos...</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function actualizarContador() {
+            document.getElementById('contadorClientes').textContent = 
+                `${clientesFiltrados.length} cliente${clientesFiltrados.length !== 1 ? 's' : ''}`;
+        }
+
+        function mostrarClientesEnTabla() {
+            const tbody = document.getElementById('tablaClientes');
+
+            if (clientesFiltrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="12" class="text-center py-4">
+                            <i class="bi-people fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">No se encontraron clientes en la base de datos</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = clientesFiltrados.map(cliente => `
+                <tr>
+                    <td class="fw-bold">${cliente.id || 'N/A'}</td>
+                    <td>${cliente.nombre || 'N/A'}</td>
+                    <td>${cliente.apellido || 'N/A'}</td>
+                    <td>${cliente.mail || 'N/A'}</td>
+                    <td>${cliente.telefono || 'N/A'}</td>
+                    <td>${cliente.documento || 'N/A'}</td>
+                    <td>${cliente.direccion || 'N/A'}</td>
+                    <td>${cliente.fecha_nacimiento || 'N/A'}</td>
+                    <td>${cliente.cuit || 'N/A'}</td>
+                    <td>${cliente.legajo || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${cliente.activo ? 'bg-success' : 'bg-secondary'}">
+                            ${cliente.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editarCliente(${cliente.id})" title="Editar">
+                                <i class="bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-info" onclick="verDetallesCompletos(${cliente.id})" title="Ver detalles">
+                                <i class="bi-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="eliminarCliente(${cliente.id})" title="Eliminar">
+                                <i class="bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ========== BÚSQUEDA Y FILTROS ==========
+        function buscarClientes() {
+            const busqueda = document.getElementById('busquedaClientes').value.toLowerCase();
+            const estado = document.getElementById('filtroEstado').value;
+
+            clientesFiltrados = todosLosClientes.filter(cliente => {
+                const cumpleBusqueda = !busqueda || 
+                    (cliente.nombre && cliente.nombre.toLowerCase().includes(busqueda)) ||
+                    (cliente.apellido && cliente.apellido.toLowerCase().includes(busqueda)) ||
+                    (cliente.mail && cliente.mail.toLowerCase().includes(busqueda)) ||
+                    (cliente.documento && cliente.documento.toString().includes(busqueda));
+
+                const cumpleEstado = !estado || 
+                    (cliente.activo !== undefined && cliente.activo.toString() === estado);
+
+                return cumpleBusqueda && cumpleEstado;
+            });
+
+            actualizarContador();
+            mostrarClientesEnTabla();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('busquedaClientes').value = '';
+            document.getElementById('filtroEstado').value = '';
+            clientesFiltrados = [...todosLosClientes];
+            actualizarContador();
+            mostrarClientesEnTabla();
+        }
+
+        // ========== CRUD OPERATIONS ==========
+        function mostrarModalNuevoCliente() {
+            document.getElementById('modalTitulo').textContent = 'Nuevo Cliente';
+            document.getElementById('formCliente').reset();
+            document.getElementById('clienteId').value = '';
+            modalCliente.show();
+        }
+
+        async function editarCliente(id) {
+            try {
+                // Llama a tu endpoint real para obtener un cliente específico
+                const response = await fetch(`/getByIdCliente/${id}`);
+                const resultado = await response.json();
+                
+                const cliente = resultado.data || resultado;
+                
+                document.getElementById('modalTitulo').textContent = 'Editar Cliente';
+                document.getElementById('clienteId').value = cliente.id;
+                document.getElementById('nombre').value = cliente.nombre || '';
+                document.getElementById('apellido').value = cliente.apellido || '';
+                document.getElementById('mail').value = cliente.mail || '';
+                document.getElementById('telefono').value = cliente.telefono || '';
+                document.getElementById('documento').value = cliente.documento || '';
+                document.getElementById('fecha_nacimiento').value = cliente.fecha_nacimiento || '';
+                document.getElementById('direccion').value = cliente.direccion || '';
+                document.getElementById('cuit').value = cliente.cuit || '';
+                document.getElementById('contrasenia').value = ''; // No mostrar contraseña actual
+                document.getElementById('activo').value = cliente.activo ? 'true' : 'false';
+                
+                modalCliente.show();
+                
+            } catch (error) {
+                console.error('Error cargando cliente para editar:', error);
+                mostrarNotificacion('Error cargando cliente: ' + error.message, 'error');
+            }
+        }
+
+        async function verDetallesCompletos(id) {
+            try {
+                const response = await fetch(`/getByIdCliente/${id}`);
+                const resultado = await response.json();
+                const cliente = resultado.data || resultado;
+                
+                const detalles = `
+DATOS COMPLETOS DEL CLIENTE:
+────────────────────────────
+ID: ${cliente.id}
+Nombre: ${cliente.nombre}
+Apellido: ${cliente.apellido}
+Email: ${cliente.mail}
+Teléfono: ${cliente.telefono || 'No especificado'}
+DNI: ${cliente.documento}
+Dirección: ${cliente.direccion || 'No especificada'}
+Fecha Nacimiento: ${cliente.fecha_nacimiento || 'No especificada'}
+CUIT: ${cliente.cuit || 'No especificado'}
+Legajo: ${cliente.legajo || 'N/A'}
+Estado: ${cliente.activo ? 'Activo' : 'Inactivo'}
+                `;
+                
+                alert(detalles);
+            } catch (error) {
+                console.error('Error cargando detalles:', error);
+                mostrarNotificacion('Error cargando detalles: ' + error.message, 'error');
+            }
+        }
+
+        async function guardarCliente() {
+            try {
+                const formData = {
+                    nombre: document.getElementById('nombre').value,
+                    apellido: document.getElementById('apellido').value,
+                    mail: document.getElementById('mail').value,
+                    telefono: document.getElementById('telefono').value,
+                    documento: document.getElementById('documento').value,
+                    fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+                    direccion: document.getElementById('direccion').value,
+                    cuit: document.getElementById('cuit').value,
+                    contrasenia: document.getElementById('contrasenia').value,
+                    activo: document.getElementById('activo').value === 'true'
+                };
+
+                const clienteId = document.getElementById('clienteId').value;
+                let endpoint, method;
+
+                if (clienteId) {
+                    // Actualizar cliente existente
+                    endpoint = '/updateCliente';
+                    method = 'PUT';
+                    formData.id = clienteId;
+                } else {
+                    // Crear nuevo cliente
+                    endpoint = '/registrarCliente';
+                    method = 'POST';
+                }
+
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}`);
+                }
+
+                const resultado = await response.json();
+
+                modalCliente.hide();
+                await cargarClientesReales();
+                mostrarNotificacion(
+                    clienteId ? 'Cliente actualizado correctamente' : 'Cliente creado correctamente', 
+                    'success'
+                );
+
+            } catch (error) {
+                console.error('Error guardando cliente:', error);
+                mostrarNotificacion('Error guardando cliente: ' + error.message, 'error');
+            }
+        }
+
+        async function eliminarCliente(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/deleteCliente/${id}`, { 
+                    method: 'DELETE' 
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}`);
+                }
+
+                await cargarClientesReales();
+                mostrarNotificacion('Cliente eliminado correctamente', 'success');
+            } catch (error) {
+                console.error('Error eliminando cliente:', error);
+                mostrarNotificacion('Error eliminando cliente: ' + error.message, 'error');
+            }
+        }
+
+        // ========== UTILIDADES ==========
+        function mostrarNotificacion(mensaje, tipo = 'info') {
+            const tipos = {
+                error: { bg: 'bg-danger', icon: 'bi-exclamation-triangle' },
+                success: { bg: 'bg-success', icon: 'bi-check-circle' },
+                info: { bg: 'bg-info', icon: 'bi-info-circle' }
+            };
+            
+            const config = tipos[tipo] || tipos.info;
+            const toastContainer = document.getElementById('toastContainer') || crearToastContainer();
+            const toastId = 'toast-' + Date.now();
+            
+            const toastHTML = `
+                <div id="${toastId}" class="toast align-items-center text-white ${config.bg} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="${config.icon} me-2"></i>
+                            ${mensaje}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            const toastElement = document.getElementById(toastId);
+            const bsToast = new bootstrap.Toast(toastElement, { delay: 4000 });
+            bsToast.show();
+            
+            toastElement.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+
+        function crearToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+            return container;
+        }
+    </script>
+
+    <!-- Container para notificaciones -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999"></div>
+</body>
+</html>

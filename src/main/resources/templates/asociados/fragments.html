@@ -1,0 +1,292 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="lista">
+    <div th:if="${#lists.isEmpty(items)}">No hay asociados.</div>
+    <div th:each="a : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/asociados/view/{id}(id=${a.id})}, data-view-target='#asociado-form'" style="cursor:pointer" role="button" tabindex="0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${a.id}">ID</strong>
+          <div class="muted" th:text="${a.nombre}">Nombre</div>
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/asociados/view/{id}(id=${a.id})}" hx-target="#asociado-form" hx-swap="innerHTML" title="Ver"><i class="bi bi-eye-fill"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/asociados/{id}(id=${a.id})}" hx-target="#asociado-form" hx-swap="innerHTML" title="Editar"><i class="bi bi-pencil-fill"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteAsociados/{id}(id=${a.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/asociados/list','#asociados-list')"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+  <form th:action="@{/asociados/save}" th:object="${asociado}"
+        hx-post="/asociados/save" hx-target="#asociados-list" hx-swap="innerHTML">
+    
+    <input type="hidden" th:field="*{id}" />
+
+    <!-- DESPLEGABLE DE ROLES -->
+    <div class="mb-2">
+      <label>Rol</label>
+      <select class="form-select" th:field="*{rol}" required>
+        <option value="">-- Seleccione un rol --</option>
+        <option value="administrador">Administrador</option>
+        <option value="asociado">Asociado</option>
+        <option value="cliente">Cliente</option>
+      </select>
+    </div>
+
+    <div class="mb-2">
+      <label>Legajo</label>
+      <input class="form-control" th:field="*{legajo}" required />
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Nombre</label>
+        <input class="form-control" th:field="*{nombre}" required />
+      </div>
+      <div class="col-md-6 mb-2">
+        <label>Apellido</label>
+        <input class="form-control" th:field="*{apellido}" required />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Documento</label>
+        <input class="form-control" th:field="*{documento}" required />
+      </div>
+
+      <div class="col-md-6 mb-2">
+        <label>Email</label>
+        <input type="email" class="form-control" th:field="*{email}" required />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Teléfono</label>
+        <input class="form-control" th:field="*{telefono}" required />
+      </div>
+
+      <div class="col-md-6 mb-2">
+        <label>Contraseña</label>
+        <input type="password" class="form-control" th:field="*{contrasenia}" 
+               th:attr="placeholder=${asociado.id != null} ? 'Dejar vacío para mantener actual' : 'Requerida'" />
+        <small class="form-text text-muted" th:if="${asociado.id != null}">
+          Dejar vacío para mantener la contraseña actual
+        </small>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-2">
+        <label>Activo</label>
+        <select class="form-select" th:field="*{activo}">
+          <option th:value="1" th:text="'Sí'"></option>
+          <option th:value="0" th:text="'No'"></option>
+        </select>
+      </div>
+
+      <div class="col-md-6 mb-2">
+        <label>Firma</label>
+        <select class="form-select" name="id_firma" th:field="*{id_firma}">
+          <option th:each="f : ${firmas}" th:value="${f.id}" th:text="${f.nombre}"></option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-2">
+      <label>Categorías</label>
+      <select class="form-select" name="categoriaIds" multiple>
+        <option th:each="c : ${categorias}"
+                th:value="${c.id}"
+                th:text="${c.nombre}"
+                th:selected="${asociado.categorias != null ? asociado.categorias.contains(c) : false}">
+        </option>
+      </select>
+    </div>
+
+    <!-- === SECCIÓN NUEVA: PERMISOS DEL SISTEMA === -->
+    <div class="card mt-3">
+      <div class="card-header bg-light">
+        <h6 class="mb-0">🛡️ Permisos del Sistema</h6>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="ver_inventario" name="permisos" value="VER_INVENTARIO" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'VER_INVENTARIO') : false}">
+              <label class="form-check-label" for="ver_inventario">
+                📦 Ver Inventario
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="gestionar_inventario" name="permisos" value="GESTIONAR_INVENTARIO" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'GESTIONAR_INVENTARIO') : false}">
+              <label class="form-check-label" for="gestionar_inventario">
+                ✏️ Gestionar Inventario
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="ver_produccion" name="permisos" value="VER_PRODUCCION" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'VER_PRODUCCION') : false}">
+              <label class="form-check-label" for="ver_produccion">
+                🏭 Ver Producción
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="gestionar_produccion" name="permisos" value="GESTIONAR_PRODUCCION" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'GESTIONAR_PRODUCCION') : false}">
+              <label class="form-check-label" for="gestionar_produccion">
+                ⚙️ Gestionar Producción
+              </label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="ver_ventas" name="permisos" value="VER_VENTAS" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'VER_VENTAS') : false}">
+              <label class="form-check-label" for="ver_ventas">
+                💰 Ver Ventas
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="gestionar_ventas" name="permisos" value="GESTIONAR_VENTAS" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'GESTIONAR_VENTAS') : false}">
+              <label class="form-check-label" for="gestionar_ventas">
+                🛒 Gestionar Ventas
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="gestionar_usuarios" name="permisos" value="GESTIONAR_USUARIOS" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'GESTIONAR_USUARIOS') : false}">
+              <label class="form-check-label" for="gestionar_usuarios">
+                👥 Gestionar Usuarios
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="config_sistema" name="permisos" value="CONFIGURACION_SISTEMA" 
+                     th:checked="${asociado.permisosList != null ? #lists.contains(asociado.permisosList, 'CONFIGURACION_SISTEMA') : false}">
+              <label class="form-check-label" for="config_sistema">
+                ⚙️ Configuración Sistema
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones rápidos -->
+        <div class="mt-3">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="seleccionarTodosPermisos()">
+            ✅ Seleccionar Todos
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="deseleccionarTodosPermisos()">
+            ❌ Limpiar Todos
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="seleccionarPermisosBasicos()">
+            👤 Permisos Básicos
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- === FIN SECCIÓN PERMISOS === -->
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Guardar</button>
+      <button type="button" class="btn btn-secondary"
+              hx-get="/asociados/list" hx-target="#asociados-list" hx-swap="innerHTML">Cancelar</button>
+    </div>
+  </form>
+
+  <script>
+    // Funciones para los permisos
+    function seleccionarTodosPermisos() {
+      document.querySelectorAll('input[name="permisos"]').forEach(checkbox => {
+        checkbox.checked = true;
+      });
+    }
+
+    function deseleccionarTodosPermisos() {
+      document.querySelectorAll('input[name="permisos"]').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+    }
+
+    function seleccionarPermisosBasicos() {
+          deseleccionarTodosPermisos();
+          const basicos = ['VER_INVENTARIO', 'VER_PRODUCCION', 'VER_VENTAS'];
+          basicos.forEach(permiso => {
+            const checkbox = document.querySelector(`input[value="${permiso}"]`);
+            if (checkbox) checkbox.checked = true;
+          });
+        }
+
+        // Script existente para validación
+        document.addEventListener('htmx:afterSwap', (evt) => {
+          if (evt.detail && evt.detail.target && evt.detail.target.id === 'asociado-form') {
+            const form = evt.detail.target.querySelector('form');
+            if (form) attachClientValidation(form);
+          }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const form = document.querySelector('#asociado-form form');
+          if (form) attachClientValidation(form);
+        });
+
+        function attachClientValidation(form) {
+          if (form._hasValidation) return;
+          form._hasValidation = true;
+
+          form.addEventListener('submit', (e) => {
+            if (!form.checkValidity()) {
+              e.preventDefault();
+              e.stopPropagation();
+              form.reportValidity();
+            }
+          });
+        }
+      </script>
+    </div>
+
+  <div th:fragment="view">
+    <div class="card p-3">
+      <h6>Detalle Asociado</h6>
+      <div><strong>Id:</strong> <span th:text="${asociado.id}">-</span></div>
+      <div><strong>Legajo:</strong> <span th:text="${asociado.legajo}">-</span></div>
+      <div><strong>Nombre:</strong> <span th:text="${asociado.nombre}">-</span></div>
+      <div><strong>Apellido:</strong> <span th:text="${asociado.apellido}">-</span></div>
+      <div><strong>Documento:</strong> <span th:text="${asociado.documento}">-</span></div>
+      <div><strong>Email:</strong> <span th:text="${asociado.email}">-</span></div>
+      <div><strong>Rol:</strong> <span th:text="${asociado.rol}">-</span></div>
+      <div><strong>Teléfono:</strong> <span th:text="${asociado.telefono}">-</span></div>
+      <div><strong>Activo:</strong> <span th:text="${asociado.activo == 1 ? 'Sí' : 'No'}">-</span></div>
+      <div><strong>Contraseña:</strong> <span>••••••</span></div>
+      
+      <div><strong>Categorías:</strong>
+        <ul>
+          <li th:each="c : ${asociado.categorias}" th:text="${c.nombre}"></li>
+        </ul>
+      </div>
+
+      <!-- === SECCIÓN NUEVA: PERMISOS === -->
+      <div><strong>Permisos del Sistema:</strong>
+        <div th:if="${not #lists.isEmpty(asociado.permisosList)}">
+          <div class="mt-2">
+            <div th:each="permiso : ${asociado.permisosList}" class="badge bg-primary me-1 mb-1">
+              <span th:text="${permiso}"></span>
+            </div>
+          </div>
+        </div>
+        <div th:if="${#lists.isEmpty(asociado.permisosList)}" class="text-muted mt-1">
+          <em>No tiene permisos asignados</em>
+        </div>
+      </div>
+      <!-- === FIN SECCIÓN PERMISOS === -->
+
+      <div class="d-flex justify-content-end mt-2">
+        <button class="btn btn-sm btn-secondary" hx-get="/asociados/list" hx-target="#asociados-list" hx-swap="innerHTML">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</html>

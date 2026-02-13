@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Fragments - Pedidos Clientes</title>
+</head>
+<body>
+
+<!-- Fragmento para el formulario de pedido de cliente -->
+<div th:fragment="pedidoClienteForm" id="pedidoClienteFormFragment">
+    <form id="pedidoClienteForm" autocomplete="off">
+        <input type="hidden" id="pedidoClienteId" value="">
+        
+        <div class="form-grid">
+            <div class="form-block">
+                <h5>Información del Cliente</h5>
+                <label>Nombre/Razón Social
+                    <input type="text" id="nombreCliente" required>
+                </label>
+                <label>Email
+                    <input type="email" id="emailCliente">
+                </label>
+                <label>Teléfono
+                    <input type="text" id="telefonoCliente">
+                </label>
+                <label>Lugar de Entrega
+                    <input type="text" id="lugarEntrega">
+                </label>
+            </div>
+
+            <div class="form-block">
+                <h5>Fechas</h5>
+                <label>Fecha Pedido
+                    <input type="date" id="fechaPedido" required>
+                </label>
+                <label>Fecha Entrega
+                    <input type="date" id="fechaEntrega" required>
+                </label>
+            </div>
+
+            <div class="form-block">
+                <h5>Envío</h5>
+                <label><input type="checkbox" id="envio"> Requiere envío</label>
+                <label>Dirección de Entrega
+                    <input type="text" id="direccionEntrega" value="Sin envío" disabled>
+                </label>
+            </div>
+
+            <div class="form-block">
+                <h5>Productos</h5>
+                <label>Cerveza
+                    <select id="cervezaSelect" required>
+                        <option value="">-- Elegir cerveza --</option>
+                    </select>
+                </label>
+                <small>Precio: <span id="cervezaPrecio">-</span></small>
+                <label>Barril (solo Disponibles)
+                    <select id="barrilSelect" required>
+                        <option value="">-- Elegir barril --</option>
+                    </select>
+                </label>
+                <small>Litros: <span id="barrilLitros">-</span></small>
+            </div>
+
+            <div class="form-block">
+                <h5>Estado</h5>
+                <label>Estado del pedido
+                    <select id="estadoSelect" required>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="En preparación">En preparación</option>
+                        <option value="En camino">En camino</option>
+                        <option value="Entregado">Entregado</option>
+                        <option value="Cancelado">Cancelado</option>
+                        <option value="Rechazado">Rechazado</option>
+                        <option value="Devuelto">Devuelto</option>
+                    </select>
+                </label>
+                <label>Estado de Pago
+                    <select id="estadoPagoSelect" required>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Pagado">Pagado</option>
+                        <option value="Parcial">Parcial</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="form-block full-span">
+                <h5>Accesorios</h5>
+                <div id="accesoriosContainer" style="max-height:140px; overflow:auto; padding-right:6px;"></div>
+                <small>Los precios de accesorios se usan solo para calcular el total (no se guardan).</small>
+            </div>
+
+            <div class="form-block full-span">
+                <h5>Notas</h5>
+                <label>Nota adicional
+                    <textarea id="nota" rows="3" placeholder="Información adicional sobre el pedido..."></textarea>
+                </label>
+            </div>
+
+            <div class="form-block full-span">
+                <h5>Total</h5>
+                <label>Total general
+                    <input type="number" id="totalGral" step="0.01" readonly>
+                </label>
+            </div>
+
+            <div class="actions full-span">
+                <button class="btn primary" type="submit">Guardar</button>
+                <button class="btn" type="button" id="resetBtn">Limpiar</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Fragmento para la tabla de pedidos de clientes -->
+<div th:fragment="pedidosClienteTable" id="pedidosClienteTableFragment">
+    <div class="search-container">
+        <label><b>Buscar pedido:</b></label>
+        <select id="searchField">
+            <option value="">-- Seleccionar campo --</option>
+            <option value="id">ID</option>
+            <option value="fechaPedido">Fecha Pedido</option>
+            <option value="fechaEntrega">Fecha Entrega</option>
+            <option value="nombreCliente">Nombre Cliente</option>
+            <option value="emailCliente">Email Cliente</option>
+            <option value="estado">Estado</option>
+            <option value="estadoPago">Estado Pago</option>
+            <option value="cerveza">Cerveza</option>
+            <option value="direccion">Dirección</option>
+        </select>
+        <input type="text" id="searchValue" placeholder="Escriba búsqueda">
+        <button class="btn" id="searchBtn" type="button">Buscar</button>
+        <button class="btn" id="showAllBtn" type="button">Ver todos</button>
+    </div>
+
+    <table id="pedidosClienteTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha Pedido</th>
+                <th>Fecha Entrega</th>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Cerveza</th>
+                <th>Estado</th>
+                <th>Estado Pago</th>
+                <th>Dirección</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="lista">
+    <div th:if="${#lists.isEmpty(items)}">No hay días.</div>
+    <div th:each="d : ${items}" class="card mb-2 p-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${d.id}">ID</strong>
+          <div class="muted" th:text="${d.nombre}">Nombre</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/dias/save}" th:object="${dia}" hx-post="/dias/save" hx-target="#dias-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label>Nombre</label>
+        <input class="form-control" th:field="*{nombre}" />
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" onclick="htmx.ajax('GET','/dias/list','#dias-list')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</html>

@@ -1,0 +1,63 @@
+  <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
+    <div th:if="${#lists.isEmpty(items)}">No hay accesorios.</div>
+    <div th:each="a : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/accesorios/view/{id}(id=${a.id})}, data-view-target='#accesorio-form'" style="cursor:pointer" role="button" tabindex="0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${a.id}">ID</strong>
+          <div class="muted" th:text="${a.nombre}">Nombre</div>
+        </div>
+        <div>
+          <button class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/accesorios/view/{id}(id=${a.id})}" hx-target="#accesorio-form" hx-swap="innerHTML" title="Ver" onclick="event.stopPropagation()"><i class="bi bi-eye-fill"></i></button>
+          <button class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/accesorios/{id}(id=${a.id})}" hx-target="#accesorio-form" hx-swap="innerHTML" title="Editar" onclick="event.stopPropagation()"><i class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteAccesorio/{id}(id=${a.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="(function(){ var c = this.closest('.card'); if(c) c.remove(); try{ htmx.ajax('GET','/accesorios/list','#accesorios-list'); }catch(e){ fetch('/accesorios/list',{credentials:'same-origin'}).then(r=>r.text()).then(html=>{ var t=document.querySelector('#accesorios-list'); if(t) t.innerHTML=html; }); } }).call(this)"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/accesorios/save}" th:object="${accesorio}" hx-post="/accesorios/save" hx-target="#accesorios-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" class="form-control" th:field="*{nombre}" placeholder="Nombre del accesorio" required />
+      </div>
+
+      <div class="mb-2">
+        <label for="estado">Estado</label>
+        <select id="estado" class="form-select" th:field="*{estado}">
+          <option value="">Seleccione...</option>
+          <option value="Disponible">Disponible</option>
+          <option value="Alquilado">Alquilado</option>
+          <option value="Devuelto">Devuelto</option>
+          <option value="Mantenimiento">Mantenimiento</option>
+          <option value="Inactivo">Inactivo</option>
+          <option value="Sucio">Sucio</option>
+        </select>
+      </div>
+
+      <div class="mb-2">
+        <label for="notas">Notas</label>
+        <input id="notas" class="form-control" th:field="*{notas}" placeholder="Notas adicionales" />
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" hx-get="/accesorios/list" hx-target="#accesorios-list" hx-swap="innerHTML">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <div th:fragment="view">
+    <div class="card p-3">
+      <h6>Detalles del Accesorio</h6>
+      <div><strong>Nombre:</strong> <span th:text="${accesorio.nombre}">-</span></div>
+      <div><strong>Estado:</strong> <span th:text="${accesorio.estado}">-</span></div>
+      <div class="mt-2"><strong>Notas:</strong>
+        <p th:text="${accesorio.notas}">-</p>
+      </div>
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-sm btn-secondary" hx-get="/accesorios/list" hx-target="#accesorios-list" hx-swap="innerHTML">Cerrar</button>
+      </div>
+    </div>
+  </div>

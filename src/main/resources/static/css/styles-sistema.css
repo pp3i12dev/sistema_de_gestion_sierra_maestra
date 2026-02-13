@@ -1,0 +1,114 @@
+/* ====================
+   ESTÉTICA GLOBAL
+==================== */
+body {
+  background-color: #2b1b0e;   /* marrón oscuro */
+  color: #f5f5f5;
+  font-family: "Courier New", Courier, monospace; /* estilo retro */
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4 {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #f5f5f5;
+}
+
+/* ====================
+   NAVBAR SUPERIOR
+==================== */
+.navbar {
+  background-color: #1c1209;
+  border-bottom: 2px solid #aaa;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar a {
+  color: #f5f5f5;
+  font-weight: bold;
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+/* ====================
+   FORMULARIOS
+==================== */
+.form-control, 
+.form-select {
+  background-color: #d9d9d9;
+  border: 2px solid #999;
+  color: #000;
+  border-radius: 0;
+  padding: 6px;
+}
+
+.form-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* ====================
+   BOTONES
+==================== */
+.btn-custom {
+  background-color: #aaa;
+  border: 2px solid #999;
+  color: #000;
+  border-radius: 0;
+  font-weight: bold;
+  padding: 6px 20px;
+}
+
+.btn-custom:hover {
+  background-color: #ccc;
+}
+
+.btn-danger {
+  border-radius: 0;
+}
+
+/* ====================
+   TARJETAS / BLOQUES
+==================== */
+.card {
+  background-color: #3a2414;
+  border: 2px solid #666;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+/* ====================
+   TABLAS
+==================== */
+.table {
+  background-color: #d9d9d9;
+  color: #000;
+}
+
+.table th {
+  background-color: #aaa;
+  text-align: center;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* ====================
+   FOOTER BOTONES
+==================== */
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}

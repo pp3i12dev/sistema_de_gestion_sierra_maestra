@@ -1,0 +1,67 @@
+<!-- ============================= -->
+<!-- Fragmento: Formulario Cerveza -->
+<!-- ============================= -->
+<div th:fragment="form-cerveza">
+    <form id="formCerveza">
+        <div class="form-group">
+            <label for="nombreCerveza">Nombre</label>
+            <input type="text" class="form-control" id="nombreCerveza" name="nombreCerveza" required />
+        </div>
+
+        <div class="form-group">
+            <label for="tipoCerveza">Tipo</label>
+            <input type="text" class="form-control" id="tipoCerveza" name="tipoCerveza" required />
+        </div>
+
+        <div class="form-group">
+            <label for="gradoAlcoholico">Grado Alcohólico (%)</label>
+            <input type="number" step="0.1" class="form-control" id="gradoAlcoholico" name="gradoAlcoholico" required />
+        </div>
+
+        <div class="form-group">
+            <label for="amargorIbu">Amargor (IBU)</label>
+            <input type="number" min="1" class="form-control" id="amargorIbu" name="amargorIbu" required />
+        </div>
+
+        <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea class="form-control" id="descripcion" name="descripcion"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="precioPorLitro">Precio por Litro</label>
+            <input type="number" step="0.01" class="form-control" id="precioPorLitro" name="precioPorLitro" required />
+        </div>
+
+        <div class="form-group">
+            <label for="estado">Estado</label>
+            <select class="form-control" id="estado" name="estado" required>
+                <option value="">Seleccione...</option>
+                <option value="Disponible">Disponible</option>
+                <option value="Agotada">Agotada</option>
+                <option value="Produccion">Producción</option>
+                <option value="Mantenimiento">Mantenimiento</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+    </form>
+</div>
+
+<div th:fragment="view">
+    <div class="card p-3">
+    <h6>Detalles de la Cerveza</h6>
+    <div><strong>Nombre:</strong> <span th:text="${cerveza.nombreCerveza}">-</span></div>
+    <div><strong>Tipo:</strong> <span th:text="${cerveza.tipoCerveza}">-</span></div>
+    <div><strong>Grado Alcoholico:</strong> <span th:text="${cerveza.gradoAlcoholico}">-</span></div>
+    <div><strong>IBU:</strong> <span th:text="${cerveza.amargorIbu}">-</span></div>
+    <div><strong>Precio/Litro:</strong> <span th:text="${cerveza.precioPorLitro}">-</span></div>
+    <div><strong>Estado:</strong> <span th:text="${cerveza.estado}">-</span></div>
+    <div class="mt-2"><strong>Descripción:</strong>
+        <p th:text="${cerveza.descripcion}">-</p>
+    </div>
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-sm btn-secondary" hx-get="/cervezas/list" hx-target="#cervezas-list" hx-swap="innerHTML">Cerrar</button>
+    </div>
+    </div>
+</div>

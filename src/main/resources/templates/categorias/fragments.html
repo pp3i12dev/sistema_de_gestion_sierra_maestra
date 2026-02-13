@@ -1,0 +1,32 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <div th:fragment="lista">
+    <div th:if="${#lists.isEmpty(items)}">No hay categorías.</div>
+    <div th:each="c : ${items}" class="card mb-2 p-2">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${c.id}">ID</strong>
+          <div class="muted" th:text="${c.nombre}">Nombre</div>
+        </div>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/categorias/{id}(id=${c.id})}" hx-target="#categoria-form" hx-swap="innerHTML" title="Editar"><i class="bi bi-pencil-fill"></i></button>
+          <button type="button" class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteCategoria/{id}(id=${c.id})}" hx-confirm="Eliminar?" hx-swap="none" onclick="event.stopPropagation()" hx-on:afterRequest="htmx.ajax('GET','/categorias/list','#categorias-list')"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+  <form th:action="@{/categorias/save}" th:object="${categoria}" hx-post="/categorias/save" hx-target="#categorias-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label>Nombre</label>
+        <input class="form-control" th:field="*{nombre}" required />
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button type="button" class="btn btn-secondary" hx-get="/categorias/list" hx-target="#categorias-list" hx-swap="innerHTML">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</html>

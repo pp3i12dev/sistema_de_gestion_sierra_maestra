@@ -1,0 +1,3104 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <title>Mis Pedidos - Sierra Maestra</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <!-- Bibliotecas para PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #f1cf10cc 0%, #ddb70d 50%, #ecaf08 100%);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, rgb(99, 57, 18), rgb(2, 1, 0) 100%);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #DAA520;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+        
+        .logo-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #DAA520;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(218, 165, 32, 0.3);
+        }
+        
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .logo-text {
+            color: #ffffffbe;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-item {
+            color: #ceb7a5b2;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(216, 190, 124, 0.3);
+            color: #c46a0a;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            border: 2px solid #DAA520;
+            color: #583207;
+            font-weight: bold;
+        }
+        
+        /* Main Content */
+        .main-content {
+            background: transparent;
+            min-height: calc(100vh - 80px);
+            padding-top: 90px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Burbujas de cerveza */
+        .bubble {
+            position: fixed;
+            bottom: -100px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3));
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: rise linear infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .subtitle {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin-top: 1.4rem;
+            opacity: 2;
+            background: linear-gradient(135deg, rgb(21, 156, 9),rgb(255, 238, 0), rgba(255, 8, 8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            animation: ripple 3s ease-in-out infinite, waveGlow 4s ease-in-out infinite alternate  ;
+        }
+        
+        @keyframes waveGlow {
+            0% { 
+                text-shadow: 0 0 30px rgba(64, 212, 6, 0.8),
+                           0 0 60px rgba(36, 238, 18, 0.6);
+            }
+            50% { 
+                text-shadow: 0 0 40px rgb(213, 250, 2),
+                             0 0 200px rgb(240, 236, 6),
+                           0 0 200px rgba(255, 238, 2, 0.993);
+            }
+            100% { 
+                text-shadow: 0 0 40px rgb(255, 30, 0),
+                           0 0 80px rgba(255, 2, 2, 0.925),
+                           0 0 200px rgba(250, 0, 0, 0.932);
+            }
+        }
+
+        @keyframes ripple {
+            0%, 100% { opacity: 0.8; transform: translateY(0px); }
+            50% { opacity: 1; transform: translateY(-5px); }
+        }
+        
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                opacity: 0;
+                transform: translateX(0) scale(1);
+            }
+            50% {
+                opacity: 0.6;
+            }
+            100% {
+                bottom: 110vh;
+                opacity: 0;
+                transform: translateX(var(--drift)) scale(0.8);
+            }
+        }
+        
+        .bubble:nth-child(1) { width: 8px; height: 8px; left: 5%; animation-duration: 8s; animation-delay: 0s; --drift: 10px; }
+        .bubble:nth-child(2) { width: 12px; height: 12px; left: 10%; animation-duration: 10s; animation-delay: 2s; --drift: -15px; }
+        .bubble:nth-child(3) { width: 10px; height: 10px; left: 15%; animation-duration: 9s; animation-delay: 1s; --drift: 8px; }
+        .bubble:nth-child(4) { width: 6px; height: 6px; left: 20%; animation-duration: 7s; animation-delay: 3s; --drift: -12px; }
+        .bubble:nth-child(5) { width: 14px; height: 14px; left: 25%; animation-duration: 11s; animation-delay: 0.5s; --drift: 18px; }
+        .bubble:nth-child(6) { width: 8px; height: 8px; left: 30%; animation-duration: 8.5s; animation-delay: 2.5s; --drift: -10px; }
+        .bubble:nth-child(7) { width: 11px; height: 11px; left: 35%; animation-duration: 9.5s; animation-delay: 1.5s; --drift: 12px; }
+        .bubble:nth-child(8) { width: 7px; height: 7px; left: 40%; animation-duration: 7.5s; animation-delay: 3.5s; --drift: -8px; }
+        .bubble:nth-child(9) { width: 13px; height: 13px; left: 45%; animation-duration: 10.5s; animation-delay: 1s; --drift: 15px; }
+        .bubble:nth-child(10) { width: 9px; height: 9px; left: 50%; animation-duration: 8s; animation-delay: 4s; --drift: -9px; }
+        
+        /* Content Sections */
+        .content-section {
+            padding: 1rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 6rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .section-container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            color: rgb(141, 78, 6);
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 3rem;
+            text-shadow: 2px 2px 4px rgba(56, 4, 4, 0.445);
+        }
+        
+        /* Cards */
+        .card { 
+            background: linear-gradient(135deg, #dfba15f8 0%, #eca814 100%); 
+            border: 2px solid #DAA520; 
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: #333; 
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            font-weight: bold;
+            border-radius: 13px 13px 0 0;
+            padding: 1rem 1.5rem;
+        }
+        
+        .table { 
+            background:#f3f3f3; 
+            color:#000; 
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(218, 165, 32, 0.1);
+        }
+        
+        .form-control, .form-select { 
+            background:#fff; 
+            color:#000000; 
+            border: 2px solid #DAA520;
+            border-radius: 8px;
+            padding: 0.75rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(218, 165, 32, 0.3);
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #FFD700 0%, #DAA520 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(218, 165, 32, 0.4);
+            color: #8B4513;
+            text-decoration: none;
+        }
+        
+        .btn-danger { 
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border-color: #e74c3c; 
+            color:#fff; 
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary { 
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            border-color: #6c757d;
+            color:#fff; 
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #95ae27 0%, #2ecc71 100%);
+            border-color: #27ae60;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            border-color: #ffc107;
+            color: #856404;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .btn-warning:hover {
+            background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+            transform: translateY(-2px);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border-color: #17a2b8;
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        
+        .btn-info:hover {
+            background: linear-gradient(135deg, #138496 0%, #17a2b8 100%);
+            transform: translateY(-2px);
+        }
+        
+        .nowrap { white-space:nowrap; }
+        
+        #msg { 
+            min-height: 1.6rem; 
+            margin-bottom: 1rem;
+        }
+        
+        #msg .error { 
+            color: #721c24; 
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+        }
+        
+        #msg .success { 
+            color: #155724; 
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .barril-info {
+            font-size: 12px;
+            color: #7a5c2d;
+            margin-top: 4px;
+        }
+        
+        /* Cliente Logueado Info */
+        .cliente-info {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        /* Form labels */
+        .form-label {
+            color: #8B4513;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* NUEVOS ESTILOS PARA EL DROPDOWN DE PERFIL */
+        .profile-dropdown {
+            position: relative;
+        }
+        
+        .profile-btn {
+            background: linear-gradient(135deg, rgba(218, 165, 32, 0.8) 0%, rgba(255, 215, 0, 0.6) 100%);
+            border: 2px solid #DAA520;
+            color: #8B4513;
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .profile-btn:hover {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(218, 165, 32, 0.4);
+        }
+        
+        .profile-dropdown .dropdown-menu {
+            background: linear-gradient(135deg, #dfba15f8 0%, #eca814 100%);
+            border: 2px solid #DAA520;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            min-width: 200px;
+            margin-top: 0.5rem;
+        }
+        
+        .profile-dropdown .dropdown-item {
+            color: #8B4513;
+            font-weight: 500;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .profile-dropdown .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .profile-dropdown .dropdown-item:hover {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #583207;
+        }
+        
+        .profile-dropdown .dropdown-header {
+            color: #583207;
+            font-weight: bold;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            padding: 1rem;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8B4513;
+            font-weight: bold;
+        }
+
+        /* ESTILOS PARA EL MODAL DE HISTORIAL */
+        .modal-historial .modal-content {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 3px solid #DAA520;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-historial .modal-header {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 3px solid #DAA520;
+        }
+        
+        .modal-historial .modal-title {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .modal-historial .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 0;
+        }
+        
+        .modal-historial .table-responsive {
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .historial-empty {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .historial-empty i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #DAA520;
+        }
+
+        /* ESTILOS PARA PRODUCTOS EN TABLA */
+        .productos-lista {
+            max-width: 200px;
+        }
+        
+        .producto-item {
+            padding: 2px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .producto-item:last-child {
+            border-bottom: none;
+        }
+        
+        .badge-estado {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-editar, .btn-detalles {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        /* ESTILOS PARA EL MODAL DE TICKET */
+        .modal-ticket .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 3px solid #DAA520;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-ticket .modal-header {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 3px solid #DAA520;
+        }
+        
+        .modal-ticket .modal-title {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .ticket-container {
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ticket-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #DAA520;
+            padding-bottom: 1rem;
+        }
+        
+        .ticket-logo {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .ticket-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .ticket-section-title {
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.25rem;
+        }
+        
+        .ticket-producto {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .ticket-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid #DAA520;
+        }
+        
+        .ticket-cliente {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        
+        /* Estilos para inputs de solo lectura */
+        .form-control:read-only {
+            background-color: #e9ecef;
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        .acc-price:disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border-color: #ced4da;
+        }
+
+        /* ESTILOS PARA MODALES DE EDICIÓN */
+        .modal-editar .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 3px solid #DAA520;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-editar .modal-header {
+            background: linear-gradient(135deg, #DAA520 0%, #FFD700 100%);
+            color: #8B4513;
+            border-radius: 12px 12px 0 0;
+            border-bottom: 3px solid #DAA520;
+        }
+
+        .modal-editar .modal-title {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .modal-editar .card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #DAA520;
+        }
+
+        .modal-editar .card-header {
+            background: linear-gradient(135deg, rgba(218, 165, 32, 0.1) 0%, rgba(255, 215, 0, 0.1) 100%);
+            border-bottom: 1px solid #DAA520;
+        }
+        
+        /* Responsive */
+        @media (max-width:768px) { 
+            .nav-menu {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .card {
+                font-size: 14px;
+            }
+            
+            .profile-btn span {
+                display: none;
+            }
+            
+            .profile-btn {
+                padding: 0.5rem;
+            }
+
+            .table-responsive {
+                font-size: 0.8rem;
+            }
+
+            .ticket-container {
+                padding: 1rem;
+            }
+
+            .modal-editar .row {
+                margin-bottom: 0.5rem;
+            }
+            
+            .modal-editar .col-md-4,
+            .modal-editar .col-md-6,
+            .modal-editar .col-md-8 {
+                margin-bottom: 0.5rem;
+            }
+        }
+  </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo" style="text-decoration: none; cursor: pointer;">
+            <div class="logo-circle">
+                <img src="/images/logo.jpg" alt="Logo Sierra Maestra" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div class="logo-text">Sierra Maestra</div>
+        </div>
+        <p class="subtitle">Para todos la luz, para todos todo</p>
+        
+        <!-- DROPDOWN DE PERFIL -->
+        <div class="profile-dropdown">
+            <button class="btn profile-btn dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="user-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <span id="clienteNombreHeader">Mi Perfil</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                <li><h6 class="dropdown-header" id="clienteNombreMenu">Nombre del Cliente</h6></li>
+                <li><a class="dropdown-item" href="#" onclick="verHistorical()"><i class="bi bi-clock-history me-2"></i>Historial</a></li>
+                <li><a class="dropdown-item" href="#" onclick="mostrarAyuda()"><i class="bi bi-question-circle me-2"></i>Ayuda</a></li>
+                <li><a class="dropdown-item" href="#" onclick="modificarDatos()"><i class="bi bi-pencil-square me-2"></i>Modificar datos</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" onclick="cerrarSesion()"><i class="bi bi-box-arrow-right me-2"></i>Cerrar sesión</a></li>
+            </ul>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Burbujas de cerveza -->
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        
+        <!-- Información del Cliente Logueado -->
+        <div id="clienteLogueadoInfo" class="cliente-info" style="display: none;">
+            <h4>¡Bienvenido, <span id="clienteNombreHeaderBanner"></span>!</h4>
+            <p>Estás viendo y gestionando tus pedidos personales</p>
+        </div>
+
+        <div class="container mb-5">
+            <!-- FORM + PRODUCTOS -->
+            <div class="card p-3 mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Nuevo Pedido</h4>
+                </div>
+                <div class="card-body">
+                    <form id="pedidoForm" class="row g-3 mt-2" autocomplete="off">
+                        <input type="hidden" id="pedidoId">
+                        
+                        <!-- FECHA DE PEDIDO OCULTA -->
+                        <input type="hidden" id="fechaPedido">
+                        <input type="hidden" id="asociado" value="001">
+
+                        <!-- FECHA DE ENTREGA VISIBLE -->
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha de Entrega *</label>
+                            <input type="date" id="fechaEntrega" class="form-control" required>
+                            <small class="text-muted">La fecha debe ser hoy o posterior</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Cerveza</label>
+                            <select id="cerveza" class="form-select"></select>
+                            <small class="barril-info">Precio por litro: <span id="cervezaPrecio">-</span></small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Barril (disponible)</label>
+                            <select id="barril" class="form-select"></select>
+                            <small class="barril-info">Litros: <span id="barrilLitros">-</span></small>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label">Cantidad (barriles)</label>
+                            <input type="number" id="cantidad" class="form-control" min="1" value="1">
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" id="btnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="envio">
+                                <label class="form-check-label">Requiere envío</label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Dirección de Entrega</label>
+                            <input type="text" id="direccionEntrega" class="form-control" value="Sin envío" disabled>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Detalle del Pedido</label>
+                            <div class="table-responsive">
+                                <table id="detalleTable" class="table table-sm table-bordered">
+                                    <thead class="table-secondary">
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Nombre</th>
+                                            <th>Litros</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio unit.</th>
+                                            <th>Subtotal</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Total Cervezas</label>
+                            <input type="text" id="totalCervezas" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-4"style="display: none;">
+                            <label class="form-label">Total Accesorios</label>
+                            <input type="text" id="totalAccesorios" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Total General</label>
+                            <input type="text" id="totalGral" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Nota</label>
+                            <textarea id="nota" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <!-- Mensajes ubicados arriba de los botones -->
+                        <div class="col-12">
+                            <div id="msg"></div>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button type="reset" id="resetBtn" class="btn btn-secondary">Limpiar</button>
+                            <button type="submit" class="btn btn-success">Crear Pedido</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-dark text-white text-center py-3 mt-4">
+        <p class="mb-0">&copy; 2025 - Sierra Maestra Cerveza Artesanal</p>
+    </footer>
+
+    <!-- MODAL PARA HISTORIAL DE PEDIDOS -->
+    <div class="modal fade modal-historial" id="modalHistorical" tabindex="-1" aria-labelledby="modalHistoricalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalHistoricalLabel">
+                        <i class="bi bi-clock-history me-2"></i>Mi Historial de Pedidos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card p-3">
+                        <div class="card-header">
+                            <h4 class="mb-0">
+                                <i class="bi bi-list-check me-2"></i>Mis Pedidos
+                                <small class="text-muted ms-2" id="contadorPedidos">(0 pedidos)</small>
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="pedidosTable" class="table table-striped table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Productos</th>
+                                            <th>Cantidades</th>
+                                            <th>Estado</th>
+                                            <th>Estado Pago</th>
+                                            <th>Dirección Envío</th>
+                                            <th>Total</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pedidosTableBody">
+                                        <!-- Los pedidos se cargarán aquí dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="sinPedidos" class="historial-empty" style="display: none;">
+                                <i class="bi bi-inbox"></i>
+                                <h4>No tienes pedidos registrados</h4>
+                                <p>Cuando realices pedidos, aparecerán aquí en tu historial.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA DETALLES DEL TICKET -->
+    <div class="modal fade modal-ticket" id="modalTicket" tabindex="-1" aria-labelledby="modalTicketLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTicketLabel">
+                        <i class="bi bi-receipt me-2"></i>Ticket de Pedido
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ticket-container" id="ticketContent">
+                        <!-- El contenido del ticket se generará aquí dinámicamente -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cerrar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="descargarTicketPDF()">
+                        <i class="bi bi-download me-2"></i>Descargar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA EDITAR PEDIDO -->
+    <div class="modal fade modal-editar" id="modalEditarPedido" tabindex="-1" aria-labelledby="modalEditarPedidoLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalEditarPedidoLabel">
+                            <i class="bi bi-pencil-square me-2"></i>Editar Pedido
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formEditarPedido" autocomplete="off">
+                            <input type="hidden" id="editarPedidoId">
+                            
+                            <!-- ✅ NUEVO: Campo para editar fecha de entrega -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha de Entrega *</label>
+                                    <input type="date" id="editarFechaEntrega" class="form-control" required>
+                                    <small class="text-muted">La fecha debe ser hoy o posterior</small>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Cerveza</label>
+                                    <select id="editarCerveza" class="form-select"></select>
+                                    <small class="barril-info">Precio por litro: <span id="editarCervezaPrecio">-</span></small>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Barril (disponible)</label>
+                                    <select id="editarBarril" class="form-select"></select>
+                                    <small class="barril-info">Litros: <span id="editarBarrilLitros">-</span></small>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Cantidad (barriles)</label>
+                                    <input type="number" id="editarCantidad" class="form-control" min="1" value="1">
+                                </div>
+
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="button" id="editarBtnAgregarProducto" class="btn btn-primary w-100">Agregar</button>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="editarEnvio">
+                                        <label class="form-check-label">Requiere envío</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Dirección de Entrega</label>
+                                    <input type="text" id="editarDireccionEntrega" class="form-control" value="Sin envío" disabled>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Detalle del Pedido</label>
+                                    <div class="table-responsive">
+                                        <table id="editarDetalleTable" class="table table-sm table-bordered">
+                                            <thead class="table-secondary">
+                                                <tr>
+                                                    <th>Tipo</th>
+                                                    <th>Nombre</th>
+                                                    <th>Litros</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Precio unit.</th>
+                                                    <th>Subtotal</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Total Cervezas</label>
+                                    <input type="text" id="editarTotalCervezas" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Total Accesorios</label>
+                                    <input type="text" id="editarTotalAccesorios" class="form-control" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Total General</label>
+                                    <input type="text" id="editarTotalGral" class="form-control" readonly>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Nota</label>
+                                    <textarea id="editarNota" class="form-control" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="guardarEdicionPedido()">
+                            <i class="bi bi-check-circle me-2"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- MODAL PARA EDITAR CLIENTE -->
+    <div class="modal fade modal-editar" id="modalEditarCliente" tabindex="-1" aria-labelledby="modalEditarClienteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarClienteLabel">
+                        <i class="bi bi-person-gear me-2"></i>Modificar Mis Datos
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarCliente">
+                        <input type="hidden" id="editarClienteId">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editarNombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="editarNombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editarApellido" class="form-label">Apellido *</label>
+                                <input type="text" class="form-control" id="editarApellido" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editarDocumento" class="form-label">Documento *</label>
+                                <input type="text" class="form-control" id="editarDocumento" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editarTelefono" class="form-label">Teléfono *</label>
+                                <input type="text" class="form-control" id="editarTelefono" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="editarDireccion" class="form-label">Dirección *</label>
+                                <input type="text" class="form-control" id="editarDireccion" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editarMail" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="editarMail" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editarCuit" class="form-label">CUIT *</label>
+                                <input type="text" class="form-control" id="editarCuit" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editarFechaNacimiento" class="form-label">Fecha de Nacimiento *</label>
+                                <input type="text" class="form-control" id="editarFechaNacimiento" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editarContrasenia" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+                                <input type="password" class="form-control" id="editarContrasenia" placeholder="Nueva contraseña">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <small><i class="bi bi-info-circle"></i> Todos los campos marcados con * son obligatorios.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="guardarEdicionCliente()">
+                        <i class="bi bi-check-circle me-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ========== CONFIGURACIÓN Y VARIABLES GLOBALES ==========
+        const API = 'http://localhost:8080';
+        let accesoriosList = [];
+        let cervezasList = [];
+        let barrilesList = [];
+        let lotesList = [];
+        let pedidosClienteActual = [];
+        let historicalModal = null;
+        let ticketModal = null;
+        let modalEditarPedido = null;
+        let modalEditarCliente = null;
+        let pedidoActualParaTicket = null;
+        let pedidoActualParaEdicion = null;
+
+        // ========== FUNCIONES PARA EL DROPDOWN ==========
+        function verHistorical() {
+            if (!historicalModal) {
+                historicalModal = new bootstrap.Modal(document.getElementById('modalHistorical'));
+            }
+            historicalModal.show();
+            
+            const contador = document.getElementById('contadorPedidos');
+            if (contador && Array.isArray(pedidosClienteActual)) {
+                contador.textContent = `(${pedidosClienteActual.length} pedido${pedidosClienteActual.length !== 1 ? 's' : ''})`;
+            }
+        }
+
+        function mostrarAyuda() {
+            alert('Para asistencia, contacte a nuestro equipo de soporte.');
+        }
+
+        function modificarDatos() {
+            const clienteLogueado = verificarClienteLogueado();
+            if (!clienteLogueado) {
+                mensaje('No se encontraron los datos del cliente', 'error');
+                return;
+            }
+
+            if (!modalEditarCliente) {
+                modalEditarCliente = new bootstrap.Modal(document.getElementById('modalEditarCliente'));
+            }
+
+            cargarDatosClienteEnModal(clienteLogueado);
+            modalEditarCliente.show();
+        }
+
+        function cerrarSesion() {
+            sessionStorage.removeItem('clienteLogueado');
+            window.location.href = `${window.location.origin}/cliente-dashboard`;
+        }
+
+        // ========== FUNCIONES BASE ==========
+        function $(selector) {
+            return document.querySelector(selector);
+        }
+
+        function $$(selector) {
+            return document.querySelectorAll(selector);
+        }
+
+        function mensaje(text, type = '') {
+            const el = document.getElementById('msg');
+            if (!el) return;
+            if (!text) { el.innerHTML = ''; return; }
+            const cls = type === 'error' ? 'error' : 'success';
+            el.innerHTML = `<div class="${cls}">${text}</div>`;
+            setTimeout(() => { if (el) el.innerHTML = ''; }, 6000);
+        }
+
+        function formatDateFromMillis(ms) {
+            if (ms === null || ms === undefined || ms === '') return '';
+            const d = new Date(Number(ms));
+            if (isNaN(d)) return '';
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        }
+
+        function formatDateToISO(ms) {
+            if (ms === null || ms === undefined || ms === '') return '';
+            const d = new Date(Number(ms));
+            if (isNaN(d)) return '';
+            return d.toISOString();
+        }
+
+        async function fetchJSON(url, opts = {}) {
+            try {
+                const fullUrl = url.startsWith('http') ? url : API + url;
+                const options = {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    ...opts
+                };
+
+                if (options.body && typeof options.body !== 'string') {
+                    options.body = JSON.stringify(options.body);
+                }
+
+                console.log(`📡 Fetch: ${options.method || 'GET'} ${fullUrl}`);
+                
+                const res = await fetch(fullUrl, options);
+                
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errorText || res.statusText}`);
+                }
+
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return await res.json();
+                } else {
+                    const text = await res.text();
+                    return text ? { message: text } : { success: true };
+                }
+            } catch (err) {
+                console.error('❌ Fetch error:', err);
+                throw new Error(`Error de conexión: ${err.message}`);
+            }
+        }
+
+        // ========== GESTIÓN DE SESIÓN ==========
+        function verificarClienteLogueado() {
+            try {
+                const clienteLogueado = JSON.parse(sessionStorage.getItem('clienteLogueado'));
+                
+                if (clienteLogueado && clienteLogueado.id) {
+                    return clienteLogueado;
+                } else {
+                    setTimeout(() => {
+                        window.location.href = `${window.location.origin}/inicio`;
+                    }, 2000);
+                    mensaje('Debe iniciar sesión para acceder a esta página. Redirigiendo...', 'error');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error al verificar cliente logueado:', error);
+                setTimeout(() => {
+                    window.location.href = `${window.location.origin}/inicio`;
+                }, 2000);
+                return null;
+            }
+        }
+
+        function actualizarUIcliente(cliente) {
+            const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ''}`.trim();
+            
+            $('#clienteNombreHeader').textContent = nombreCompleto || 'Mi Perfil';
+            $('#clienteNombreMenu').textContent = nombreCompleto || 'Cliente';
+            $('#clienteNombreHeaderBanner').textContent = nombreCompleto || 'Cliente';
+            
+            const userAvatar = $('.user-avatar');
+            if (userAvatar && cliente.nombre) {
+                const inicial = cliente.nombre.charAt(0).toUpperCase();
+                userAvatar.innerHTML = inicial;
+            }
+            
+            $('#clienteLogueadoInfo').style.display = 'block';
+        }
+
+        // ========== FUNCIONES PARA BARRILES ==========
+        function obtenerBarrilesPorCerveza(cervezaId) {
+            if (!lotesList || !Array.isArray(lotesList)) {
+                console.warn('⚠️ lotesList no está disponible:', lotesList);
+                return [];
+            }
+            
+            if (!barrilesList || !Array.isArray(barrilesList)) {
+                console.warn('⚠️ barrilesList no está disponible:', barrilesList);
+                return [];
+            }
+
+            try {
+                const lotesDeCerveza = lotesList.filter(lote =>
+                    lote && lote.cerveza && String(lote.cerveza.id) === String(cervezaId)
+                );
+                
+                const loteIds = lotesDeCerveza.map(lote => lote.id);
+                
+                return barrilesList.filter(barril =>
+                    barril && loteIds.includes(barril.loteId) &&
+                    barril.estado === "Cargado"
+                );
+            } catch (error) {
+                console.error('❌ Error en obtenerBarrilesPorCerveza:', error);
+                return [];
+            }
+        }
+
+        function agruparBarrilesPorLitros(barriles) {
+            const agrupados = {};
+            barriles.forEach(barril => {
+                const litros = barril.litros;
+                if (!agrupados[litros]) {
+                    agrupados[litros] = {
+                        litros: litros,
+                        cantidad: 0,
+                        barriles: []
+                    };
+                }
+                agrupados[litros].cantidad++;
+                agrupados[litros].barriles.push(barril);
+            });
+            return Object.values(agrupados);
+        }
+
+        function actualizarSelectBarriles(cervezaId = null) {
+            const selectBarril = $('#barril');
+            if (!selectBarril) return;
+
+            selectBarril.innerHTML = '<option value="">Seleccione tamaño de barril</option>';
+            let barrilesDisponibles = [];
+
+            if (cervezaId) {
+                const barrilesCerveza = obtenerBarrilesPorCerveza(cervezaId);
+                barrilesDisponibles = agruparBarrilesPorLitros(barrilesCerveza);
+            } else {
+                const barrilesCargados = barrilesList.filter(b => b.estado === "Cargado");
+                barrilesDisponibles = agruparBarrilesPorLitros(barrilesCargados);
+            }
+
+            barrilesDisponibles.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.litros;
+                option.textContent = `${grupo.litros}L - ${grupo.cantidad} disponible(s)`;
+                option.dataset.cantidad = grupo.cantidad;
+                selectBarril.appendChild(option);
+            });
+            updateBarrilInfo();
+        }
+
+        // ========== ACTUALIZACIÓN DE INFORMACIÓN ==========
+        function updateCervezaInfo() {
+            const cervezaId = $('#cerveza').value;
+            const span = $('#cervezaPrecio');
+            if (!cervezaId) {
+                if (span) span.textContent = '-';
+                actualizarSelectBarriles();
+                recalcTotal();
+                return;
+            }
+            const cerveza = cervezasList.find(c => String(c.id) === String(cervezaId));
+            if (span) span.textContent = cerveza && cerveza.precioPorLitro != null ?
+                ('$' + cerveza.precioPorLitro) : '-';
+            actualizarSelectBarriles(cervezaId);
+            recalcTotal();
+        }
+
+        function updateBarrilInfo() {
+            const v = $('#barril').value;
+            const span = $('#barrilLitros');
+            if (!v) {
+                if (span) span.textContent = '-';
+                recalcTotal();
+                return;
+            }
+            if (span) span.textContent = v + ' L';
+            recalcTotal();
+        }
+
+        function recalcTotal() {
+            let totalCervezas = 0, totalAccesorios = 0;
+            $$('#detalleTable tbody tr').forEach(tr => {
+                const tipo = tr.dataset.tipo;
+                const subtotal = Number(tr.querySelector('.subtotal').textContent || 0);
+                if (tipo === 'cerveza') totalCervezas += subtotal;
+                else totalAccesorios += subtotal;
+            });
+            const totalGeneral = Math.round((totalCervezas + totalAccesorios + Number.EPSILON) * 100) / 100;
+            $('#totalCervezas').value = totalCervezas !== 0 ? ('$' + totalCervezas) : '';
+            $('#totalAccesorios').value = totalAccesorios !== 0 ? ('$' + totalAccesorios) : '';
+            $('#totalGral').value = totalGeneral !== 0 ? ('$' + totalGeneral) : '';
+            return totalGeneral;
+        }
+
+        // ========== CARGA INICIAL DE DATOS - VERSIÓN CORREGIDA ==========
+        async function loadAll() {
+            try {
+                const clienteLogueado = verificarClienteLogueado();
+                if (!clienteLogueado) return;
+
+                actualizarUIcliente(clienteLogueado);
+
+                mensaje('Cargando datos...');
+                
+                console.log('🔄 Iniciando carga de datos...');
+
+                // Cargar todos los endpoints en paralelo
+                const [pedRes, cerRes, lotRes, accRes, barRes] = await Promise.all([
+                    fetchJSON(`${API}/getAllPedido`).catch(e => {
+                        console.warn('❌ Error cargando pedidos:', e.message);
+                        return { data: [] };
+                    }),
+                    fetchJSON(`${API}/getAllCerveza`).catch(e => {
+                        console.warn('❌ Error cargando cervezas:', e.message);
+                        return { data: [] };
+                    }),
+                    fetchJSON(`${API}/getAllLote`).catch(e => {
+                        console.warn('❌ Error cargando lotes:', e.message);
+                        return { data: [] };
+                    }),
+                    fetchJSON(`${API}/getAllAccesorio`).catch(e => {
+                        console.warn('❌ Error cargando accesorios:', e.message);
+                        return { data: [] };
+                    }),
+                    fetchJSON(`${API}/getAllBarril`).catch(e => {
+                        console.warn('❌ Error cargando barriles:', e.message);
+                        return { data: [] };
+                    })
+                ]);
+
+                console.log('📦 Respuestas de APIs:', {
+                    pedidos: pedRes,
+                    cervezas: cerRes,
+                    lotes: lotRes,
+                    accesorios: accRes,
+                    barriles: barRes
+                });
+
+                // Procesar pedidos
+                const todosPedidos = (pedRes && pedRes.data) ? pedRes.data : (Array.isArray(pedRes) ? pedRes : []);
+                console.log('📋 Total pedidos recibidos:', todosPedidos.length);
+                
+                pedidosClienteActual = todosPedidos.filter(pedido => {
+                    if (!pedido.cliente) return false;
+                    
+                    let clienteIdDelPedido;
+                    if (typeof pedido.cliente === 'object' && pedido.cliente !== null) {
+                        clienteIdDelPedido = pedido.cliente.id;
+                    } else {
+                        clienteIdDelPedido = pedido.cliente;
+                    }
+                    
+                    const coincide = String(clienteIdDelPedido) === String(clienteLogueado.id);
+                    if (coincide) {
+                        console.log('✅ Pedido del cliente:', pedido.id);
+                    }
+                    return coincide;
+                });
+
+                // Procesar cervezas - CORREGIDO
+                cervezasList = (cerRes && cerRes.data) ? cerRes.data : (Array.isArray(cerRes) ? cerRes : []);
+                console.log('🍺 Cervezas cargadas:', cervezasList.length);
+                if (cervezasList.length > 0) {
+                    console.log('📝 Ejemplo cerveza:', cervezasList[0]);
+                }
+
+                // Procesar lotes - CORREGIDO
+                lotesList = (lotRes && lotRes.data) ? lotRes.data : (Array.isArray(lotRes) ? lotRes : []);
+                console.log('📦 Lotes cargados:', lotesList.length);
+                if (lotesList.length > 0) {
+                    console.log('📝 Ejemplo lote:', lotesList[0]);
+                }
+
+                // Procesar accesorios - CORREGIDO
+                const todosAccesorios = (accRes && accRes.data) ? accRes.data : (Array.isArray(accRes) ? accRes : []);
+                accesoriosList = todosAccesorios.filter(a => {
+                    const estado = String(a.estado || '').toLowerCase().trim();
+                    return estado === 'disponible';
+                });
+                console.log('🔧 Accesorios disponibles:', accesoriosList.length);
+
+                // Procesar barriles - CORREGIDO
+                barrilesList = (barRes && barRes.data) ? barRes.data : (Array.isArray(barRes) ? barRes : []);
+                console.log('🛢️ Barriles cargados:', barrilesList.length);
+                if (barrilesList.length > 0) {
+                    console.log('📝 Ejemplo barril:', barrilesList[0]);
+                }
+
+                // Resumen final
+                console.log('✅ Datos cargados exitosamente:', {
+                    cervezas: cervezasList.length,
+                    lotes: lotesList.length,
+                    accesorios: accesoriosList.length,
+                    barriles: barrilesList.length,
+                    pedidosCliente: pedidosClienteActual.length
+                });
+
+                // Verificar datos mínimos necesarios
+                if (cervezasList.length === 0) {
+                    console.warn('⚠️ No se cargaron cervezas');
+                    mensaje('Error: No se pudieron cargar las cervezas', 'error');
+                }
+
+                if (barrilesList.length === 0) {
+                    console.warn('⚠️ No se cargaron barriles');
+                    mensaje('Error: No se pudieron cargar los barriles', 'error');
+                }
+
+                // Inicializar la interfaz
+                populateSelects();
+                renderPedidosTable(pedidosClienteActual);
+                setDefaultFecha();
+
+                if (pedidosClienteActual.length === 0) {
+                    mensaje(`Bienvenido ${clienteLogueado.nombre}, no tienes pedidos registrados`, 'success');
+                } else {
+                    mensaje(`Bienvenido ${clienteLogueado.nombre}, tienes ${pedidosClienteActual.length} pedido(s)`, 'success');
+                }
+                
+            } catch (err) {
+                console.error('❌ Error crítico en loadAll:', err);
+                mensaje('Error cargando datos: ' + (err.message || err), 'error');
+            }
+        }
+
+        // ========== RENDER TABLA PEDIDOS ==========
+        function renderPedidosTable(items) {
+            const tbody = $('#pedidosTableBody');
+            const sinPedidosDiv = $('#sinPedidos');
+            
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (!Array.isArray(items) || items.length === 0) {
+                if (tbody.parentNode) tbody.parentNode.style.display = 'none';
+                if (sinPedidosDiv) sinPedidosDiv.style.display = 'block';
+                return;
+            }
+
+            if (tbody.parentNode) tbody.parentNode.style.display = '';
+            if (sinPedidosDiv) sinPedidosDiv.style.display = 'none';
+
+            const itemsOrdenados = [...items].sort((a, b) => b.id - a.id);
+
+            itemsOrdenados.forEach(p => {
+                console.log('🔍 DEBUG - Procesando pedido:', { 
+                    id: p.id, 
+                    barriles: p.barriles,
+                    cervezas: p.cervezas,
+                    accesorios: p.accesorios 
+                });
+
+                // ✅ NUEVO: Obtener metadata para mostrar información completa
+                const metadata = p.metadata ? JSON.parse(p.metadata) : {};
+                const costoEnvio = metadata.costoEnvio || 0;
+                const preciosAccesorios = metadata.accesoriosPrecios || {};
+
+                let productosInfo = [];
+                let cantidadesInfo = [];
+
+                // ✅ CORREGIDO: PROCESAR BARRILES AGRUPADOS COMO EN ASOCIADO
+                if (p.barriles && Array.isArray(p.barriles)) {
+                    const barrilesAgrupados = {};
+
+                    p.barriles.forEach(barril => {
+                        const barrilId = typeof barril === 'object' ? barril.id : barril;
+                        const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+                        if (barrilCompleto) {
+                            let cervezaNombre = 'Cerveza no especificada';
+                            const litros = barrilCompleto.litros || 0;
+
+                            // Obtener información desde el lote
+                            if (barrilCompleto.loteId) {
+                                const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                                if (lote && lote.cerveza) {
+                                    cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                                }
+                            }
+
+                            // Crear clave única
+                            const key = `${cervezaNombre}-${litros}`;
+
+                            if (!barrilesAgrupados[key]) {
+                                barrilesAgrupados[key] = {
+                                    cervezaNombre,
+                                    litros,
+                                    cantidad: 0
+                                };
+                            }
+
+                            barrilesAgrupados[key].cantidad++;
+                        }
+                    });
+
+                    // ✅ Generar información para mostrar
+                    Object.values(barrilesAgrupados).forEach(grupo => {
+                        productosInfo.push(`${grupo.cervezaNombre} (${grupo.litros}L)`);
+                        cantidadesInfo.push(`${grupo.cantidad} barril(es)`);
+                    });
+
+                    console.log('✅ Barriles agrupados:', barrilesAgrupados);
+                }
+
+                // ✅ MEJORADO: Accesorios con precios desde metadata
+                if (p.accesorios && Array.isArray(p.accesorios)) {
+                    p.accesorios.forEach(accesorio => {
+                        const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
+                        const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
+                        
+                        const precio = preciosAccesorios[accesorioId] != null 
+                            ? parseFloat(preciosAccesorios[accesorioId])
+                            : (accesorioCompleto.precio || 0);
+
+                        const nombre = accesorioCompleto.nombre || `Accesorio ${accesorioId}`;
+                        productosInfo.push(nombre);
+                        cantidadesInfo.push(`1 unidad - $${precio.toFixed(2)}`);
+                    });
+                }
+
+                // ✅ NUEVO: Mostrar costo de envío en la lista
+                if (costoEnvio > 0) {
+                    productosInfo.push('Costo de envío');
+                    cantidadesInfo.push(`$${costoEnvio.toFixed(2)}`);
+                }
+
+                // ✅ NUEVO: Si no hay productos pero sí hay cervezas en el pedido, mostrar información básica
+                if (productosInfo.length === 0 && p.cervezas && Array.isArray(p.cervezas)) {
+                    p.cervezas.forEach(cerveza => {
+                        const nombre = cerveza.nombreCerveza || cerveza.nombre || `Cerveza ${cerveza.id}`;
+                        productosInfo.push(nombre);
+                        cantidadesInfo.push('Cantidad no especificada');
+                    });
+                }
+
+                console.log('📦 Productos finales:', { productosInfo, cantidadesInfo });
+
+                const estado = p.estado || 'Pendiente';
+                const estadoPago = p.estadoPago || 'Pendiente';
+                const direccionEnvio = p.direccionEntrega && p.direccionEntrega !== 'Sin envío' ? p.direccionEntrega : 'Sin envío';
+                const total = p.totalGral ? `$${p.totalGral.toFixed(2)}` : '';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="nowrap">${p.id || ''}</td>
+                    <td class="productos-lista">
+                        ${productosInfo.map(prod => `<div class="producto-item">${prod}</div>`).join('')}
+                        ${productosInfo.length === 0 ? '<div class="producto-item text-muted">No hay productos</div>' : ''}
+                    </td>
+                    <td class="productos-lista">
+                        ${cantidadesInfo.map(cant => `<div class="producto-item">${cant}</div>`).join('')}
+                        ${cantidadesInfo.length === 0 ? '<div class="producto-item text-muted">-</div>' : ''}
+                    </td>
+                    <td>
+                        <span class="badge ${estado === 'Pendiente' ? 'bg-warning' : estado === 'Entregado' ? 'bg-success' : estado === 'Cancelado' ? 'bg-danger' : 'bg-secondary'} badge-estado">
+                            ${estado}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${estadoPago === 'Pagado' ? 'bg-success' : 'bg-warning'} badge-estado">
+                            ${estadoPago}
+                        </span>
+                    </td>
+                    <td title="${direccionEnvio}">
+                        ${direccionEnvio.length > 30 ? direccionEnvio.substring(0, 30) + '...' : direccionEnvio}
+                    </td>
+                    <td class="nowrap">${total}</td>
+                    <td class="nowrap">
+                        <div class="btn-group" role="group">
+                            ${estado === 'Pendiente' ? 
+                                `<button class="btn btn-warning btn-sm btn-editar" onclick="editarPedido(${p.id})">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <button class="btn btn-danger btn-sm btn-cancelar" onclick="cancelarPedido(${p.id})">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </button>` : 
+                                ''
+                            }
+                            <button class="btn btn-info btn-sm btn-detalles" onclick="verDetallesTicket(${p.id})">
+                                <i class="bi bi-receipt"></i> Ticket
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }        // ========== FUNCIÓN CANCELAR PEDIDO ==========
+        async function cancelarPedido(pedidoId) {
+            if (!confirm('¿Está seguro de que desea cancelar este pedido? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            try {
+                mensaje('Cancelando pedido...');
+                
+                const res = await fetchJSON(`${API}/cancelPedido/${pedidoId}`, {
+                    method: 'PUT'
+                });
+
+                console.log('Respuesta de cancelación:', res);
+
+                if (res && res.codigo === '200') {
+                    mensaje('✅ Pedido cancelado correctamente. Los barriles han sido liberados.', 'success');
+                    await loadAll(); // Recargar la lista de pedidos
+                } else {
+                    const errorMsg = res?.descripcion || res?.message || 'Error al cancelar el pedido';
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.error('Error al cancelar pedido:', error);
+                mensaje('❌ Error al cancelar pedido: ' + error.message, 'error');
+            }
+        }
+
+        // ========== FUNCIÓN EDITAR PEDIDO ==========
+        function editarPedido(pedidoId) {
+            const pedido = pedidosClienteActual.find(p => p.id === pedidoId);
+            if (!pedido) {
+                mensaje('No se encontró el pedido solicitado', 'error');
+                return;
+            }
+
+            if (pedido.estado !== 'Pendiente') {
+                mensaje('Solo se pueden editar pedidos con estado "Pendiente"', 'error');
+                return;
+            }
+
+            pedidoActualParaEdicion = pedido;
+
+            if (!modalEditarPedido) {
+                modalEditarPedido = new bootstrap.Modal(document.getElementById('modalEditarPedido'));
+            }
+
+            cargarDatosEnModalEdicion(pedido);
+            modalEditarPedido.show();
+        }
+
+        // ========== FUNCIONES PARA EL TICKET ==========
+        function verDetallesTicket(pedidoId) {
+            const pedido = pedidosClienteActual.find(p => p.id === pedidoId);
+            if (!pedido) {
+                mensaje('No se encontró el pedido solicitado', 'error');
+                return;
+            }
+
+            pedidoActualParaTicket = pedido;
+            generarVistaTicket(pedido);
+
+            if (!ticketModal) {
+                ticketModal = new bootstrap.Modal(document.getElementById('modalTicket'));
+            }
+            ticketModal.show();
+        }
+
+        function generarVistaTicket(pedido) {
+            const ticketContent = $('#ticketContent');
+            if (!ticketContent) return;
+
+            console.log('🔍 DEBUG - Generando ticket para pedido:', { 
+                id: pedido.id, 
+                barriles: pedido.barriles,
+                cervezas: pedido.cervezas,
+                accesorios: pedido.accesorios 
+            });
+
+            // ✅ NUEVO: Obtener metadata con precios de accesorios y costo de envío
+            const metadata = pedido.metadata ? JSON.parse(pedido.metadata) : {};
+            const preciosAccesorios = metadata.accesoriosPrecios || {};
+            const costoEnvio = metadata.costoEnvio || 0;
+
+            let productosHTML = '';
+            let subtotalTotal = 0;
+
+            // ✅ CORREGIDO: PROCESAR BARRILES AGRUPADOS COMO EN ASOCIADO
+            if (pedido.barriles && Array.isArray(pedido.barriles)) {
+                const barrilesAgrupados = {};
+
+                pedido.barriles.forEach(barril => {
+                    const barrilId = typeof barril === 'object' ? barril.id : barril;
+                    const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+                    if (barrilCompleto) {
+                        let cervezaNombre = 'Cerveza no especificada';
+                        let precioPorLitro = 0;
+                        const litros = barrilCompleto.litros || 0;
+
+                        // Obtener información desde el lote
+                        if (barrilCompleto.loteId) {
+                            const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                            if (lote && lote.cerveza) {
+                                cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                                precioPorLitro = lote.cerveza.precioPorLitro || 0;
+                            }
+                        }
+
+                        // Crear clave única
+                        const key = `${cervezaNombre}-${litros}`;
+
+                        if (!barrilesAgrupados[key]) {
+                            barrilesAgrupados[key] = {
+                                cervezaNombre,
+                                litros,
+                                precioPorLitro,
+                                cantidad: 0
+                            };
+                        }
+
+                        barrilesAgrupados[key].cantidad++;
+                    }
+                });
+
+                // ✅ Generar HTML con subtotal correcto por cantidad
+                Object.values(barrilesAgrupados).forEach(grupo => {
+                    const subtotal = grupo.cantidad * grupo.litros * grupo.precioPorLitro;
+                    subtotalTotal += subtotal;
+                    
+                    productosHTML += `
+                        <div class="ticket-producto">
+                            <div>
+                                <strong>${grupo.cervezaNombre}</strong><br>
+                                <small>${grupo.cantidad} barril(es) de ${grupo.litros}L - $${grupo.precioPorLitro}/L</small>
+                            </div>
+                            <div>$${subtotal.toFixed(2)}</div>
+                        </div>
+                    `;
+                });
+
+                console.log('✅ Barriles procesados en ticket:', barrilesAgrupados);
+            }
+
+            // ✅ CORREGIDO: Accesorios con precios desde metadata
+            if (pedido.accesorios && Array.isArray(pedido.accesorios)) {
+                pedido.accesorios.forEach(accesorio => {
+                    const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
+                    const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
+                    
+                    // Usar precio desde metadata si existe, sino el precio base
+                    const precio = preciosAccesorios[accesorioId] != null 
+                        ? parseFloat(preciosAccesorios[accesorioId])
+                        : (accesorioCompleto.precio || 0);
+
+                    subtotalTotal += precio;
+
+                    productosHTML += `
+                        <div class="ticket-producto">
+                            <div>
+                                <strong>${accesorioCompleto.nombre || 'Accesorio ' + accesorioId}</strong><br>
+                                <small>1 unidad</small>
+                            </div>
+                            <div>$${precio.toFixed(2)}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // ✅ NUEVO: Mostrar costo de envío si existe
+            if (costoEnvio > 0) {
+                productosHTML += `
+                    <div class="ticket-producto">
+                        <div><strong>Costo de envío</strong></div>
+                        <div>$${costoEnvio.toFixed(2)}</div>
+                    </div>
+                `;
+                subtotalTotal += costoEnvio;
+            }
+
+            // ✅ NUEVO: Si no hay productos pero sí hay cervezas en el pedido, mostrar información básica
+            if (productosHTML === '' && pedido.cervezas && Array.isArray(pedido.cervezas)) {
+                pedido.cervezas.forEach(cerveza => {
+                    const nombre = cerveza.nombreCerveza || cerveza.nombre || `Cerveza ${cerveza.id}`;
+                    productosHTML += `
+                        <div class="ticket-producto">
+                            <div>${nombre}</div>
+                            <div>-</div>
+                        </div>
+                    `;
+                });
+            }
+
+            const nombreCliente = pedido.cliente ? 
+                `${pedido.cliente.nombre} ${pedido.cliente.apellido}` : 
+                'Cliente no disponible';
+            
+            const direccionEnvio = pedido.direccionEntrega && pedido.direccionEntrega !== 'Sin envío' 
+                ? pedido.direccionEntrega 
+                : 'Sin envío';
+            
+            const fechaPedido = formatDateFromMillis(pedido.fechaPedido);
+            const fechaEntrega = formatDateFromMillis(pedido.fechaEntrega);
+
+            // ✅ Usar totalGral del pedido (que ya incluye accesorios y envío)
+            const totalFinal = pedido.totalGral || subtotalTotal;
+
+            console.log('💰 Totales calculados:', { subtotalTotal, totalGral: pedido.totalGral, totalFinal });
+
+            const ticketHTML = `
+                <div class="ticket-header">
+                    <img src="/images/logo.jpg" alt="Sierra Maestra" class="ticket-logo">
+                    <h3>Historial de compras</h3>
+                    <h4>Nº de pedido: ${pedido.id}</h4>
+                </div>
+
+                <div class="ticket-section">
+                    <div class="ticket-section-title">Nombre y cantidad de producto</div>
+                    ${productosHTML || '<div class="text-muted text-center">No hay productos en este pedido</div>'}
+                </div>
+
+                <div class="ticket-total">
+                    <div>Precio Total:</div>
+                    <div><strong>$${totalFinal.toFixed(2)}</strong></div>
+                </div>
+
+                <div class="ticket-section">
+                    <div class="ticket-section-title">Dirección de envío:</div>
+                    <div>${direccionEnvio}</div>
+                    ${costoEnvio > 0 ? `<div><small>Costo de envío: $${costoEnvio.toFixed(2)}</small></div>` : ''}
+                </div>
+
+                <div class="ticket-cliente">
+                    <div><strong>Cliente:</strong> ${nombreCliente}</div>
+                    <div><strong>Fecha de pedido:</strong> ${fechaPedido}</div>
+                    <div><strong>Fecha de entrega:</strong> ${fechaEntrega}</div>
+                    <div>
+                        <strong>Estado:</strong> 
+                        <span class="badge ${pedido.estado === 'Entregado' ? 'bg-success' : 
+                                        pedido.estado === 'Cancelado' ? 'bg-danger' : 'bg-warning'}">
+                            ${pedido.estado || 'Pendiente'}
+                        </span>
+                    </div>
+                    <div>
+                        <strong>Estado de pago:</strong> 
+                        <span class="badge ${pedido.estadoPago === 'Pagado' ? 'bg-success' : 'bg-warning'}">
+                            ${pedido.estadoPago || 'Pendiente'}
+                        </span>
+                    </div>
+                    ${pedido.nota ? `<div class="mt-2"><strong>Notas:</strong> ${pedido.nota}</div>` : ''}
+                </div>
+
+                <div class="text-center mt-4 text-muted">
+                    <small>¡Gracias por su compra! 🍻</small>
+                </div>
+            `;
+
+            ticketContent.innerHTML = ticketHTML;
+
+            // ✅ Verificar si el logo se cargó correctamente
+            setTimeout(() => {
+                const logo = ticketContent.querySelector('.ticket-logo');
+                if (logo && logo.naturalHeight === 0) {
+                    console.log('⚠️ Logo no se pudo cargar, mostrando texto alternativo');
+                }
+            }, 100);
+        }
+        // ========== GENERACIÓN DE PDF ==========
+        async function descargarTicketPDF() {
+            if (!pedidoActualParaTicket) {
+                mensaje('No hay pedido seleccionado para descargar', 'error');
+                return;
+            }
+
+            try {
+                mensaje('Generando PDF...', 'success');
+                
+                const ticketElement = document.getElementById('ticketContent');
+                if (!ticketElement) {
+                    throw new Error('No se encontró el contenido del ticket');
+                }
+
+                const downloadBtn = ticketElement.querySelector('button');
+                const originalDisplay = downloadBtn ? downloadBtn.style.display : 'none';
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'none';
+                }
+
+                // Esperar a que la imagen se cargue
+                await new Promise((resolve) => {
+                    const images = ticketElement.getElementsByTagName('img');
+                    let loadedCount = 0;
+                    const totalImages = images.length;
+
+                    if (totalImages === 0) {
+                        resolve();
+                        return;
+                    }
+
+                    for (let img of images) {
+                        if (img.complete) {
+                            loadedCount++;
+                        } else {
+                            img.onload = () => {
+                                loadedCount++;
+                                if (loadedCount === totalImages) resolve();
+                            };
+                            img.onerror = () => {
+                                loadedCount++;
+                                if (loadedCount === totalImages) resolve();
+                            };
+                        }
+                    }
+
+                    if (loadedCount === totalImages) resolve();
+                });
+
+                const canvas = await html2canvas(ticketElement, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    onclone: (clonedDoc, element) => {
+                        element.style.boxShadow = 'none';
+                        element.style.border = '1px solid #ccc';
+                        const cloneBtn = element.querySelector('button');
+                        if (cloneBtn) {
+                            cloneBtn.style.display = 'none';
+                        }
+                    }
+                });
+
+                if (downloadBtn) {
+                    downloadBtn.style.display = originalDisplay;
+                }
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jspdf.jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                const margin = 10;
+                const contentWidth = pdfWidth - (2 * margin);
+                const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, contentHeight);
+                pdf.save(`ticket-pedido-${pedidoActualParaTicket.id}.pdf`);
+
+                mensaje('PDF descargado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                mensaje('Error al generar el PDF: ' + error.message, 'error');
+            }
+        }
+
+        // ========== EDICIÓN DE PEDIDO ==========
+        function cargarDatosEnModalEdicion(pedido) {
+        console.log('🔄 Cargando datos del pedido:', pedido);
+        
+        document.getElementById('editarPedidoId').value = pedido.id;
+        document.getElementById('editarNota').value = pedido.nota || '';
+
+        // ✅ Cargar fecha de entrega
+        const fechaEntregaInput = document.getElementById('editarFechaEntrega');
+        if (fechaEntregaInput) {
+            const fechaFormateada = formatDateToISO(pedido.fechaEntrega);
+            if (fechaFormateada) {
+                fechaEntregaInput.value = fechaFormateada.split('T')[0];
+            }
+            
+            // Establecer fecha mínima como hoy
+            const hoy = new Date().toISOString().split('T')[0];
+            fechaEntregaInput.min = hoy;
+        }
+
+        const tieneEnvio = pedido.direccionEntrega && pedido.direccionEntrega !== 'Sin envío';
+        document.getElementById('editarEnvio').checked = tieneEnvio;
+        document.getElementById('editarDireccionEntrega').value = pedido.direccionEntrega || 'Sin envío';
+        document.getElementById('editarDireccionEntrega').disabled = !tieneEnvio;
+
+        // ✅ CORREGIDO: Cargar detalle del pedido
+        cargarDetalleEdicion(pedido);
+        calcularTotalesEdicion();
+        configurarEventosEdicion();
+        
+        console.log('✅ Datos cargados correctamente');
+    }
+
+        function cargarDetalleEdicion(pedido) {
+            const tbody = document.querySelector('#editarDetalleTable tbody');
+            tbody.innerHTML = '';
+
+            console.log('📦 Cargando detalle del pedido:', {
+                barriles: pedido.barriles,
+                cervezas: pedido.cervezas,
+                accesorios: pedido.accesorios
+            });
+
+            // ✅ CORREGIDO: Obtener metadata con precios
+            const metadata = pedido.metadata ? JSON.parse(pedido.metadata) : {};
+            const preciosAccesorios = metadata.accesoriosPrecios || {};
+
+            // ✅ CORREGIDO: Procesar BARRILES individualmente (no agrupados)
+            if (pedido.barriles && Array.isArray(pedido.barriles)) {
+                console.log('🛢️ Procesando', pedido.barriles.length, 'barriles');
+                
+                pedido.barriles.forEach(barril => {
+                    const barrilId = typeof barril === 'object' ? barril.id : barril;
+                    const barrilCompleto = barrilesList.find(b => b.id == barrilId) || barril;
+
+                    if (barrilCompleto) {
+                        let cervezaNombre = 'Cerveza no especificada';
+                        let precioPorLitro = 0;
+                        const litros = barrilCompleto.litros || 0;
+
+                        // Obtener información desde el lote
+                        if (barrilCompleto.loteId) {
+                            const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                            if (lote && lote.cerveza) {
+                                cervezaNombre = lote.cerveza.nombreCerveza || lote.cerveza.nombre || 'Cerveza no especificada';
+                                precioPorLitro = lote.cerveza.precioPorLitro || 0;
+                            }
+                        }
+
+                        const subtotal = litros * precioPorLitro;
+
+                        const tr = document.createElement('tr');
+                        tr.dataset.tipo = 'barril'; // ✅ Tipo correcto: barril
+                        tr.dataset.id = barrilId; // ✅ ID del barril
+                        tr.dataset.litros = litros;
+                        tr.innerHTML = `
+                            <td>Barril</td>
+                            <td>${cervezaNombre} - Barril #${barrilId} (${litros}L)</td>
+                            <td class="litros">${litros}</td>
+                            <td class="qty">1</td>
+                            <td class="unit">${precioPorLitro}</td>
+                            <td class="subtotal">${subtotal.toFixed(2)}</td>
+                            <td class="nowrap">
+                                <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                        
+                        console.log('✅ Barril agregado:', barrilId, cervezaNombre);
+                    }
+                });
+            }
+
+            // ✅ CORREGIDO: Procesar accesorios con precios desde metadata
+            if (pedido.accesorios && Array.isArray(pedido.accesorios)) {
+                console.log('🎯 Procesando', pedido.accesorios.length, 'accesorios');
+                
+                pedido.accesorios.forEach(accesorio => {
+                    const accesorioId = typeof accesorio === 'object' ? accesorio.id : accesorio;
+                    const accesorioCompleto = accesoriosList.find(a => a.id == accesorioId) || accesorio;
+                    
+                    // Usar precio desde metadata si existe, sino el precio base
+                    const precio = preciosAccesorios[accesorioId] != null 
+                        ? parseFloat(preciosAccesorios[accesorioId])
+                        : (accesorioCompleto.precio || 0);
+
+                    const subtotal = precio;
+
+                    const tr = document.createElement('tr');
+                    tr.dataset.tipo = 'accesorio';
+                    tr.dataset.id = accesorioId;
+                    tr.innerHTML = `
+                        <td>Accesorio</td>
+                        <td>${accesorioCompleto.nombre || 'Accesorio ' + accesorioId} ${accesorioCompleto.notas ? '- ' + accesorioCompleto.notas : ''}</td>
+                        <td class="litros">-</td>
+                        <td class="qty">1</td>
+                        <td class="unit">${precio.toFixed(2)}</td>
+                        <td class="subtotal">${subtotal.toFixed(2)}</td>
+                        <td class="nowrap">
+                            <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    
+                    console.log('✅ Accesorio agregado:', accesorioCompleto.nombre);
+                });
+            }
+
+            // ✅ Si no hay productos, mostrar mensaje
+            if (tbody.children.length === 0) {
+                console.warn('⚠️ No se cargaron productos en el detalle');
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay productos en este pedido</td></tr>';
+            } else {
+                console.log('✅ Total productos cargados:', tbody.children.length, '(Barriles:', pedido.barriles?.length || 0, 'Accesorios:', pedido.accesorios?.length || 0, ')');
+            }
+        }
+
+        function configurarEventosEdicion() {
+            const cervezaSel = document.getElementById('editarCerveza');
+            const barrilSel = document.getElementById('editarBarril');
+            const btnAgregar = document.getElementById('editarBtnAgregarProducto');
+
+            if (cervezaSel) {
+                cervezaSel.addEventListener('change', updateCervezaInfoEdicion);
+            }
+
+            if (barrilSel) {
+                barrilSel.addEventListener('change', updateBarrilInfoEdicion);
+            }
+
+            if (btnAgregar) {
+                btnAgregar.addEventListener('click', () => {
+                    const cid = document.getElementById('editarCerveza').value;
+                    agregarDetalleEdicion('Cerveza', cid, Number(document.getElementById('editarCantidad').value || 1));
+                });
+            }
+
+            const envioInput = document.getElementById('editarEnvio');
+            const direccionInput = document.getElementById('editarDireccionEntrega');
+            
+            if (envioInput && direccionInput) {
+                envioInput.addEventListener('change', function() {
+                    if (this.checked) {
+                        direccionInput.disabled = false;
+                        direccionInput.value = pedidoActualParaEdicion.direccionEntrega || '';
+                        direccionInput.required = true;
+                    } else {
+                        direccionInput.disabled = true;
+                        direccionInput.value = 'Sin envío';
+                        direccionInput.required = false;
+                    }
+                });
+            }
+
+            const tbody = document.querySelector('#editarDetalleTable tbody');
+            tbody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-remove')) {
+                    const fila = e.target.closest('tr');
+                    fila.remove();
+                    calcularTotalesEdicion();
+                }
+            });
+        }
+
+        function updateCervezaInfoEdicion() {
+            const cervezaId = document.getElementById('editarCerveza').value;
+            const span = document.getElementById('editarCervezaPrecio');
+            if (!cervezaId) {
+                if (span) span.textContent = '-';
+                actualizarSelectBarrilesEdicion();
+                return;
+            }
+            const cerveza = cervezasList.find(c => String(c.id) === String(cervezaId));
+            if (span) span.textContent = cerveza && cerveza.precioPorLitro != null ?
+                ('$' + cerveza.precioPorLitro) : '-';
+            actualizarSelectBarrilesEdicion(cervezaId);
+        }
+
+        function updateBarrilInfoEdicion() {
+            const v = document.getElementById('editarBarril').value;
+            const span = document.getElementById('editarBarrilLitros');
+            if (!v) {
+                if (span) span.textContent = '-';
+                return;
+            }
+            if (span) span.textContent = v + ' L';
+        }
+
+        function actualizarSelectBarrilesEdicion(cervezaId = null) {
+            const selectBarril = document.getElementById('editarBarril');
+            if (!selectBarril) return;
+
+            selectBarril.innerHTML = '<option value="">Seleccione tamaño de barril</option>';
+            let barrilesDisponibles = [];
+
+            if (cervezaId) {
+                const barrilesCerveza = obtenerBarrilesPorCerveza(cervezaId);
+                barrilesDisponibles = agruparBarrilesPorLitros(barrilesCerveza);
+            } else {
+                const barrilesCargados = barrilesList.filter(b => b.estado === "Cargado");
+                barrilesDisponibles = agruparBarrilesPorLitros(barrilesCargados);
+            }
+
+            barrilesDisponibles.forEach(grupo => {
+                const option = document.createElement('option');
+                option.value = grupo.litros;
+                option.textContent = `${grupo.litros}L - ${grupo.cantidad} disponible(s)`;
+                option.dataset.cantidad = grupo.cantidad;
+                selectBarril.appendChild(option);
+            });
+            updateBarrilInfoEdicion();
+        }
+
+        function agregarDetalleEdicion(tipo, id, cantidad = 1) {
+            if (!id) {
+                mensaje('Seleccioná un artículo para agregar', 'error');
+                return;
+            }
+
+            try {
+                if (tipo === 'Cerveza') {
+                    const cer = cervezasList.find(c => String(c.id) === String(id));
+                    if (!cer) {
+                        mensaje('Cerveza no encontrada', 'error');
+                        return;
+                    }
+
+                    const litrosSeleccionados = document.getElementById('editarBarril').value;
+                    if (!litrosSeleccionados) {
+                        mensaje('Debe seleccionar un tamaño de barril', 'error');
+                        return;
+                    }
+
+                    const barrilesCerveza = obtenerBarrilesPorCerveza(id);
+                    const barrilesDelTamaño = barrilesCerveza.filter(b => b.litros == litrosSeleccionados);
+                    const qty = Number(document.getElementById('editarCantidad').value) || Number(cantidad);
+
+                    if (barrilesDelTamaño.length < qty) {
+                        mensaje(`No hay suficientes barriles de ${litrosSeleccionados}L disponibles. Solo hay ${barrilesDelTamaño.length}`, 'error');
+                        return;
+                    }
+
+                    const litrosPorBarril = Number(litrosSeleccionados);
+                    const precioPorLitro = Number(cer.precioPorLitro || 0);
+                    const litrosTotales = litrosPorBarril * qty;
+                    const subtotal = Math.round((precioPorLitro * litrosTotales + Number.EPSILON) * 100) / 100;
+
+                    const tbody = document.querySelector('#editarDetalleTable tbody');
+                    const existe = document.querySelector(`#editarDetalleTable tbody tr[data-tipo="cerveza"][data-id="${id}"][data-litros="${litrosPorBarril}"]`);
+
+                    if (existe) {
+                        const existingQty = Number(existe.querySelector('.qty').textContent);
+                        const newQty = existingQty + qty;
+                        existe.querySelector('.qty').textContent = newQty;
+                        existe.querySelector('.subtotal').textContent = Math.round((precioPorLitro * litrosPorBarril * newQty + Number.EPSILON) * 100) / 100;
+                    } else {
+                        const tr = document.createElement('tr');
+                        tr.dataset.tipo = 'cerveza';
+                        tr.dataset.id = cer.id;
+                        tr.dataset.litros = litrosPorBarril;
+                        tr.innerHTML = `
+                            <td>Cerveza</td>
+                            <td>${cer.nombreCerveza} (${litrosPorBarril}L)</td>
+                            <td class="litros">${litrosPorBarril || ''}</td>
+                            <td class="qty">${qty}</td>
+                            <td class="unit">${precioPorLitro || 0}</td>
+                            <td class="subtotal">${subtotal}</td>
+                            <td class="nowrap">
+                                <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+
+                    document.getElementById('editarBarril').value = '';
+                    actualizarSelectBarrilesEdicion();
+                    calcularTotalesEdicion();
+                    mensaje(`Producto agregado correctamente`, 'success');
+
+                } else if (tipo === 'Accesorio') {
+                    const acc = accesoriosList.find(a => String(a.id) === String(id));
+                    if (!acc) {
+                        mensaje('Accesorio no encontrado', 'error');
+                        return;
+                    }
+
+                    const precio = parseFloat(acc.precio) || 0;
+                    const subtotal = precio * cantidad;
+
+                    const tbody = document.querySelector('#editarDetalleTable tbody');
+                    const tr = document.createElement('tr');
+                    tr.dataset.tipo = 'accesorio';
+                    tr.dataset.id = acc.id;
+                    tr.innerHTML = `
+                        <td>Accesorio</td>
+                        <td>${acc.nombre} ${acc.notas ? '- ' + acc.notas : ''}</td>
+                        <td class="litros">-</td>
+                        <td class="qty">${cantidad}</td>
+                        <td class="unit">${precio.toFixed(2)}</td>
+                        <td class="subtotal">${subtotal.toFixed(2)}</td>
+                        <td class="nowrap">
+                            <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    calcularTotalesEdicion();
+                    mensaje(`Accesorio "${acc.nombre}" agregado correctamente`, 'success');
+                }
+            } catch (error) {
+                console.error('Error en agregarDetalleEdicion:', error);
+                mensaje('Error agregando producto: ' + error.message, 'error');
+            }
+        }
+
+        function calcularTotalesEdicion() {
+            let totalCervezas = 0;
+            let totalAccesorios = 0;
+            
+            const filas = document.querySelectorAll('#editarDetalleTable tbody tr');
+            console.log('💰 Calculando totales para', filas.length, 'filas');
+            
+            filas.forEach(tr => {
+                const tipo = tr.dataset.tipo;
+                
+                // ✅ CORREGIDO: Extraer subtotal correctamente
+                const subtotalCell = tr.querySelector('.subtotal');
+                let subtotal = 0;
+                
+                if (subtotalCell) {
+                    const text = subtotalCell.textContent.trim();
+                    // Eliminar símbolo $, espacios, y parsear
+                    const cleanText = text.replace(/[$\s]/g, '');
+                    subtotal = parseFloat(cleanText) || 0;
+                    console.log('📊 Fila', tipo, '- Subtotal:', subtotal);
+                }
+
+                if (tipo === 'barril' || tipo === 'cerveza') {
+                    totalCervezas += subtotal;
+                } else if (tipo === 'accesorio') {
+                    totalAccesorios += subtotal;
+                }
+            });
+
+            const totalGeneral = Math.round((totalCervezas + totalAccesorios + Number.EPSILON) * 100) / 100;
+
+            // ✅ Mostrar con formato
+            document.getElementById('editarTotalCervezas').value = totalCervezas > 0 ? ('$' + totalCervezas.toFixed(2)) : '';
+            document.getElementById('editarTotalAccesorios').value = totalAccesorios > 0 ? ('$' + totalAccesorios.toFixed(2)) : '';
+            document.getElementById('editarTotalGral').value = totalGeneral > 0 ? ('$' + totalGeneral.toFixed(2)) : '';
+
+            console.log('💰 Totales calculados:', {
+                cervezas: totalCervezas,
+                accesorios: totalAccesorios,
+                general: totalGeneral
+            });
+
+            return totalGeneral;
+        }
+        // ========== FUNCIÓN GUARDAR EDICIÓN CORREGIDA ==========
+        async function guardarEdicionPedido() {
+            const pedidoId = document.getElementById('editarPedidoId').value;
+            if (!pedidoId) {
+                mensaje('No se encontró el ID del pedido', 'error');
+                return;
+            }
+
+            try {
+                console.log('🔍 Iniciando guardarEdicionPedido...');
+                console.log('📋 Pedido ID:', pedidoId);
+
+                // ✅ NUEVO: Validar fecha de entrega
+                const fechaEntregaInput = document.getElementById('editarFechaEntrega').value;
+                if (!fechaEntregaInput) {
+                    mensaje('La fecha de entrega es obligatoria', 'error');
+                    return;
+                }
+
+                const fechaEntrega = new Date(fechaEntregaInput + 'T12:00:00').getTime();
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                if (fechaEntrega < hoy.getTime()) {
+                    mensaje('La fecha de entrega no puede ser anterior a la fecha actual', 'error');
+                    return;
+                }
+
+                // Validar que haya al menos un producto en el detalle
+                const filasDetalle = document.querySelectorAll('#editarDetalleTable tbody tr');
+                console.log('📊 Filas detalle:', filasDetalle.length);
+                
+                if (filasDetalle.length === 0) {
+                    mensaje('Debe agregar al menos un producto al pedido', 'error');
+                    return;
+                }
+
+                const direccionEntrega = document.getElementById('editarDireccionEntrega').value;
+                const nota = document.getElementById('editarNota').value;
+                const totalGral = calcularTotalesEdicion();
+                const envio = document.getElementById('editarEnvio').checked;
+
+                // Obtener el pedido original
+                const pedidoOriginal = pedidosClienteActual.find(p => p.id == pedidoId);
+                if (!pedidoOriginal) {
+                    throw new Error('No se encontró el pedido original');
+                }
+
+                // Obtener cliente logueado
+                const clienteLogueado = verificarClienteLogueado();
+                if (!clienteLogueado) {
+                    throw new Error('Cliente no logueado');
+                }
+
+                // ✅ CORREGIDO: Procesar productos del detalle
+                const accesoriosPayload = [];
+                const barrilesPayload = [];
+                const cervezasMap = new Map(); // Para agrupar cervezas por ID
+
+                console.log('🔄 Procesando filas del detalle...');
+                
+                filasDetalle.forEach(tr => {
+                    const tipo = tr.dataset.tipo;
+                    const id = tr.dataset.id;
+
+                    if (tipo === 'barril') {
+                        // ✅ Procesar barriles individualmente
+                        const barrilId = parseInt(id);
+                        barrilesPayload.push({ id: barrilId });
+                        console.log('✅ Barril agregado al payload:', barrilId);
+
+                        // ✅ También agregar la cerveza asociada al barril
+                        const barrilCompleto = barrilesList.find(b => b.id == barrilId);
+                        if (barrilCompleto && barrilCompleto.loteId) {
+                            const lote = lotesList.find(l => l.id == barrilCompleto.loteId);
+                            if (lote && lote.cerveza) {
+                                const cervezaId = lote.cerveza.id;
+                                if (!cervezasMap.has(cervezaId)) {
+                                    cervezasMap.set(cervezaId, { id: cervezaId });
+                                }
+                                console.log('✅ Cerveza asociada al barril:', cervezaId);
+                            }
+                        }
+
+                    } else if (tipo === 'accesorio') {
+                        // ✅ Procesar accesorios
+                        const accesorioId = parseInt(id);
+                        accesoriosPayload.push({ id: accesorioId });
+                        console.log('✅ Accesorio agregado al payload:', accesorioId);
+                    }
+                });
+
+                // Convertir mapa de cervezas a array
+                const cervezasPayload = Array.from(cervezasMap.values());
+
+                console.log('📦 Payload final:', {
+                    cervezas: cervezasPayload,
+                    barriles: barrilesPayload,
+                    accesorios: accesoriosPayload
+                });
+
+                // PAYLOAD SIMPLIFICADO
+                const payload = {
+                    id: parseInt(pedidoId),
+                    fechaPedido: pedidoOriginal.fechaPedido || Date.now(),
+                    fechaEntrega: fechaEntrega, // ✅ Fecha editada
+                    envio: envio,
+                    direccionEntrega: direccionEntrega,
+                    estado: pedidoOriginal.estado || "Pendiente",
+                    estadoPago: pedidoOriginal.estadoPago || "Pendiente",
+                    totalGral: totalGral,
+                    nota: nota,
+                    // ✅ CORREGIDO: Arrays con los productos
+                    cliente: { id: clienteLogueado.id },
+                    usuario: { id: 1 },
+                    accesorios: accesoriosPayload,
+                    cervezas: cervezasPayload,
+                    barriles: barrilesPayload
+                };
+
+                console.log('📤 Payload completo para updatePedido:', payload);
+
+                // Realizar la petición PUT
+                const res = await fetchJSON(`${API}/updatePedido`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('📨 Respuesta del servidor:', res);
+
+                // Verificar respuesta
+                const ok = res && (
+                    res.codigo === '200' ||
+                    res.codigo === '201' ||
+                    res.status === 'success' ||
+                    /ok/i.test(res.status) ||
+                    res.estado === 'OK' ||
+                    (res.data && res.data.id)
+                );
+
+                if (ok) {
+                    mensaje('✅ Pedido actualizado correctamente', 'success');
+                    
+                    // Cerrar el modal
+                    if (modalEditarPedido) {
+                        modalEditarPedido.hide();
+                    }
+                    
+                    // Recargar los datos
+                    await loadAll();
+                } else {
+                    const errorMsg = res?.descripcion || res?.message || res?.error || 'Error al actualizar pedido';
+                    throw new Error(errorMsg);
+                }
+
+            } catch (error) {
+                console.error('❌ Error al guardar edición:', error);
+                mensaje('❌ Error al actualizar pedido: ' + error.message, 'error');
+            }
+        }
+        // ========== EDICIÓN DE CLIENTE ==========
+        async function cargarDatosClienteEnModal(cliente) {
+            try {
+                // Obtener datos actualizados del servidor
+                const res = await fetchJSON(`${API}/getByIdCliente/${cliente.id}`);
+                
+                if (res && res.data) {
+                    const clienteActual = res.data;
+                    
+                    // Llenar formulario con datos actuales
+                    document.getElementById('editarClienteId').value = clienteActual.id;
+                    document.getElementById('editarNombre').value = clienteActual.nombre || '';
+                    document.getElementById('editarApellido').value = clienteActual.apellido || '';
+                    document.getElementById('editarDocumento').value = clienteActual.documento || '';
+                    document.getElementById('editarTelefono').value = clienteActual.telefono || '';
+                    document.getElementById('editarDireccion').value = clienteActual.direccion || '';
+                    document.getElementById('editarMail').value = clienteActual.mail || '';
+                    document.getElementById('editarCuit').value = clienteActual.cuit || '';
+                    document.getElementById('editarFechaNacimiento').value = clienteActual.fecha_nacimiento || '';
+                    document.getElementById('editarContrasenia').value = '';
+                } else {
+                    throw new Error('No se pudieron cargar los datos del cliente');
+                }
+            } catch (error) {
+                console.error('Error al cargar datos del cliente:', error);
+                mensaje('Error al cargar datos: ' + error.message, 'error');
+            }
+        }
+
+        async function guardarEdicionCliente() {
+            const clienteId = document.getElementById('editarClienteId').value;
+            if (!clienteId) {
+                mensaje('No se encontró el ID del cliente', 'error');
+                return;
+            }
+
+            try {
+                const camposRequeridos = [
+                    'editarNombre', 'editarApellido', 'editarDocumento', 
+                    'editarTelefono', 'editarDireccion', 'editarMail', 
+                    'editarCuit', 'editarFechaNacimiento'
+                ];
+
+                // Validar campos requeridos
+                for (const campoId of camposRequeridos) {
+                    const campo = document.getElementById(campoId);
+                    if (!campo.value.trim()) {
+                        mensaje(`El campo ${campo.previousElementSibling.textContent} es requerido`, 'error');
+                        campo.focus();
+                        return;
+                    }
+                }
+
+                // Construir payload SOLO con los datos del formulario
+                const payload = {
+                    id: parseInt(clienteId),
+                    nombre: document.getElementById('editarNombre').value.trim(),
+                    apellido: document.getElementById('editarApellido').value.trim(),
+                    documento: document.getElementById('editarDocumento').value.trim(),
+                    telefono: document.getElementById('editarTelefono').value.trim(),
+                    direccion: document.getElementById('editarDireccion').value.trim(),
+                    mail: document.getElementById('editarMail').value.trim(),
+                    cuit: document.getElementById('editarCuit').value.trim(),
+                    fecha_nacimiento: document.getElementById('editarFechaNacimiento').value.trim(),
+                    tipo: "cliente",
+                    activo: true
+                };
+
+                // Solo agregar contraseña si se proporcionó una nueva
+                const nuevaContrasenia = document.getElementById('editarContrasenia').value;
+                if (nuevaContrasenia.trim()) {
+                    payload.contrasenia = nuevaContrasenia.trim();
+                }
+
+                console.log('📦 Payload para actualizar cliente:', payload);
+
+                // Hacer la petición PUT al endpoint correcto
+                const res = await fetchJSON(`${API}/updateCliente`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                // Verificar respuesta
+                const ok = res && (
+                    res.codigo === '200' ||
+                    res.codigo === '201' ||
+                    res.status === 'success' ||
+                    /ok/i.test(res.status) ||
+                    res.estado === 'OK'
+                );
+
+                if (ok) {
+                    // ACTUALIZAR sessionStorage con los NUEVOS datos
+                    const clienteActualizado = { 
+                        id: parseInt(clienteId),
+                        nombre: payload.nombre,
+                        apellido: payload.apellido,
+                        documento: payload.documento,
+                        telefono: payload.telefono,
+                        direccion: payload.direccion,
+                        mail: payload.mail,
+                        cuit: payload.cuit,
+                        fecha_nacimiento: payload.fecha_nacimiento,
+                        tipo: "cliente",
+                        activo: true
+                    };
+                    
+                    sessionStorage.setItem('clienteLogueado', JSON.stringify(clienteActualizado));
+                    
+                    // Actualizar UI con los nuevos datos
+                    actualizarUIcliente(clienteActualizado);
+                    
+                    mensaje('✅ Datos actualizados correctamente', 'success');
+                    
+                    // Cerrar modal
+                    if (modalEditarCliente) {
+                        modalEditarCliente.hide();
+                    }
+                } else {
+                    throw new Error(res?.descripcion || res?.message || 'Error al actualizar datos');
+                }
+
+            } catch (error) {
+                console.error('Error al guardar datos del cliente:', error);
+                mensaje('❌ Error al actualizar datos: ' + error.message, 'error');
+            }
+        }
+
+        // ========== POPULATE SELECTS ==========
+        function populateSelects() {
+            console.log("🔄 Poblando selects con datos:", {
+                cervezas: cervezasList.length,
+                lotes: lotesList.length,
+                barriles: barrilesList.length
+            });
+
+            const cervezaSel = $('#cerveza');
+            const editarCervezaSel = $('#editarCerveza');
+            
+            if (cervezaSel) {
+                cervezaSel.innerHTML = '<option value="">-- Elegir cerveza --</option>';
+                if (cervezasList && cervezasList.length > 0) {
+                    cervezasList.forEach(c => {
+                        const price = (c.precioPorLitro !== undefined && c.precioPorLitro !== null) ? c.precioPorLitro : '';
+                        const label = (c.nombreCerveza || c.nombre || `Cerveza ${c.id}`) + (price !== '' ? ` - $${price}` : '');
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = label;
+                        opt.dataset.price = price;
+                        cervezaSel.appendChild(opt);
+                    });
+                    console.log(`✅ Cargadas ${cervezasList.length} cervezas en select`);
+                } else {
+                    console.warn('⚠️ No hay cervezas para cargar en el select');
+                    const opt = document.createElement('option');
+                    opt.value = "";
+                    opt.textContent = "No hay cervezas disponibles";
+                    cervezaSel.appendChild(opt);
+                }
+            }
+
+            if (editarCervezaSel) {
+                editarCervezaSel.innerHTML = '<option value="">-- Elegir cerveza --</option>';
+                if (cervezasList && cervezasList.length > 0) {
+                    cervezasList.forEach(c => {
+                        const price = (c.precioPorLitro !== undefined && c.precioPorLitro !== null) ? c.precioPorLitro : '';
+                        const label = (c.nombreCerveza || c.nombre || `Cerveza ${c.id}`) + (price !== '' ? ` - $${price}` : '');
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = label;
+                        opt.dataset.price = price;
+                        editarCervezaSel.appendChild(opt);
+                    });
+                }
+            }
+
+            actualizarSelectBarriles();
+            actualizarSelectBarrilesEdicion();
+            console.log("✅ Selects poblados correctamente");
+        }
+
+        // ========== AGREGAR DETALLE ==========
+        async function agregarDetalle(tipo, id, cantidad = 1) {
+            if (!id) {
+                mensaje('Seleccioná una cerveza para agregar', 'error');
+                return;
+            }
+
+            try {
+                // Solo manejar cervezas ahora
+                const cer = cervezasList.find(c => String(c.id) === String(id));
+                if (!cer) {
+                    mensaje('Cerveza no encontrada', 'error');
+                    return;
+                }
+
+                const litrosSeleccionados = $('#barril').value;
+                if (!litrosSeleccionados) {
+                    mensaje('Debe seleccionar un tamaño de barril', 'error');
+                    return;
+                }
+
+                const barrilesCerveza = obtenerBarrilesPorCerveza(id);
+                const barrilesDelTamaño = barrilesCerveza.filter(b => b.litros == litrosSeleccionados);
+                const qty = Number($('#cantidad').value) || Number(cantidad);
+
+                if (barrilesDelTamaño.length < qty) {
+                    mensaje(`No hay suficientes barriles de ${litrosSeleccionados}L disponibles. Solo hay ${barrilesDelTamaño.length}`, 'error');
+                    return;
+                }
+
+                const litrosPorBarril = Number(litrosSeleccionados);
+                const precioPorLitro = Number(cer.precioPorLitro || 0);
+                const litrosTotales = litrosPorBarril * qty;
+                const subtotal = Math.round((precioPorLitro * litrosTotales + Number.EPSILON) * 100) / 100;
+
+                const existe = document.querySelector(`#detalleTable tbody tr[data-tipo="cerveza"][data-id="${id}"][data-litros="${litrosPorBarril}"]`);
+
+                if (existe) {
+                    const existingQty = Number(existe.querySelector('.qty').textContent);
+                    const newQty = existingQty + qty;
+                    existe.querySelector('.qty').textContent = newQty;
+                    existe.querySelector('.subtotal').textContent = Math.round((precioPorLitro * litrosPorBarril * newQty + Number.EPSILON) * 100) / 100;
+                } else {
+                    const tr = document.createElement('tr');
+                    tr.dataset.tipo = 'cerveza';
+                    tr.dataset.id = cer.id;
+                    tr.dataset.litros = litrosPorBarril;
+                    tr.innerHTML = `
+                        <td>Cerveza</td>
+                        <td>${cer.nombreCerveza || cer.nombre || 'Cerveza ' + cer.id} (${litrosPorBarril}L)</td>
+                        <td class="litros">${litrosPorBarril || ''}</td>
+                        <td class="qty">${qty}</td>
+                        <td class="unit">${precioPorLitro || 0}</td>
+                        <td class="subtotal">${subtotal}</td>
+                        <td class="nowrap">
+                            <button type="button" class="btn btn-sm btn-danger btn-remove">Quitar</button>
+                        </td>
+                    `;
+                    $('#detalleTable tbody').appendChild(tr);
+                }
+
+                $('#barril').value = '';
+                actualizarSelectBarriles();
+                recalcTotal();
+                mensaje(`Cerveza agregada correctamente`, 'success');
+
+            } catch (error) {
+                console.error('Error en agregarDetalle:', error);
+                mensaje('Error agregando cerveza: ' + error.message, 'error');
+            }
+        }
+
+        // ========== MANEJO DE BOTONES "QUITAR" ==========
+        document.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("btn-remove")) {
+                const fila = e.target.closest("tr");
+                if (!fila) return;
+
+                fila.remove();
+                recalcTotal();
+                mensaje("Producto removido", "success");
+            }
+        });
+
+        // ========== SUBMIT HANDLER ==========
+        async function submitFormHandler(e) {
+          e.preventDefault();
+
+          try {
+            const clienteLogueado = verificarClienteLogueado();
+            if (!clienteLogueado) {
+                mensaje('Debe iniciar sesión para realizar pedidos', 'error');
+                return;
+            }
+
+            // VALIDAR FECHA DE ENTREGA
+            const fechaEntregaInput = new Date($('#fechaEntrega').value);
+            const fechaHoy = new Date();
+            fechaHoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+
+            if (fechaEntregaInput < fechaHoy) {
+                mensaje('La fecha de entrega no puede ser anterior a la fecha actual', 'error');
+                return;
+            }
+
+            const filasDetalle = $$('#detalleTable tbody tr');
+            if (filasDetalle.length === 0) {
+              mensaje('Debe agregar al menos un producto al pedido', 'error');
+              return;
+            }
+
+            mensaje('Creando pedido...');
+
+            const accesoriosSeleccionados = [];
+            const cervezasPayload = [];
+            const barrilesPayload = [];
+
+            filasDetalle.forEach(tr => {
+              const tipo = tr.dataset.tipo;
+              const id = Number(tr.dataset.id);
+
+              if (tipo === 'accesorio') {
+                accesoriosSeleccionados.push({ id });
+              }
+
+              if (tipo === 'cerveza') {
+                const cantidad = Number(tr.querySelector('.qty')?.textContent || 1);
+                cervezasPayload.push({ id, cantidad });
+                
+                const litros = Number(tr.dataset.litros);
+                const barrilesDisponibles = obtenerBarrilesPorCerveza(id).filter(b => b.litros == litros);
+                const barrilesParaPedido = barrilesDisponibles.slice(0, cantidad);
+                barrilesParaPedido.forEach(barril => {
+                  barrilesPayload.push({ id: Number(barril.id) });
+                });
+              }
+            });
+
+            const total = recalcTotal() || 0;
+            const envio = $('#envio').checked;
+            const direccion = envio ? ($('#direccionEntrega').value.trim() || 'Sin envío') : 'Sin envío';
+            const notaValor = $('#nota')?.value.trim() || '';
+            
+            const fechaActual = new Date();
+            const fechaEntrega = new Date($('#fechaEntrega').value);
+            
+            const fechaPedidoMillis = fechaActual.getTime();
+            const fechaEntregaMillis = fechaEntrega.getTime();
+
+            const payload = {
+              fechaPedido: fechaPedidoMillis,
+              fechaEntrega: fechaEntregaMillis,
+              direccionEntrega: direccion,
+              estado: 'Pendiente',
+              estadoPago: 'Pendiente',
+              envio,
+              accesorios: accesoriosSeleccionados,
+              cervezas: cervezasPayload,
+              barriles: barrilesPayload,
+              usuario: { id: 001 },
+              cliente: { id: clienteLogueado.id },
+              totalGral: total,
+              nota: notaValor
+            };
+
+            console.log('📦 Payload del pedido:', payload);
+
+            const res = await fetchJSON(`${API}/addPedido`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const ok = res && (
+              res.codigo === '200' ||
+              res.codigo === '201' ||
+              res.status === 'success' ||
+              /ok/i.test(res.status) ||
+              res.estado === 'OK'
+            );
+
+            if (ok) {
+              mensaje('✅ Pedido creado correctamente', 'success');
+              resetForm();
+              await loadAll();
+            } else {
+              let errorMsg = 'No se pudo crear el pedido';
+              if (res?.descripcion) errorMsg = res.descripcion;
+              else if (res?.message) errorMsg = res.message;
+              else if (res?.error) errorMsg = res.error;
+
+              mensaje(errorMsg, 'error');
+            }
+
+          } catch (err) {
+            console.error('Error al crear pedido:', err);
+            mensaje('❌ Error al crear pedido: ' + (err.message || err), 'error');
+          }
+        }
+
+        // ========== RESET FORM ==========
+        function resetForm() {
+            const form = $('#pedidoForm');
+            if (form) form.reset();
+            $('#pedidoId').value = '';
+            $('#direccionEntrega').disabled = true; 
+            $('#direccionEntrega').value = 'Sin envío';
+            $('#cantidad').value = 1;
+            $('#detalleTable tbody').innerHTML = '';
+            $('#totalCervezas').value = ''; 
+            $('#totalAccesorios').value = ''; 
+            $('#totalGral').value = '';
+            $('#nota').value = '';
+            
+            setDefaultFecha();
+            actualizarSelectBarriles();
+            mensaje('', '');
+        }
+
+        function setDefaultFecha() {
+            const hoy = new Date();
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
+            
+            // Fecha actual como fecha de pedido (oculta)
+            $('#fechaPedido').value = `${yyyy}-${mm}-${dd}`;
+            
+            // Fecha por defecto de entrega: 7 días después
+            const entrega = new Date();
+            entrega.setDate(hoy.getDate() + 7);
+            const yyyyE = entrega.getFullYear();
+            const mmE = String(entrega.getMonth() + 1).padStart(2, '0');
+            const ddE = String(entrega.getDate()).padStart(2, '0');
+            const fechaEntregaDefault = `${yyyyE}-${mmE}-${ddE}`;
+            
+            $('#fechaEntrega').value = fechaEntregaDefault;
+            $('#fechaEntrega').min = `${yyyy}-${mm}-${dd}`; // Establecer fecha mínima = hoy
+        }
+
+        // ========== CONFIGURACIÓN DE EVENTOS ==========
+        function attachListeners() {
+            const form = $('#pedidoForm'); 
+            if (form) form.addEventListener('submit', submitFormHandler);
+            
+            const resetBtn = $('#resetBtn'); 
+            if (resetBtn) resetBtn.addEventListener('click', ()=>{ resetForm(); mensaje('', ''); });
+            
+            const btnAdd = $('#btnAgregarProducto'); 
+            if (btnAdd) btnAdd.addEventListener('click', ()=>{ 
+                const cid = $('#cerveza').value; 
+                agregarDetalle('Cerveza', cid, Number($('#cantidad').value || 1)); 
+            });
+            
+            const cervezaSel = $('#cerveza'); 
+            if (cervezaSel) cervezaSel.addEventListener('change', updateCervezaInfo);
+            
+            const barrilSel = $('#barril'); 
+            if (barrilSel) barrilSel.addEventListener('change', updateBarrilInfo);
+            
+            const envioInput = $('#envio'); 
+            if (envioInput) envioInput.addEventListener('change', ()=>{
+                if (envioInput.checked) { 
+                    $('#direccionEntrega').disabled=false; 
+                    $('#direccionEntrega').value=''; 
+                    $('#direccionEntrega').required=true; 
+                } else { 
+                    $('#direccionEntrega').disabled=true; 
+                    $('#direccionEntrega').value='Sin envío'; 
+                    $('#direccionEntrega').required=false; 
+                }
+            });
+        }
+
+        // ========== INICIALIZACIÓN ==========
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Iniciando aplicación cliente...');
+            
+            const clienteInicial = verificarClienteLogueado();
+            if (clienteInicial) {
+                console.log('🎉 Cliente listo para usar:', clienteInicial);
+                attachListeners();
+                await loadAll();
+                console.log('✅ Aplicación cliente iniciada correctamente');
+            } else {
+                console.log('⚠️ No hay cliente logueado, redirigiendo...');
+                mensaje('Redirigiendo a la página de login...', 'error');
+            }
+        });
+
+        
+    </script>
+</body>
+</html>

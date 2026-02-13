@@ -1,0 +1,100 @@
+  <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
+    <div th:if="${#lists.isEmpty(items)}">No hay lotes.</div>
+  <div th:each="p : ${items}" class="card mb-2 p-2 position-relative" th:attr="data-view-url=@{/lotes/view/{id}(id=${p.id})}, data-view-target='#lote-form'" style="cursor:pointer" role="button" tabindex="0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <strong th:text="${p.id}">ID</strong>
+          <div class="muted" th:text="${p.cerveza != null ? p.cerveza.nombreCerveza : '---'}">Cerveza</div>
+        </div>
+        <div>
+          <span class="muted me-3" th:text="${p.cantidadLitros} + ' L'">0 L</span>
+          <button class="btn btn-sm btn-outline-primary me-1" th:attr="hx-get=@{/lotes/view/{id}(id=${p.id})}" hx-target="#lote-form" hx-swap="innerHTML" title="Ver" onclick="event.stopPropagation()"><i class="bi bi-eye-fill"></i></button>
+          <button class="btn btn-sm btn-outline-secondary me-1" th:attr="hx-get=@{/lotes/{id}(id=${p.id})}" hx-target="#lote-form" hx-swap="innerHTML" title="Editar" onclick="event.stopPropagation()"><i class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-sm btn-outline-danger" th:attr="hx-delete=@{/deleteLote/{id}(id=${p.id})}" hx-confirm="Eliminar?" hx-swap="none" hx-on:afterRequest="htmx.ajax('GET','/lotes/list','#lotes-list')"><i class="bi bi-trash-fill"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:fragment="form">
+    <form th:action="@{/lotes/save}" th:object="${lote}" hx-post="/lotes/save" hx-target="#lotes-list" hx-swap="innerHTML">
+      <input type="hidden" th:field="*{id}" />
+      <div class="mb-2">
+        <label>Cerveza</label>
+        <select class="form-select" th:field="*{cerveza.id}">
+          <option th:each="c : ${cervezas}" th:value="${c.id}" th:text="${c.nombreCerveza}">Cerveza</option>
+        </select>
+      </div>
+      <div class="mb-2">
+        <label>Cantidad Litros</label>
+        <input class="form-control" type="number" th:field="*{cantidadLitros}" min="1" required />
+      </div>
+      <div class="mb-2">
+        <label>Estado</label>
+        <select class="form-select" th:field="*{estado}" required>
+          <option value="">Seleccione...</option>
+          <option value="Produccion">Producción</option>
+          <option value="Madurando">Madurando</option>
+          <option value="Terminado">Terminado</option>
+          <option value="Mantenimiento">Mantenimiento</option>
+        </select>
+      </div>
+      <div class="mb-2">
+        <label>Notas</label>
+        <input class="form-control" th:field="*{notas}" />
+      </div>
+      <div class="mb-2">
+        <label>Fecha Cocina</label>
+        <!-- Accept DD/MM/YYYY as requested by UX (will be parsed server-side). -->
+      <input id="fechaCocina" class="form-control date-arg" type="text" th:field="*{fechaCarga}" placeholder="DD/MM/YYYY" />
+      </div>
+      <div class="mb-2">
+        <label>Fecha Carga Madurador</label>
+      <input id="fechaCargaMadurador" class="form-control date-arg" type="text" th:field="*{fechaCargaMadurador}" placeholder="DD/MM/YYYY" />
+      </div>
+      <div class="mb-2">
+        <label>Fecha Vencimiento</label>
+      <input id="fechaVencimiento" class="form-control date-arg" type="text" th:field="*{fechaVencimiento}" placeholder="DD/MM/YYYY" />
+      </div>
+      <div class="d-flex gap-2">
+  <button class="btn btn-primary" type="submit"><i class="bi bi-save-fill me-1"></i>Guardar</button>
+  <button type="button" class="btn btn-secondary" hx-get="/lotes/list" hx-target="#lotes-list" hx-swap="innerHTML"><i class="bi bi-x-lg me-1"></i>Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ESTO IGNORA PORQUE SE DUPLICA EL ID AL PRESIONAR UNO DE LOS DATOS CARGADO -->
+  <!-- <div th:fragment="view">
+    <div class="card p-3">
+      <h6>Detalle Lote</h6>
+      <div><strong>Id:</strong> <span th:text="${lote.id}">-</span></div>
+      <div><strong>Cerveza:</strong> <span th:text="${lote.cerveza != null ? lote.cerveza.nombreCerveza : '-'}">-</span></div>
+      <div><strong>Cantidad (L):</strong> <span th:text="${lote.cantidadLitros}">-</span></div>
+      <div><strong>Estado:</strong> <span th:text="${lote.estado}">-</span></div>
+      <div><strong>Notas:</strong> <span th:text="${lote.notas}">-</span></div>
+      <div><strong>Fecha Carga:</strong> <span th:text="${lote.fechaCarga}">-</span></div>
+      <div class="d-flex justify-content-end mt-2">
+        <button class="btn btn-sm btn-secondary" hx-get="/lotes/list" hx-target="#lotes-list" hx-swap="innerHTML">Cerrar</button>
+      </div>
+    </div>
+  </div> -->
+
+  <div th:fragment="view">
+    <div th:if="${lote != null}" class="card p-3 mb-2">
+        <h6>Detalle Lote</h6>
+        <div><strong>Id:</strong> <span th:text="${lote.id}">-</span></div>
+        <div><strong>Cerveza:</strong> <span th:text="${lote.cerveza != null ? lote.cerveza.nombreCerveza : '-'}">-</span></div>
+        <div><strong>Cantidad (L):</strong> <span th:text="${lote.cantidadLitros}">-</span></div>
+        <div><strong>Estado:</strong> <span th:text="${lote.estado}">-</span></div>
+        <div><strong>Notas:</strong> <span th:text="${lote.notas}">-</span></div>
+        <div><strong>Fecha Carga:</strong> <span th:text="${lote.fechaCarga}">-</span></div>
+        <div><strong>Fecha Carga Madurador:</strong> <span th:text="${lote.fechaCargaMadurador}">-</span></div>
+        <div><strong>Fecha Vencimiento:</strong> <span th:text="${lote.fechaVencimiento}">-</span></div>
+        <div class="d-flex justify-content-end mt-2">
+            <button class="btn btn-sm btn-secondary" hx-get="/lotes/list" hx-target="#lotes-list" hx-swap="innerHTML">Cerrar</button>
+        </div>
+    </div>
+    <div th:if="${lote == null}">No se encontró el lote.</div>
+</div>
+
+

@@ -1,0 +1,105 @@
+fragments de barriles <div th:fragment="lista" xmlns:th="http://www.thymeleaf.org">
+  <div th:if="${#lists.isEmpty(items)}">No hay barriles.</div>
+  <div th:each="b : ${items}" 
+       class="card mb-2 p-2 position-relative" 
+       th:attr="data-view-url=@{/barriles/view/{id}(id=${b.id})}, data-view-target='#barril-form'" 
+       style="cursor:pointer" role="button" tabindex="0">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <strong th:text="${b.id}">ID</strong>
+        <div class="muted" th:text="${b.notas}">Notas</div>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline-primary me-1"
+                th:attr="hx-get=@{/barriles/view/{id}(id=${b.id})}"
+                hx-target="#barril-form"
+                hx-swap="innerHTML"
+                title="Ver"
+                onclick="event.stopPropagation()">
+          <i class="bi bi-eye-fill"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-secondary me-1"
+                th:attr="hx-get=@{/barriles/{id}(id=${b.id})}"
+                hx-target="#barril-form"
+                hx-swap="innerHTML"
+                title="Editar"
+                onclick="event.stopPropagation()">
+          <i class="bi bi-pencil-fill"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger"
+                th:attr="hx-delete=@{/deleteBarril/{id}(id=${b.id})}"
+                hx-confirm="Eliminar?"
+                hx-swap="none"
+                onclick="event.stopPropagation()"
+                hx-on:afterRequest="htmx.ajax('GET','/barriles/list','#barriles-list')">
+          <i class="bi bi-trash-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:fragment="form">
+  <form th:action="@{/barriles/save}"
+        th:object="${barril}"
+        hx-post="/barriles/save"
+        hx-target="#barriles-list"
+        hx-swap="innerHTML">
+    <input type="hidden" th:field="*{id}" />
+    <div class="mb-2 row">
+      <div class="col">
+        <label>Litros</label>
+        <input class="form-control" type="number" th:field="*{litros}" min="1" required />
+      </div>
+      <div class="col">
+        <label>Estado</label>
+        <select class="form-select" th:field="*{estado}">
+          <option th:value="'Disponible'">Disponible</option>
+          <option th:value="'Cargado'">Cargado</option>
+          <option th:value="'Alquilado'">Alquilado</option>
+          <option th:value="'Despacho'">Despacho</option>
+          <option th:value="'Devuelto'">Devuelto</option>
+          <option th:value="'Sucio'">Sucio</option>
+        </select>
+      </div>
+    </div>
+    <div class="mb-2">
+      <label>Notas</label>
+      <input class="form-control" th:field="*{notas}" />
+    </div>
+    <div class="mb-2">
+      <label>Lote</label>
+      <select class="form-select" th:field="*{lote.id}">
+        <option th:each="l : ${lotes}" th:value="${l.id}"
+                th:text="${l.cerveza != null ? l.cerveza.nombreCerveza : 'Lote ' + l.id}">
+          Lote
+        </option>
+      </select>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Guardar</button>
+      <button type="button"
+              class="btn btn-secondary"
+              hx-get="/barriles/list"
+              hx-target="#barriles-list"
+              hx-swap="innerHTML">Cancelar</button>
+    </div>
+  </form>
+</div>
+
+<div th:fragment="view">
+  <div class="card p-3">
+    <h6>Detalle Barril</h6>
+    <div><strong>Id:</strong> <span th:text="${barril.id}">-</span></div>
+    <div><strong>Litros:</strong> <span th:text="${barril.litros}">-</span></div>
+    <div><strong>Estado:</strong> <span th:text="${barril.estado}">-</span></div>
+    <div><strong>Notas:</strong> <span th:text="${barril.notas}">-</span></div>
+    <div><strong>Lote:</strong> <span th:text="${barril.lote != null ? barril.lote.id : '-'}">-</span></div>
+    <div class="d-flex justify-content-end mt-2">
+      <button class="btn btn-sm btn-secondary"
+              hx-get="/barriles/list"
+              hx-target="#barriles-list"
+              hx-swap="innerHTML">Cerrar</button>
+    </div>
+  </div>
+</div>
